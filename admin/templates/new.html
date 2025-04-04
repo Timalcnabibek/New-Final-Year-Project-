@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/newstyles.css') }}">
+    <!-- <link rel="stylesheet" href="url_for('static', filename='css/styles.css')"> -->
+</head>
+
+<body>
+    <div class="container">
+                <!-- Navigation -->
+                <nav class="navbar">
+                    <div class="sidebar">
+                        <h2>Logo</h2>
+                        <ul>
+                            <li><a href="{{url_for('dashboard_page')}}" >Dashboard</a></li>
+                            <li><a href="{{url_for('average_page')}}">Average Data</a></li>
+                            <li><a href="{{url_for('prediction_page')}}">Prediction Data</a></li>
+                            <li><a href="{{ url_for('new_page') }}" class="active">Customer Data</a></li>
+                            <li><a href="{{url_for('order_page')}}">Orders</a></li>
+                            <li><a href="{{ url_for('index') }}">Products</a></li>
+                            <li><a href="#" id="logoutButton">Log Out</a></li>
+                        </ul>
+                    </div>
+                </nav>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="page-header">
+                <h1>Customer Panel</h1>
+                <p>Overview of your customer data</p>
+            </div>
+
+            <div class="dashboard-metrics">
+    <!-- Total Customers -->
+    <div class="metric-card">
+        <h3>Total Customers</h3>
+        <div class="metric-icon user-icon"><i class="fas fa-users"></i></div>
+        <div class="metric-value">
+            <h2 id="totalCustomersCount">0</h2>  <!-- Updated by JavaScript -->
+            <span class="growth positive">+12%</span>
+        </div>
+        <div class="metric-comparison">vs. previous month</div>
+    </div>
+
+    <!-- Active Customers -->
+    <div class="metric-card">
+        <h3>Active Customers</h3>
+        <div class="metric-icon active-icon"><i class="fas fa-user-check"></i></div>
+        <div class="metric-value">
+            <h2 id="activeCustomersCount">0</h2>  <!-- Updated by JavaScript -->
+            <span class="growth positive">+8%</span>
+        </div>
+        <div class="metric-comparison">0% of total</div>
+    </div>
+
+    <!-- Total Revenue -->
+    <div class="metric-card">
+        <h3>Total Revenue</h3>
+        <div class="metric-icon revenue-icon"><i class="fas fa-dollar-sign"></i></div>
+        <div class="metric-value">
+            <h2 id="totalRevenue">$0</h2>  <!-- Updated by JavaScript -->
+            <span class="growth positive">+15%</span>
+        </div>
+        <div class="metric-comparison">vs. previous month</div>
+    </div>
+
+    <!-- Average Spend -->
+    <div class="metric-card">
+        <h3>Average Spend</h3>
+        <div class="metric-icon spend-icon"><i class="fas fa-shopping-cart"></i></div>
+        <div class="metric-value">
+            <h2 id="averageSpend">$0.00</h2>  <!-- Updated by JavaScript -->
+            <span class="growth positive">+5%</span>
+        </div>
+        <div class="metric-comparison">per customer</div>
+    </div>
+</div>
+
+            
+
+
+            <!-- Dashboard Charts -->
+            <div class="dashboard-charts">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h2>Customer Growth</h2>
+                        <p>New customers per month</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h2>Customer Status</h2>
+                        <p>Distribution by status</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Customers -->
+            <div class="recent-customers">
+                <div class="section-header">
+                    <h2>Recent Customers</h2>
+                    <a href="/customers" class="view-all-btn">View All</a>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Total Spent</th>
+                                <th>Registered</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentCustomersTable">
+                            <!-- Will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fetch recent customers data
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch('http://localhost:5000/api/customers')
+    .then(response => response.json())
+    .then(data => {
+        console.log("API Response:", data);
+
+        // ✅ Extract the customers array
+        const customers = data.customers || []; 
+
+        if (!Array.isArray(customers)) {
+            console.error("❌ Error: Expected an array but got:", customers);
+            return;
+        }
+
+        const sortedCustomers = customers.sort((a, b) => 
+            new Date(b.registration_date || 0) - new Date(a.registration_date || 0)
+        ).slice(0, 5);
+
+        const recentCustomersTable = document.getElementById('recentCustomersTable');
+        if (!recentCustomersTable) {
+            console.error("❌ Table element not found");
+            return;
+        }
+
+        recentCustomersTable.innerHTML = '';
+
+        sortedCustomers.forEach(customer => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${customer.username || 'N/A'}</td>
+                <td>${customer.email || 'N/A'}</td>
+                <td><span class="status-badge">${customer.status || 'N/A'}</span></td>
+                <td>$${(customer.total_spent || 0).toFixed(2)}</td>
+                <td>${customer.registration_date ? new Date(customer.registration_date).toLocaleDateString() : 'N/A'}</td>
+            `;
+            recentCustomersTable.appendChild(row);
+        });
+    })
+    .catch(error => console.error('❌ Fetch error:', error));
+
+
+            fetch('/api/metrics')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("totalCustomersCount").innerText = data.total_customers;
+                    document.getElementById("activeCustomersCount").innerText = data.active_customers;
+                    document.getElementById("totalRevenue").innerText = `$${data.total_revenue.toFixed(2)}`;
+                    document.getElementById("averageSpend").innerText = `$${data.average_spend.toFixed(2)}`;
+                })
+                .catch(error => console.error("Error fetching metrics:", error));
+
+
+
+            // Fetch customer statistics and update the UI
+            function fetchCustomerStats() {
+                fetch('/api/customers/stats')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Update total customers count
+                        document.getElementById('totalCustomersCount').textContent = data.totalCustomers;
+
+                        // Update active customers count
+                        document.getElementById('activeCustomersCount').textContent = data.activeCustomers;
+
+                        // Update customer growth percentage
+                        const growthElement = document.querySelector('#totalCustomersCount + .growth');
+                        growthElement.textContent = `+${data.customerGrowthPercentage}%`;
+
+                        // Change color based on growth (if negative, make it red)
+                        if (data.customerGrowthPercentage < 0) {
+                            growthElement.classList.remove("positive");
+                            growthElement.classList.add("negative");
+                        } else {
+                            growthElement.classList.remove("negative");
+                            growthElement.classList.add("positive");
+                        }
+                    })
+                    .catch(error => console.error('Error fetching customer statistics:', error));
+            }
+
+            // Run function when page loads
+            document.addEventListener('DOMContentLoaded', fetchCustomerStats);
+
+        });
+
+
+        // Initialize Growth Chart
+        const monthlyData = JSON.parse('{{ monthly_data|safe }}');
+        const growthCtx = document.getElementById('growthChart').getContext('2d');
+        new Chart(growthCtx, {
+            type: 'bar',
+            data: {
+                labels: monthlyData.months,
+                datasets: [{
+                    label: 'New Customers',
+                    data: monthlyData.counts,
+                    backgroundColor: 'rgba(13, 110, 253, 0.5)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+
+        // Initialize Status Chart
+        const statusData = JSON.parse('{{ status_distribution|safe }}');
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: statusData.map(item => item.status),
+                datasets: [{
+                    data: statusData.map(item => item.count),
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.7)', // Active - green
+                        'rgba(108, 117, 125, 0.7)', // Inactive - gray
+                        'rgba(255, 193, 7, 0.7)' // Pending - yellow
+                    ],
+                    borderColor: [
+                        'rgba(40, 167, 69, 1)',
+                        'rgba(108, 117, 125, 1)',
+                        'rgba(255, 193, 7, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    </script>
+
+<script src="{{ url_for('static', filename='js/customerstats.js') }}"></script>
+
+</body>
+
+</html>

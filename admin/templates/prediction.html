@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prediction Data - Admin Panel</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #6366f1;
+      --primary-light: #818cf8;
+      --primary-dark: #4f46e5;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+      --text-primary: #1f2937;
+      --text-secondary: #4b5563;
+      --text-tertiary: #9ca3af;
+      --bg-primary: #f9fafb;
+      --bg-secondary: #ffffff;
+      --border-color: #e5e7eb;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --radius-sm: 0.25rem;
+      --radius-md: 0.375rem;
+      --radius-lg: 0.5rem;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      --sidebar-bg: #3c6382;
+      --sidebar-width: 220px;
+      --sidebar-text: #ffffff;
+      --sidebar-active-bg: #f39c12;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: var(--font-sans);
+    }
+    
+    html, body {
+      height: 100%;
+    }
+    
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      padding: 0;
+      line-height: 1.5;
+      display: flex;
+    }
+    
+    /* Sidebar styles updated to match the photo */
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    .logo-container {
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 1rem;
+    }
+
+    .sidebar ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .sidebar ul li {
+      width: 100%;
+    }
+
+    .sidebar ul li a {
+      display: block;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      padding: 0.875rem 1.5rem;
+      transition: background-color 0.3s;
+    }
+
+    .sidebar ul li a:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar ul li a.active {
+      background-color: var(--sidebar-active-bg);
+      font-weight: 500;
+    }
+
+    /* Main content container */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      padding: 1.5rem;
+      width: calc(100% - var(--sidebar-width));
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    
+    .header-left h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: var(--text-primary);
+    }
+    
+    .header-left p {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+    
+    .time-selector {
+      display: flex;
+      align-items: center;
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .time-selector:hover {
+      border-color: var(--primary-light);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .time-selector span {
+      margin-right: 0.5rem;
+      font-size: 0.875rem;
+    }
+    
+    .time-selector i {
+      color: var(--text-tertiary);
+    }
+    
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .metric-card {
+      background-color: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+      position: relative;
+      border: 1px solid var(--border-color);
+    }
+    
+    .metric-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+      border-color: var(--primary-light);
+    }
+    
+    .metric-title {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .metric-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      color: var(--bg-secondary);
+      background-color: var(--primary-color);
+    }
+    
+    .metric-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+    
+    .metric-change {
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-weight: 500;
+    }
+    
+    .positive-change {
+      color: var(--success-color);
+    }
+    
+    .negative-change {
+      color: var(--danger-color);
+    }
+    
+    .charts-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .chart-card {
+      background-color: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+      border: 1px solid var(--border-color);
+    }
+    
+    .chart-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-light);
+    }
+    
+    .chart-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: var(--text-primary);
+    }
+    
+    .chart-subtitle {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+    
+    .chart-container {
+      height: 250px;
+      position: relative;
+    }
+    
+    .customer-behavior {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .behavior-metrics {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .behavior-tab {
+      padding: 0.5rem 0;
+      flex: 1;
+      text-align: center;
+      color: var(--text-secondary);
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+    }
+    
+    .behavior-tab:hover {
+      color: var(--primary-color);
+    }
+    
+    .behavior-tab.active {
+      color: var(--primary-color);
+      border-bottom: 3px solid var(--primary-color);
+    }
+    
+    .abandonment-rate {
+      margin-bottom: 1.25rem;
+    }
+    
+    .rate-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    
+    .rate-label span {
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+    
+    .rate-value {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .progress-bar {
+      height: 0.5rem;
+      background-color: var(--border-color);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+      position: relative;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background-color: var(--primary-color);
+      border-radius: var(--radius-lg);
+      transition: width 0.5s ease;
+    }
+    
+    .reasons-title {
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      color: var(--text-primary);
+    }
+    
+    .reasons-list {
+      margin-top: 0.75rem;
+    }
+    
+    .reason-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.625rem;
+      font-size: 0.875rem;
+    }
+    
+    .reason-item span:first-child {
+      color: var(--text-secondary);
+    }
+    
+    .reason-item span:last-child {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .data-source {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      margin-top: 1rem;
+      font-style: italic;
+    }
+    
+    .date-stamp {
+      position: absolute;
+      top: 0.625rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--bg-secondary);
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 500;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 10;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-color);
+    }
+    
+    .chart-container:hover .date-stamp {
+      opacity: 1;
+    }
+    
+    @media (max-width: 768px) {
+      .main-content {
+        margin-left: 0;
+        width: 100%;
+      }
+      
+      .sidebar {
+        left: -100%;
+        transition: left 0.3s ease;
+      }
+      
+      .sidebar.active {
+        left: 0;
+      }
+      
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .time-selector {
+        width: 100%;
+        justify-content: space-between;
+      }
+      
+      .metrics-row {
+        grid-template-columns: repeat(auto-fit, minmax(100%, 1fr));
+      }
+      
+      .metric-card {
+        padding: 1rem;
+      }
+      
+      .charts-row {
+        grid-template-columns: 1fr;
+      }
+      
+      .chart-container {
+        height: 200px;
+      }
+      
+      .behavior-metrics {
+        flex-direction: row;
+      }
+    }
+    
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary-color: #818cf8;
+        --primary-light: #a5b4fc;
+        --primary-dark: #6366f1;
+        --text-primary: #f9fafb;
+        --text-secondary: #e5e7eb;
+        --text-tertiary: #9ca3af;
+        --bg-primary: #111827;
+        --bg-secondary: #1f2937;
+        --border-color: #374151;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+      }
+    }
+    
+    /* Tooltip and chart styles */
+    .tooltip {
+      position: absolute;
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      pointer-events: none;
+      z-index: 100;
+      font-size: 0.75rem;
+      border: 1px solid var(--border-color);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    
+    .tooltip-visible {
+      opacity: 1;
+    }
+    
+    /* Smooth animation for all transitions */
+    .animate-all {
+      transition: all 0.3s ease;
+    }
+    
+    /* Loading state */
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      border-radius: var(--radius-lg);
+    }
+    
+    .spinner {
+      width: 2rem;
+      height: 2rem;
+      border: 3px solid rgba(99, 102, 241, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--primary-color);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    
+    /* Responsive font sizes */
+    @media (max-width: 640px) {
+      .header-left h1 {
+        font-size: 1.25rem;
+      }
+      
+      .metric-value {
+        font-size: 1.25rem;
+      }
+      
+      .chart-title {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <div class="sidebar">
+    <div class="logo-container">Logo</div>
+    <ul>
+      <li><a href="{{url_for('dashboard_page')}}">Dashboard</a></li>
+      <li><a href="{{url_for('average_page')}}">Average Data</a></li>
+      <li><a href="{{url_for('prediction_page')}}" class="active">Prediction Data</a></li>
+      <li><a href="{{ url_for('new_page') }}">Customer Data</a></li>
+      <li><a href="{{url_for('order_page')}}">Orders</a></li>
+      <li><a href="{{ url_for('index') }}">Products</a></li>
+      <li><a href="#" id="logoutButton">Log Out</a></li>
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="header">
+      <div class="header-left">
+        <h1>Prediction Data</h1>
+        <p>Data-driven sales and customer behavior forecasts</p>
+      </div>
+      <div class="time-selector">
+        <span>Next 30 Days</span>
+        <i>▼</i>
+      </div>
+    </div>
+    
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>Projected Sales</span>
+          <div class="metric-icon" style="background-color: rgba(99, 102, 241, 0.1); color: var(--primary-color);">$</div>
+        </div>
+        <div class="metric-value">$58,000</div>
+        <div class="metric-change positive-change">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+            <path fill-rule="evenodd" d="M12 7a1 1 0 01-2 0V5H9a1 1 0 110-2h1V2a1 1 0 112 0v1h1a1 1 0 110 2h-1v2z" clip-rule="evenodd" />
+            <path d="M6.293 14.707a1 1 0 010-1.414L10.586 9.5 7.293 6.207a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
+          </svg>
+          +12.5% vs previous period
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>Estimated Orders</span>
+          <div class="metric-icon" style="background-color: rgba(16, 185, 129, 0.1); color: var(--success-color);">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+              <path d="M2.25 2.25a.75.75 0 000 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 00-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 000-1.5H5.378A2.25 2.25 0 017.5 15h11.218a.75.75 0 00.674-.421 60.358 60.358 0 002.96-7.228.75.75 0 00-.525-.965A60.864 60.864 0 005.68 4.509l-.232-.867A1.875 1.875 0 003.636 2.25H2.25zM3.75 20.25a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM16.5 20.25a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" />
+            </svg>
+          </div>
+        </div>
+        <div class="metric-value">750</div>
+        <div class="metric-change positive-change">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+            <path fill-rule="evenodd" d="M12 7a1 1 0 01-2 0V5H9a1 1 0 110-2h1V2a1 1 0 112 0v1h1a1 1 0 110 2h-1v2z" clip-rule="evenodd" />
+            <path d="M6.293 14.707a1 1 0 010-1.414L10.586 9.5 7.293 6.207a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
+          </svg>
+          +8.2% vs previous period
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>Avg. Order Value</span>
+          <div class="metric-icon" style="background-color: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+              <path d="M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75zM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75a1.875 1.875 0 01-1.875-1.875V8.625zM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75A1.875 1.875 0 013 19.875v-6.75z" />
+            </svg>
+          </div>
+        </div>
+        <div class="metric-value">$77</div>
+        <div class="metric-change positive-change">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+            <path fill-rule="evenodd" d="M12 7a1 1 0 01-2 0V5H9a1 1 0 110-2h1V2a1 1 0 112 0v1h1a1 1 0 110 2h-1v2z" clip-rule="evenodd" />
+            <path d="M6.293 14.707a1 1 0 010-1.414L10.586 9.5 7.293 6.207a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
+          </svg>
+          +3.6% vs previous period
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>Customer Growth</span>
+          <div class="metric-icon" style="background-color: rgba(239, 68, 68, 0.1); color: var(--danger-color);">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+              <path d="M4.5 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM14.25 8.625a3.375 3.375 0 116.75 0 3.375 3.375 0 01-6.75 0zM1.5 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM17.25 19.128l-.001.144a2.25 2.25 0 01-.233.96 10.088 10.088 0 005.06-1.01.75.75 0 00.42-.643 4.875 4.875 0 00-6.957-4.611 8.586 8.586 0 011.71 5.157v.003z" />
+            </svg>
+          </div>
+        </div>
+        <div class="metric-value">+14.5%</div>
+        <div class="metric-change negative-change">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+          </svg>
+          -2.1% vs previous period
+        </div>
+      </div>
+    </div>
+    
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Sales Forecast</div>
+        <div class="chart-subtitle">Predicted vs. actual daily sales for the next period</div>
+        <div class="chart-container">
+          <div class="date-stamp" id="salesDateStamp">Mar 25: $1,860</div>
+          <canvas id="salesChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Order Volume Projection</div>
+        <div class="chart-subtitle">Expected daily order count for the upcoming period</div>
+        <div class="chart-container">
+          <div class="date-stamp" id="orderDateStamp">Mar 25: 25</div>
+          <canvas id="orderChart"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Category Demand</div>
+        <div class="chart-subtitle">Predicted popularity by product category</div>
+        <div class="chart-container">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+      <!-- <div class="chart-card customer-behavior">
+        <div class="chart-title">Customer Behavior Metrics</div>
+        <div class="chart-subtitle">Key metrics that influence revenue and customer experience</div> -->
+        <!-- <div class="behavior-metrics">
+          <div class="behavior-tab active">Cart Abandonment</div>
+          <div class="behavior-tab">Repeat Purchase</div>
+        </div> -->
+        <!-- <div class="abandonment-rate">
+          <div class="rate-label">
+            <span>Projected Cart Abandonment Rate</span>
+            <span class="rate-value">64%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 0%;"></div>
+          </div>
+          <div>
+            <div class="reasons-title">Top abandonment reasons:</div>
+            <div class="reasons-list">
+              <div class="reason-item">
+                <span>Extra shipping costs</span>
+                <span>42%</span>
+              </div>
+              <div class="reason-item">
+                <span>Creating account required</span>
+                <span>28%</span>
+              </div>
+              <div class="reason-item">
+                <span>Complex checkout process</span>
+                <span>18%</span>
+              </div>
+              <div class="reason-item">
+                <span>Other reasons</span>
+                <span>12%</span>
+              </div>
+            </div>
+          </div>
+          <div class="data-source">Based on historical data and machine learning predictions</div>
+        </div> -->
+      <!-- </div> -->
+    </div>
+
+  <script>
+    // Add loading overlay functionality
+function createLoadingOverlay(parent) {
+  const overlay = document.createElement('div');
+  overlay.className = 'loading-overlay';
+  
+  const spinner = document.createElement('div');
+  spinner.className = 'spinner';
+  
+  overlay.appendChild(spinner);
+  parent.appendChild(overlay);
+  
+  return overlay;
+}
+
+// Add loading overlays to all chart containers
+document.querySelectorAll('.chart-container').forEach(container => {
+  const overlay = createLoadingOverlay(container);
+  
+  // Remove overlay after "loading" data
+  setTimeout(() => {
+    overlay.style.opacity = 0;
+    setTimeout(() => overlay.remove(), 300);
+  }, 1000);
+});
+
+// Animate the progress bar
+setTimeout(() => {
+  document.querySelector('.progress-fill').style.width = '64%';
+}, 500);
+
+// Date range for the x-axis
+const dates = [
+  'Mar 23', 'Mar 24', 'Mar 25', 'Mar 26', 'Mar 27', 'Mar 28', 'Mar 29', 
+  'Mar 30', 'Mar 31', 'Apr 1', 'Apr 2', 'Apr 3', 'Apr 4', 'Apr 5',
+  'Apr 6', 'Apr 7', 'Apr 8', 'Apr 9', 'Apr 10', 'Apr 11', 'Apr 12',
+  'Apr 13', 'Apr 14', 'Apr 15', 'Apr 16', 'Apr 17', 'Apr 18', 'Apr 19'
+];
+
+// Sales Forecast Chart
+const salesCtx = document.getElementById('salesChart').getContext('2d');
+
+// Generate some random data but with a slightly increasing trend
+const actualSales = [1700, 1750, 1860, 1800, 1830, 1800];
+const predictedSales = Array(dates.length).fill().map((_, i) => {
+  const base = 1800 + Math.sin(i * 0.5) * 300;
+  return base + Math.random() * 200 - 100;
+});
+
+// Create gradient for the area
+const salesGradient = salesCtx.createLinearGradient(0, 0, 0, 300);
+salesGradient.addColorStop(0, 'rgba(129, 140, 248, 0.8)');
+salesGradient.addColorStop(1, 'rgba(129, 140, 248, 0.1)');
+
+const pastGradient = salesCtx.createLinearGradient(0, 0, 0, 300);
+pastGradient.addColorStop(0, 'rgba(59, 130, 246, 0.8)');
+pastGradient.addColorStop(1, 'rgba(59, 130, 246, 0.1)');
+
+// Adjust Chart.js defaults for better UI
+Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#6b7280';
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.cornerRadius = 6;
+Chart.defaults.plugins.tooltip.titleFont.weight = 'bold';
+Chart.defaults.plugins.tooltip.displayColors = false;
+
+// Create the sales chart with improved visuals
+const salesChart = new Chart(salesCtx, {
+  type: 'line',
+  data: {
+    labels: dates,
+    datasets: [{
+      label: 'Actual Sales',
+      data: actualSales.concat(Array(dates.length - actualSales.length).fill(null)),
+      backgroundColor: pastGradient,
+      borderColor: 'rgba(59, 130, 246, 1)',
+      borderWidth: 2,
+      tension: 0.4,
+      fill: true,
+      pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2,
+      pointRadius: 4,
+      pointHoverRadius: 6
+    }, {
+      label: 'Predicted Sales',
+      data: predictedSales,
+      backgroundColor: salesGradient,
+      borderColor: 'rgba(99, 102, 241, 1)',
+      borderWidth: 2,
+      borderDash: [5, 5],
+      tension: 0.4,
+      fill: true,
+      pointBackgroundColor: 'rgba(99, 102, 241, 1)',
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 5
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          maxRotation: 0,
+          autoSkip: true,
+          maxTicksLimit: 7
+        }
+      },
+      y: {
+        beginAtZero: false,
+        grid: {
+          borderDash: [2, 2]
+        },
+        ticks: {
+          callback: function(value) {
+            return '$' + value.toLocaleString();
+          }
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          boxWidth: 12,
+          usePointStyle: true,
+          pointStyle: 'circle'
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return context.dataset.label + ': $' + context.raw.toLocaleString();
+          }
+        }
+      }
+    }
+  }
+});
+
+// Order Volume Chart
+const orderCtx = document.getElementById('orderChart').getContext('2d');
+
+// Generate order data with slight weekly pattern
+const actualOrders = [22, 24, 25, 23, 21, 18];
+const predictedOrders = Array(dates.length).fill().map((_, i) => {
+  // Weekly pattern (lower on weekends)
+  const dayEffect = (i % 7 < 5) ? 0 : -5;
+  return Math.floor(22 + Math.sin(i * 0.5) * 6 + Math.random() * 4 - 2 + dayEffect);
+});
+
+// Create gradient for the area
+const orderGradient = orderCtx.createLinearGradient(0, 0, 0, 300);
+orderGradient.addColorStop(0, 'rgba(16, 185, 129, 0.7)');
+orderGradient.addColorStop(1, 'rgba(16, 185, 129, 0.05)');
+
+const orderPastGradient = orderCtx.createLinearGradient(0, 0, 0, 300);
+orderPastGradient.addColorStop(0, 'rgba(5, 150, 105, 0.7)');
+orderPastGradient.addColorStop(1, 'rgba(5, 150, 105, 0.05)');
+
+// Create the order chart
+const orderChart = new Chart(orderCtx, {
+  type: 'line',
+  data: {
+    labels: dates,
+    datasets: [{
+      label: 'Actual Orders',
+      data: actualOrders.concat(Array(dates.length - actualOrders.length).fill(null)),
+      backgroundColor: orderPastGradient,
+      borderColor: 'rgba(5, 150, 105, 1)',
+      borderWidth: 2,
+      tension: 0.4,
+      fill: true,
+      pointBackgroundColor: 'rgba(5, 150, 105, 1)',
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2,
+      pointRadius: 4,
+      pointHoverRadius: 6
+    }, {
+      label: 'Predicted Orders',
+      data: predictedOrders,
+      backgroundColor: orderGradient,
+      borderColor: 'rgba(16, 185, 129, 1)',
+      borderWidth: 2,
+      borderDash: [5, 5],
+      tension: 0.4,
+      fill: true,
+      pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 5
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          maxRotation: 0,
+          autoSkip: true,
+          maxTicksLimit: 7
+        }
+      },
+      y: {
+        beginAtZero: false,
+        grid: {
+          borderDash: [2, 2]
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          boxWidth: 12,
+          usePointStyle: true,
+          pointStyle: 'circle'
+        }
+      }
+    }
+  }
+});
+
+// Category Demand Chart
+const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+const categoryChart = new Chart(categoryCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ['Electronics', 'Clothing', 'Home & Garden', 'Sports', 'Toys'],
+    datasets: [{
+      data: [35, 25, 20, 12, 8],
+      backgroundColor: [
+        'rgba(99, 102, 241, 0.8)',
+        'rgba(16, 185, 129, 0.8)',
+        'rgba(245, 158, 11, 0.8)',
+        'rgba(239, 68, 68, 0.8)',
+        'rgba(124, 58, 237, 0.8)'
+      ],
+      borderColor: 'rgba(255, 255, 255, 0.8)',
+      borderWidth: 2,
+      hoverOffset: 10
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '65%',
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: {
+          boxWidth: 12,
+          usePointStyle: true,
+          pointStyle: 'circle',
+          padding: 15
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return context.label + ': ' + context.raw + '%';
+          }
+        }
+      }
+    }
+  }
+});
+
+// Event handlers for interactive elements
+document.querySelectorAll('.behavior-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.behavior-tab').forEach(t => t.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// Add hover effects for charts to display date stamps
+document.getElementById('salesChart').addEventListener('mousemove', function(event) {
+  const rect = this.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const width = rect.width;
+  
+  // Calculate which data point we're hovering over
+  const index = Math.min(Math.floor((x / width) * dates.length), dates.length - 1);
+  const dateStamp = document.getElementById('salesDateStamp');
+  
+  dateStamp.textContent = dates[index] + ': $' + predictedSales[index].toLocaleString(undefined, {maximumFractionDigits: 0});
+});
+
+document.getElementById('orderChart').addEventListener('mousemove', function(event) {
+  const rect = this.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const width = rect.width;
+  
+  // Calculate which data point we're hovering over
+  const index = Math.min(Math.floor((x / width) * dates.length), dates.length - 1);
+  const dateStamp = document.getElementById('orderDateStamp');
+  
+  dateStamp.textContent = dates[index] + ': ' + predictedOrders[index];
+});
+
+// Time selector dropdown functionality
+const timeSelector = document.querySelector('.time-selector');
+timeSelector.addEventListener('click', function() {
+  alert('Time range selector would open here');
+});
+  </script>
+</body>
+</html>

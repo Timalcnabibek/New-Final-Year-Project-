@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customers - Admin Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/newstyles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}">
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+      <!-- Navigation -->
+      <nav class="navbar">
+        <div class="sidebar">
+            <h2>Logo</h2>
+            <ul>
+                <li><a href="{{url_for('dashboard_page')}}" >Dashboard</a></li>
+                <li><a href="{{url_for('average_page')}}">Average Data</a></li>
+                <li><a href="{{url_for('prediction_page')}}">Prediction Data</a></li>
+                <li><a href="{{ url_for('new_page') }}" class="active">Customer Data</a></li>
+                <li><a href="{{url_for('order_page')}}">Orders</a></li>
+                <li><a href="{{ url_for('index') }}">Products</a></li>
+                <li><a href="#" id="logoutButton">Log Out</a></li>
+            </ul>
+        </div>
+    </nav>
+        
+        <!-- Content -->
+        <div class="content">
+            <div class="page-header">
+                <h1>Customers</h1>
+                <p>Manage your customer database</p>
+            </div>
+            
+            <div class="customers-actions">
+                <div class="search-filter">
+                    <div class="search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="customerSearch" placeholder="Search customers...">
+                    </div>
+                    <div class="filter-dropdown">
+                        <select id="statusFilter">
+                            <option value="all">All Statuses</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button class="primary-btn" id="addCustomerBtn">
+                    <i class="fas fa-plus"></i> Add Customer
+                </button>
+            </div>
+            
+            <div class="recent-customers">
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                                <th>Total Spent</th>
+                                <th>Registered</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customersTable">
+                            <!-- Will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Customer Modal -->
+    <div class="modal" id="customerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New Customer</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="customerForm">
+                    <input type="hidden" id="customerId">
+                    <div class="form-group">
+                        <label for="customerName">Name</label>
+                        <input type="text" id="customerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerEmail">Email</label>
+                        <input type="email" id="customerEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerPhone">Phone</label>
+                        <input type="text" id="customerPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerStatus">Status</label>
+                        <select id="customerStatus" required>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerSpent">Total Spent</label>
+                        <input type="number" id="customerSpent" step="0.01" min="0">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="secondary-btn" id="cancelBtn">Cancel</button>
+                        <button type="submit" class="primary-btn">Save Customer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Confirm Delete</h2>
+                <button class="close-btn" id="closeDeleteModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this customer? This action cannot be undone.</p>
+                <input type="hidden" id="deleteCustomerId">
+                <div class="form-actions">
+                    <button class="secondary-btn" id="cancelDeleteBtn">Cancel</button>
+                    <button class="danger-btn" id="confirmDeleteBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM Elements
+        const customersTable = document.getElementById('customersTable');
+        const customerSearch = document.getElementById('customerSearch');
+        const statusFilter = document.getElementById('statusFilter');
+        const addCustomerBtn = document.getElementById('addCustomerBtn');
+        const customerModal = document.getElementById('customerModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const customerForm = document.getElementById('customerForm');
+        const closeModal = document.getElementById('closeModal');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const deleteModal = document.getElementById('deleteModal');
+        const closeDeleteModal = document.getElementById('closeDeleteModal');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        
+        // Customer Form Elements
+        const customerId = document.getElementById('customerId');
+        const customerName = document.getElementById('customerName');
+        const customerEmail = document.getElementById('customerEmail');
+        const customerPhone = document.getElementById('customerPhone');
+        const customerStatus = document.getElementById('customerStatus');
+        const customerSpent = document.getElementById('customerSpent');
+        const deleteCustomerId = document.getElementById('deleteCustomerId');
+        
+        let customers = [];
+        
+        // Fetch customer data
+// Fetch customer data
+function fetchCustomers() {
+    fetch('/api/customers')
+        .then(response => response.json())
+        .then(data => {
+            console.log("✅ API Response:", data); // Log data for debugging
+
+            if (data.success && Array.isArray(data.customers)) {
+                customers = data.customers;  // Store data globally
+                renderCustomers();  // Call function to display data in the table
+            } else {
+                console.error("❌ API did not return expected data structure:", data);
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error fetching customer data:', error);
+        });
+}
+
+// Render customers table
+function renderCustomers() {
+    console.log("✅ Rendering Customers:", customers);  // Debugging log
+    
+    customersTable.innerHTML = ''; // Clear previous data
+
+    if (customers.length === 0) {
+        console.warn("⚠️ No customers to display!");
+        // Display a message in the table
+        customersTable.innerHTML = '<tr><td colspan="7" class="text-center">No customers found</td></tr>';
+        return;
+    }
+
+    // Apply filters if needed
+    let filteredCustomers = customers;
+    
+    // Apply search filter
+    const searchTerm = customerSearch.value.toLowerCase().trim();
+    if (searchTerm) {
+        filteredCustomers = filteredCustomers.filter(customer => 
+            (customer.username && customer.username.toLowerCase().includes(searchTerm)) ||
+            (customer.email && customer.email.toLowerCase().includes(searchTerm)) ||
+            (customer.phone && String(customer.phone).includes(searchTerm))
+        );
+    }
+    
+    // Apply status filter
+    const statusValue = statusFilter.value;
+    if (statusValue !== 'all') {
+        filteredCustomers = filteredCustomers.filter(customer => 
+            customer.status === statusValue
+        );
+    }
+
+    // Display filtered customers
+    filteredCustomers.forEach(customer => {
+        console.log("➡️ Adding Customer:", customer);  // Debugging log
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${customer.username || 'N/A'}</td>
+            <td>${customer.email || 'N/A'}</td>
+            <td>${customer.phone || 'N/A'}</td>
+            <td>${customer.isVerified ? 'Active' : 'Inactive'}</td>
+            <td>$${(customer.total_spent || 0).toFixed(2)}</td>
+            <td>${customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : 'N/A'}</td>
+            <td class="actions-cell">
+                <button class="edit-btn" data-id="${customer._id}"><i class="fas fa-edit"></i></button>
+                <button class="delete-btn" data-id="${customer._id}"><i class="fas fa-trash"></i></button>
+            </td>
+        `;
+
+        customersTable.appendChild(row);
+    });
+
+    // Add event listeners to edit and delete buttons
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => openEditModal(btn.dataset.id));
+    });
+    
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => openDeleteModal(btn.dataset.id));
+    });
+
+    console.log("✅ Table successfully populated with", filteredCustomers.length, "customers!");
+}
+
+        
+        // Open add customer modal
+        function openAddModal() {
+            modalTitle.textContent = 'Add New Customer';
+            customerForm.reset();
+            customerId.value = '';
+            customerSpent.value = '0.00';
+            customerModal.style.display = 'flex';
+        }
+        
+        // Open edit customer modal
+        function openEditModal(id) {
+            const customer = customers.find(c => c._id === id);
+            if (!customer) return;
+            
+            modalTitle.textContent = 'Edit Customer';
+            customerId.value = customer._id;
+            customerName.value = customer.name;
+            customerEmail.value = customer.email;
+            customerPhone.value = customer.phone;
+            customerStatus.value = customer.status;
+            customerSpent.value = customer.total_spent.toFixed(2);
+            
+            customerModal.style.display = 'flex';
+        }
+        
+        // Open delete confirmation modal
+        function openDeleteModal(id) {
+            deleteCustomerId.value = id;
+            deleteModal.style.display = 'flex';
+        }
+        
+        // Handle form submission
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const customerData = {
+                name: customerName.value,
+                email: customerEmail.value,
+                phone: customerPhone.value,
+                status: customerStatus.value,
+                total_spent: parseFloat(customerSpent.value)
+            };
+            
+            try {
+                let response;
+                
+                if (customerId.value) {
+                    // Update existing customer
+                    response = await fetch(`/api/customers/${customerId.value}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(customerData)
+                    });
+                } else {
+                    // Add new customer
+                    response = await fetch('/api/customers', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(customerData)
+                    });
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    customerModal.style.display = 'none';
+                    fetchCustomers();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error saving customer:', error);
+                alert('An error occurred while saving the customer.');
+            }
+        }
+        
+        // Handle customer deletion
+        async function deleteCustomer() {
+            const id = deleteCustomerId.value;
+            
+            try {
+                const response = await fetch(`/api/customers/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    deleteModal.style.display = 'none';
+                    fetchCustomers();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error deleting customer:', error);
+                alert('An error occurred while deleting the customer.');
+            }
+        }
+        
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', fetchCustomers);
+        
+        customerSearch.addEventListener('input', renderCustomers);
+        statusFilter.addEventListener('change', renderCustomers);
+        
+        addCustomerBtn.addEventListener('click', openAddModal);
+        closeModal.addEventListener('click', () => customerModal.style.display = 'none');
+        cancelBtn.addEventListener('click', () => customerModal.style.display = 'none');
+        
+        closeDeleteModal.addEventListener('click', () => deleteModal.style.display = 'none');
+        cancelDeleteBtn.addEventListener('click', () => deleteModal.style.display = 'none');
+        confirmDeleteBtn.addEventListener('click', deleteCustomer);
+        
+        customerForm.addEventListener('submit', handleFormSubmit);
+        
+        // Close modals when clicking outside the content
+        window.addEventListener('click', (e) => {
+            if (e.target === customerModal) {
+                customerModal.style.display = 'none';
+            }
+            if (e.target === deleteModal) {
+                deleteModal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

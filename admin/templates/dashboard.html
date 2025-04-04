@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-commerce Sales Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}"> -->
+
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="sidebar">
+            <h2>Logo</h2>
+            <ul>
+                <li><a href="{{url_for('dashboard_page')}}" class="active">Dashboard</a></li>
+                <li><a href="{{url_for('average_page')}}">Average Data</a></li>
+                <li><a href="{{url_for('prediction_page')}}">Prediction Data</a></li>
+                <li><a href="{{ url_for('new_page') }}">Customer Data</a></li>
+                <li><a href="{{url_for('order_page')}}">Orders</a></li>
+                <li><a href="{{ url_for('index') }}">Products</a></li>
+                <li><a href="#" id="logoutButton">Log Out</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div>
+                <h1 class="dashboard-title">E-commerce Sales Dashboard</h1>
+                <p class="dashboard-subtitle">Make data-driven decisions with predictive analytics</p>
+            </div>
+            <div class="period-selector">
+                <span>Time Period:</span>
+                <div class="period-dropdown">
+                    Last 30 Days
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="metrics-container">
+            <div class="metric-card">
+                <div class="metric-title">
+                    Total Sales
+                    <i class="fas fa-dollar-sign" style="color: var(--primary-color)"></i>
+                </div>
+                <div class="metric-value" id="total-sales">Loading...</div>
+                <div class="metric-change negative">
+                    <i class="fas fa-arrow-down"></i> 2.3% vs previous period
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-title">
+                    Total Revenue
+                    <i class="fas fa-chart-line" style="color: var(--green-color)"></i>
+                </div>
+                <div class="metric-value" id="total-revenue">Loading...</div>
+                <div class="metric-change positive">
+                    <i class="fas fa-arrow-up"></i> 0.2% vs previous period
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-title">
+                    Total Orders
+                    <i class="fas fa-shopping-cart" style="color: var(--purple-color)"></i>
+                </div>
+                <div class="metric-value" id="order-count">Loading...</div>
+                <div class="metric-change negative">
+                    <i class="fas fa-arrow-down"></i> 1.7% vs previous period
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-title">
+                    Avg. Order Value
+                    <i class="fas fa-chart-bar" style="color: #ff9800"></i>
+                </div>
+                <div class="metric-value" id="avg-order-value">Loading...</div>
+                <div class="metric-change negative">
+                    <i class="fas fa-arrow-down"></i> 2.1% vs previous period
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-title">
+                    Conversion Rate
+                    <i class="fas fa-users" style="color: #4285f4"></i>
+                </div>
+                <div class="metric-value" id="conversion-rate">Loading...</div>
+                <div class="metric-change negative">
+                    <i class="fas fa-arrow-down"></i> 0.4% vs previous period
+                </div>
+            </div>
+        </div>
+
+
+        <div class="sales-prediction">
+            <div class="sales-prediction-header">
+                <h2 class="sales-prediction-title">Sales Prediction</h2>
+                <p class="sales-prediction-subtitle">Historical data and predictive analytics for future sales trends
+                </p>
+            </div>
+
+            <div class="view-tabs">
+                <div class="view-tab active">Combined View</div>
+                <div class="view-tab">Historical Sales</div>
+                <div class="view-tab">Sales Forecast</div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+
+        <div class="insights-container">
+            <div class="customer-insights">
+                <h2 class="insight-title">Customer Insights</h2>
+                <p class="insight-subtitle">Customer segmentation analysis</p>
+
+                <div class="customer-chart">
+                    <div class="donut-chart-container">
+                        <canvas id="customerChart"></canvas>
+                    </div>
+
+                    <div class="customer-segments">
+                        <div class="customer-total">13,331</div>
+
+                        <div class="customer-segment">
+                            <div class="segment-name">
+                                <div class="segment-indicator new"></div>
+                                Pending Customers
+                            </div>
+                            <div>--%</div>
+                        </div>
+
+                        <div class="customer-segment">
+                            <div class="segment-name">
+                                <div class="segment-indicator returning"></div>
+                                Active Customers
+                            </div>
+                            <div>--%</div>
+                        </div>
+
+                        <div class="customer-segment">
+                            <div class="segment-name">
+                                <div class="segment-indicator inactive"></div>
+                                Inactive Customers
+                            </div>
+                            <div>--%</div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-performance">
+                <h2 class="insight-title">Product Performance</h2>
+                <p class="insight-subtitle">Top selling products and their performance metrics</p>
+
+                <table class="product-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Sales</th>
+                            <th>Revenue</th>
+                            <th>Growth</th>
+                            <th>Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="product-name">
+                                    <div class="product-icon">
+                                        <img src="/api/placeholder/20/20" alt="Headphones">
+                                    </div>
+                                    Wireless Headphones
+                                </div>
+                            </td>
+                            <td>928</td>
+                            <td>$51,294</td>
+                            <td>
+                                <div class="product-growth positive">
+                                    <i class="fas fa-arrow-up"></i> 2.7%
+                                </div>
+                            </td>
+                            <td>156</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="product-name">
+                                    <div class="product-icon">
+                                        <img src="/api/placeholder/20/20" alt="Watch">
+                                    </div>
+                                    Smart Watch
+                                </div>
+                            </td>
+                            <td>740</td>
+                            <td>$62,745</td>
+                            <td>
+                                <div class="product-growth positive">
+                                    <i class="fas fa-arrow-up"></i> 4.7%
+                                </div>
+                            </td>
+                            <td>65</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="product-name">
+                                    <div class="product-icon">
+                                        <img src="/api/placeholder/20/20" alt="Laptop">
+                                    </div>
+                                    Laptop Pro
+                                </div>
+                            </td>
+                            <td>399</td>
+                            <td>$825,458</td>
+                            <td>
+                                <div class="product-growth negative">
+                                    <i class="fas fa-arrow-down"></i> 3.9%
+                                </div>
+                            </td>
+                            <td>39</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="product-name">
+                                    <div class="product-icon">
+                                        <img src="/api/placeholder/20/20" alt="Smartphone">
+                                    </div>
+                                    Smartphone X
+                                </div>
+                            </td>
+                            <td>480</td>
+                            <td>$707,078</td>
+                            <td>
+                                <div class="product-growth negative">
+                                    <i class="fas fa-arrow-down"></i> 1.9%
+                                </div>
+                            </td>
+                            <td>108</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="product-name">
+                                    <div class="product-icon">
+                                        <img src="/api/placeholder/20/20" alt="Earbuds">
+                                    </div>
+                                    Wireless Earbuds
+                                </div>
+                            </td>
+                            <td>884</td>
+                            <td>$116,130</td>
+                            <td>
+                                <div class="product-growth positive">
+                                    <i class="fas fa-arrow-up"></i> 1.3%
+                                </div>
+                            </td>
+                            <td>213</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{url_for('static',filename = 'js/dashboard.js')}}"> </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch("/api/orders/count")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById("order-count").textContent = data.totalOrders
+                            .toLocaleString();
+                    } else {
+                        document.getElementById("order-count").textContent = "Error";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching order count:", error);
+                    document.getElementById("order-count").textContent = "Error";
+                });
+        });
+    </script>
+
+    <!-- orders and other things -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch("/api/metrics/total-sales")
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById("total-sales").textContent = data.totalSales
+                            .toLocaleString();
+                    }
+                });
+
+            fetch("/api/metrics/total-revenue")
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById("total-revenue").textContent = "$" + data.totalRevenue
+                            .toLocaleString();
+                    }
+                });
+
+            fetch("/api/metrics/average-order-value")
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById("avg-order-value").textContent = "$" + data.avgOrderValue;
+                    }
+                });
+
+            fetch("/api/metrics/conversion-rate")
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById("conversion-rate").textContent = data.conversionRate + "%";
+                    }
+                });
+
+            fetch("/api/orders/count")
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById("order-count").textContent = data.totalOrders;
+                    }
+                });
+        });
+    </script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch("http://localhost:5000/api/customers")
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const customers = data.customers;
+
+                        // Count statuses
+                        let active = 0,
+                            inactive = 0,
+                            pending = 0;
+                        customers.forEach(c => {
+                            const status = c.status ?.toLowerCase();
+                            if (status === "active") active++;
+                            else if (status === "inactive") inactive++;
+                            else if (status === "pending") pending++;
+                        });
+
+                        const total = active + inactive + pending;
+
+                        // Update total customers in the UI
+                        document.querySelector('.customer-total').textContent = total.toLocaleString();
+
+                        // Optional: update % text next to segments
+                        document.querySelectorAll('.customer-segment')[0].children[1].textContent =
+                            `${Math.round((pending / total) * 100)}%`;
+                        document.querySelectorAll('.customer-segment')[1].children[1].textContent =
+                            `${Math.round((active / total) * 100)}%`;
+                        document.querySelectorAll('.customer-segment')[2].children[1].textContent =
+                            `${Math.round((inactive / total) * 100)}%`;
+
+
+                        // Render donut chart
+                        const ctx = document.getElementById("customerChart").getContext("2d");
+                        new Chart(ctx, {
+                            type: "doughnut",
+                            data: {
+                                labels: ["Pending", "Active", "Inactive"],
+                                datasets: [{
+                                    data: [pending, active, inactive],
+                                    backgroundColor: ["#ffca28", "#4caf50", "#e53935"]
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom'
+                                    }
+                                },
+                                cutout: "65%" // donut thickness
+                            }
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to load customer data:", err);
+                });
+        });
+    </script>
+
+<script>
+    // Get reference to the table body
+    const tableBody = document.querySelector('.product-table tbody');
+  
+    // Fetch top-selling product data
+    fetch("http://localhost:5000/api/products/topselling")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.top_products)) {
+          tableBody.innerHTML = ""; // Clear existing table rows
+  
+          data.top_products.forEach(product => {
+            const row = document.createElement("tr");
+  
+            // Determine growth rate status class
+            const growthClass = product.growth_rate >= 0 ? "positive" : "negative";
+            const growthIcon = product.growth_rate >= 0 ? "fa-arrow-up" : "fa-arrow-down";
+  
+            row.innerHTML = `
+              <td>
+                <div class="product-name">
+                  <div class="product-icon">
+                    <img src="/api/placeholder/20/20" alt="${product.product_name}">
+                  </div>
+                  ${product.product_name}
+                </div>
+              </td>
+              <td>${product.total_sold}</td>
+              <td>$${product.total_revenue.toLocaleString()}</td>
+              <td>
+                <div class="product-growth ${growthClass}">
+                  <i class="fas ${growthIcon}"></i> ${product.growth_rate.toFixed(1)}%
+                </div>
+              </td>
+              <td>—</td> <!-- You can replace this with stock info if you have it -->
+            `;
+  
+            tableBody.appendChild(row);
+          });
+        } else {
+          tableBody.innerHTML = `<tr><td colspan="5">No top-selling product data available.</td></tr>`;
+        }
+      })
+      .catch(err => {
+        console.error("Error fetching top-selling products:", err);
+        tableBody.innerHTML = `<tr><td colspan="5">Failed to load product data.</td></tr>`;
+      });
+  </script>
+ 
+</body>
+
+</html>

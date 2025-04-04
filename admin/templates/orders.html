@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        /* Sidebar/Navigation Styles */
+        .navbar {
+            height: 100%;
+            position: fixed;
+            width: 250px;
+            z-index: 100;
+            left: 0;
+            top: 0;
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, #3d6a8a 0%, #2c4b63 100%);
+            height: 100vh;
+            width: 250px;
+            padding: 20px 0;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 {
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            color: #ffffff;
+            padding: 15px 20px;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar ul li a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar ul li a.active {
+            background: #ff9800;
+            color: #ffffff;
+            font-weight: 500;
+            border-radius: 5px;
+            margin: 0 10px;
+            padding: 15px 10px;
+        }
+
+        /* Main Content Container */
+        .main-content {
+            margin-left: 250px;
+            /* Same as sidebar width */
+            padding: 20px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .nav-tab {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-tab i {
+            font-size: 16px;
+        }
+
+        .nav-tab.active {
+            background-color: #17337A;
+            color: white;
+        }
+
+        .nav-tab:not(.active) {
+            background-color: #f1f3f5;
+            color: #333;
+        }
+
+        .order-management {
+            margin-top: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .order-management h2 {
+            margin: 0 0 20px 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 500;
+            color: #666;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f1f3f5;
+            font-size: 14px;
+        }
+
+        .status-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .status-text {
+            font-size: 14px;
+        }
+
+        .status-delivered {
+            color: #28a745;
+        }
+
+        .status-shipped {
+            color: #007bff;
+        }
+
+        .status-processing {
+            color: #9933cc;
+        }
+
+        .status-pending {
+            color: #fd7e14;
+        }
+
+        .status-select {
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            color: #333;
+            background-color: #fff;
+            cursor: pointer;
+        }
+
+        .order-id {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .amount {
+            font-weight: 500;
+        }
+
+        .delete-btn {
+            background-color: #f8d7da;
+            color: #dc3545;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+
+        .delete-btn:hover {
+            background-color: #f5c2c7;
+        }
+
+        .location {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .navbar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                padding: 15px;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 15px;
+            }
+
+            .sidebar ul li a.active {
+                margin: 0;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="sidebar">
+            <h2>Logo</h2>
+            <ul>
+                <li><a href="{{url_for('dashboard_page')}}" class="active">Dashboard</a></li>
+                <li><a href="{{url_for('average_page')}}">Average Data</a></li>
+                <li><a href="{{url_for('prediction_page')}}">Prediction Data</a></li>
+                <li><a href="{{ url_for('new_page') }}">Customer Data</a></li>
+                <li><a href="{{url_for('order_page')}}">Orders</a></li>
+                <li><a href="{{ url_for('index') }}">Products</a></li>
+                <li><a href="#" id="logoutButton">Log Out</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <div class="main-content">
+        <h1>Admin Dashboard</h1>
+        <div class="subtitle">Manage order statuses and track customer orders</div>
+
+        <div class="nav-tabs">
+            <div class="nav-tab">
+                <i class="fas fa-user"></i>
+                Customer Dashboard
+            </div>
+            <div class="nav-tab active">
+                <i class="fas fa-lock"></i>
+                Admin
+            </div>
+        </div>
+
+        <div class="order-management">
+            <h2>Order Management</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>Current Status</th>
+                        <th>Update Status</th>
+                        <th>Delete Order</th>
+                    </tr>
+                </thead>
+                <tbody id="order-table-body">
+                    <!-- Order rows will be injected here -->
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Status update functionality
+            const statusSelects = document.querySelectorAll('.status-select');
+
+            statusSelects.forEach(select => {
+                select.addEventListener('change', function () {
+                    const row = this.closest('tr');
+                    const statusCell = row.querySelector('.status-indicator');
+                    const statusIcon = statusCell.querySelector('.status-icon');
+                    const statusText = statusCell.querySelector('.status-text');
+
+                    // Update status icon and text based on selection
+                    statusIcon.className = 'status-icon';
+                    statusText.className = 'status-text';
+
+                    switch (this.value) {
+                        case 'Delivered':
+                            statusIcon.classList.add('status-delivered');
+                            statusText.classList.add('status-delivered');
+                            statusIcon.innerHTML = '<i class="fas fa-check"></i>';
+                            break;
+                        case 'Shipped':
+                            statusIcon.classList.add('status-shipped');
+                            statusText.classList.add('status-shipped');
+                            statusIcon.innerHTML = '<i class="fas fa-truck"></i>';
+                            break;
+                        case 'Processing':
+                            statusIcon.classList.add('status-processing');
+                            statusText.classList.add('status-processing');
+                            statusIcon.innerHTML = '<i class="fas fa-cog"></i>';
+                            break;
+                        case 'Pending':
+                            statusIcon.classList.add('status-pending');
+                            statusText.classList.add('status-pending');
+                            statusIcon.innerHTML = '<i class="fas fa-clock"></i>';
+                            break;
+                    }
+
+                    statusText.textContent = this.value;
+
+                    // In a real application, you would send this update to the server
+                    console.log(
+                        `Order ${row.querySelector('.order-id').textContent} status updated to ${this.value}`
+                        );
+                });
+            });
+
+            // Delete order functionality
+            const deleteButtons = document.querySelectorAll('.delete-btn');
+
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const row = this.closest('tr');
+                    const orderId = row.querySelector('.order-id').textContent;
+
+                    if (confirm(`Are you sure you want to delete order ${orderId}?`)) {
+                        // In a real application, you would send a delete request to the server
+                        console.log(`Deleting order ${orderId}`);
+                        row.remove();
+                    }
+                });
+            });
+
+            // Tab navigation
+            const navTabs = document.querySelectorAll('.nav-tab');
+
+            navTabs.forEach(tab => {
+                tab.addEventListener('click', function () {
+                    navTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    // In a real application, you would switch views/pages
+                });
+            });
+        });
+    </script>
+
+    <script>
+        // Function to fetch orders and populate table
+        function fetchAndDisplayOrders() {
+            fetch("/api/orders/dashboard")
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById("order-table-body");
+                    tbody.innerHTML = "";
+
+                    data.forEach(order => {
+                        const status = order.status;
+                        const statusLower = status.toLowerCase();
+
+                        const statusIcon = {
+                            delivered: '<i class="fas fa-check"></i>',
+                            shipped: '<i class="fas fa-truck"></i>',
+                            processing: '<i class="fas fa-cog"></i>',
+                            pending: '<i class="fas fa-clock"></i>',
+                        } [statusLower] || '<i class="fas fa-question-circle"></i>';
+
+                        const row = `
+                    <tr>
+                        <td class="order-id">${order.orderReference}</td>
+                        <td>${new Date(order.orderedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</td>
+                        <td>
+                        <div><strong>${order.customerName || "Unknown"}</strong></div>
+                        <div class="location">${order.customerLocation || "N/A"}</div>
+                        </td>
+                        <td class="amount">$${order.totalAmount.toFixed(2)}</td>
+                        <td>
+                            <div class="status-indicator">
+                                <div class="status-icon status-${statusLower}">${statusIcon}</div>
+                                <div class="status-text status-${statusLower}">${status}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <select class="status-select" data-id="${order._id}">
+                                <option ${status === "Delivered" ? "selected" : ""}>Delivered</option>
+                                <option ${status === "Shipped" ? "selected" : ""}>Shipped</option>
+                                <option ${status === "Processing" ? "selected" : ""}>Processing</option>
+                                <option ${status === "Pending" ? "selected" : ""}>Pending</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="delete-btn" data-id="${order._id}" data-ref="${order.orderReference}">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                        tbody.insertAdjacentHTML("beforeend", row);
+                    });
+
+                    // Attach status change events
+                    attachStatusChangeEvents();
+                    // Attach delete button events
+                    attachDeleteEvents();
+                });
+        }
+
+        // Function to handle status updates with toast notifications
+        function attachStatusChangeEvents() {
+            document.querySelectorAll(".status-select").forEach(select => {
+                select.addEventListener("change", function () {
+                    const newStatus = this.value;
+                    const orderId = this.dataset.id;
+
+                    // Show loading toast
+                    Toastify({
+                        text: "Updating status...",
+                        duration: -1, // Until dismissed
+                        close: false,
+                        className: "info-toast",
+                        style: {
+                            background: "#3498db",
+                        }
+                    }).showToast();
+
+                    fetch(`/api/orders/${orderId}`, {
+                            method: "PUT",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                status: newStatus
+                            })
+                        })
+                        .then(res => res.json())
+                        .then(response => {
+                            // Remove all existing toasts
+                            const toasts = document.querySelectorAll('.toastify');
+                            toasts.forEach(toast => toast.remove());
+
+                            if (response.success) {
+                                // Success toast
+                                Toastify({
+                                    text: "✅ Status updated successfully",
+                                    duration: 3000,
+                                    close: true,
+                                    className: "success-toast",
+                                    style: {
+                                        background: "#28a745",
+                                    }
+                                }).showToast();
+
+                                // Refresh the data after short delay
+                                setTimeout(() => {
+                                    fetchAndDisplayOrders();
+                                }, 1000);
+                            } else {
+                                // Error toast
+                                Toastify({
+                                    text: `❌ Failed to update status: ${response.error || 'Unknown error'}`,
+                                    duration: 5000,
+                                    close: true,
+                                    className: "error-toast",
+                                    style: {
+                                        background: "#dc3545",
+                                    }
+                                }).showToast();
+                            }
+                        })
+                        .catch(err => {
+                            // Remove all existing toasts
+                            const toasts = document.querySelectorAll('.toastify');
+                            toasts.forEach(toast => toast.remove());
+
+                            // Server error toast
+                            Toastify({
+                                text: "❌ Server error. Please try again later.",
+                                duration: 5000,
+                                close: true,
+                                className: "error-toast",
+                                style: {
+                                    background: "#dc3545",
+                                }
+                            }).showToast();
+
+                            console.error("Error updating status:", err);
+                        });
+                });
+            });
+        }
+
+        // Function to handle delete button events
+        function attachDeleteEvents() {
+            document.querySelectorAll(".delete-btn").forEach(button => {
+                button.addEventListener("click", function () {
+                    const orderId = this.dataset.id;
+                    const orderRef = this.dataset.ref;
+
+                    // Show confirmation dialog
+                    if (confirm(`Are you sure you want to delete order ${orderRef}?`)) {
+                        // Show loading toast
+                        Toastify({
+                            text: "Deleting order...",
+                            duration: -1, // Until dismissed
+                            close: false,
+                            className: "info-toast",
+                            style: {
+                                background: "#3498db",
+                            }
+                        }).showToast();
+
+                        // Send delete request to API
+                        fetch(`/api/orders/${orderId}`, {
+                                method: "DELETE"
+                            })
+                            .then(res => res.json())
+                            .then(response => {
+                                // Remove all existing toasts
+                                const toasts = document.querySelectorAll('.toastify');
+                                toasts.forEach(toast => toast.remove());
+
+                                if (response.success) {
+                                    // Success toast
+                                    Toastify({
+                                        text: "🗑️ Order deleted successfully",
+                                        duration: 3000,
+                                        close: true,
+                                        className: "success-toast",
+                                        style: {
+                                            background: "#28a745",
+                                        }
+                                    }).showToast();
+
+                                    // Remove the row from the table
+                                    this.closest('tr').remove();
+                                } else {
+                                    // Error toast
+                                    Toastify({
+                                        text: `❌ Failed to delete order: ${response.error || 'Unknown error'}`,
+                                        duration: 5000,
+                                        close: true,
+                                        className: "error-toast",
+                                        style: {
+                                            background: "#dc3545",
+                                        }
+                                    }).showToast();
+                                }
+                            })
+                            .catch(err => {
+                                // Remove all existing toasts
+                                const toasts = document.querySelectorAll('.toastify');
+                                toasts.forEach(toast => toast.remove());
+
+                                // Server error toast
+                                Toastify({
+                                    text: "❌ Server error. Please try again later.",
+                                    duration: 5000,
+                                    close: true,
+                                    className: "error-toast",
+                                    style: {
+                                        background: "#dc3545",
+                                    }
+                                }).showToast();
+
+                                console.error("Error deleting order:", err);
+                            });
+                    }
+                });
+            });
+        }
+
+        // Add Toastify CSS to the page if not already included
+        function addToastifyStyles() {
+            if (!document.getElementById('toastify-css')) {
+                const link = document.createElement('link');
+                link.id = 'toastify-css';
+                link.rel = 'stylesheet';
+                link.href = 'https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.css';
+                document.head.appendChild(link);
+            }
+        }
+
+        // Add Toastify script to the page if not already included
+        function addToastifyScript() {
+            return new Promise((resolve, reject) => {
+                if (window.Toastify) {
+                    resolve();
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        // Initialize everything when the document is loaded
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Add Toastify library
+            addToastifyStyles();
+            await addToastifyScript();
+
+            // Fetch and display orders
+            fetchAndDisplayOrders();
+        });
+    </script>
+
+
+
+</body>
+
+</html>
