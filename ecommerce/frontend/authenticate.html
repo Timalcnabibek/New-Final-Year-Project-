@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Verification</title>
+    <link rel="stylesheet" href="loading.css">
+    <style>
+        /* Google Font */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        /* Reset & Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f0f2f5;
+        }
+
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            width: 350px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-box {
+            margin: 40px 0;
+        }
+
+        input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            text-align: center;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #007bff;
+        }
+
+        .timer {
+            font-size: 16px;
+            color: #d9534f;
+            font-weight: 500;
+            margin-top: 5px;
+        }
+
+        .submit {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+
+        .submit:disabled {
+            background-color: #b0c4de;
+            cursor: not-allowed;
+        }
+
+        .resend {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 15px;
+            display: none;
+            transition: 0.3s;
+        }
+
+        .resend:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Verify Your OTP</h1><br>
+        <p>We have sent a One-Time Password to your phone.</p>
+        <div class="input-box">
+            <input type="text" id="otp" placeholder="Enter OTP" maxlength="6">
+        </div>
+        <div class="timer" id="timer">Time Left: 01:00</div>
+        <button type="submit" class="submit" id="submitBtn" disabled>Submit</button>
+        <button class="resend" id="resendBtn">Resend OTP</button>
+    </div>
+    <div class="load-wrapp">
+        <div class="load-9">
+            <p>Please wait...</p>
+            <div class="spinner">
+                <div class="bubble-1"></div>
+                <div class="bubble-2"></div>
+            </div>
+        </div>
+    </div>
+
+ <script>
+    const loader = document.querySelector('.load-wrapp');
+
+function showLoader() {
+    loader.style.display = 'flex';
+}
+
+function hideLoader() {
+    loader.style.display = 'none';
+}
+
+let timeLeft = 300; // ✅ Set timer to 5 minutes
+let timerInterval; // ✅ Store the interval globally
+const timerDisplay = document.getElementById("timer");
+const submitBtn = document.getElementById("submitBtn");
+const resendBtn = document.getElementById("resendBtn");
+const otpInput = document.getElementById("otp");
+
+// Enable submit button only when OTP is entered
+otpInput.addEventListener("input", () => {
+    submitBtn.disabled = otpInput.value.length !== 6;
+});
+
+function startTimer() {
+    clearInterval(timerInterval); // ✅ Prevent multiple timers from running
+
+    timerInterval = setInterval(() => {
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            timerDisplay.innerText = "Time Expired!";
+            submitBtn.disabled = true;
+            resendBtn.style.display = "block";
+        } else {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+            timerDisplay.innerText = `Time Left: ${minutes}:${seconds}`;
+            timeLeft--;
+        }
+    }, 1000);
+}
+
+// Start timer on page load
+startTimer();
+
+resendBtn.addEventListener("click", async function () {
+    showLoader(); // Show loader when resending OTP
+
+    try {
+        const email = localStorage.getItem("userEmail");
+        if (!email) {
+            alert("Email is missing. Please try again.");
+            return;
+        }
+
+        const response = await fetch("http://localhost:3000/api/resend_otp", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email }),
+        });
+
+        if (response.ok) {
+            console.log("OTP resent successfully to:", email);
+
+            timeLeft = 300; // ✅ Reset timer to 5 minutes
+            submitBtn.disabled = false;
+            resendBtn.style.display = "none";
+            timerDisplay.innerText = "Time Left: 05:00"; // ✅ Update UI
+            startTimer(); // ✅ Restart the timer
+        } else {
+            alert("Failed to resend OTP. Please try again.");
+        }
+    } catch (error) {
+        console.error("Error resending OTP:", error);
+        alert("Something went wrong. Please try again.");
+    } finally {
+        hideLoader(); // Hide loader after resend attempt
+    }
+});
+
+// Function to verify OTP
+async function verifyOTP() {
+    const otpValue = otpInput.value.trim();
+    
+    // ✅ Fix: Retrieve the correct email from LocalStorage
+    const user = JSON.parse(localStorage.getItem("user")); // Retrieve stored user object
+    const email = user ? user.email : null; // Get email if user exists
+
+    console.log("📌 Email retrieved for OTP verification:", email); // Debugging log
+
+    if (!email) {
+        alert("Email not found. Please sign up again.");
+        return;
+    }
+
+    if (otpValue.length !== 6) {
+        alert("Please enter a valid 6-digit OTP.");
+        return;
+    }
+
+    showLoader(); // Show loader before verification starts
+
+    try {
+        const response = await fetch("http://localhost:3000/api/verify-otp", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email, otp: otpValue }), // ✅ Send email + OTP
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert("OTP verified successfully!");
+            // localStorage.removeItem("user"); // ✅ Clear email after verification
+            window.location.href = "./dashboard.html"; // Redirect to dashboard
+        } else {
+            alert(`Error: ${data.message}`);
+        }
+    } catch (error) {
+        console.error("Error verifying OTP:", error);
+        alert("Something went wrong. Please try again.");
+    } finally {
+        hideLoader(); // Hide loader after verification
+    }
+}
+
+
+submitBtn.addEventListener("click", verifyOTP);
+
+ </script>
+    
+
+</body>
+
+</html>

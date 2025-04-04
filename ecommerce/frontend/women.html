@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StyleHub - Women's Collection</title>
+    <link rel="stylesheet" href="./css/mens.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="logo">
+            <a href="#" class="logo-text">StyleHub</a>
+        </div>
+        <div class="nav-links">
+            <a href="dashboard.html">Home</a>
+            <a href="viewall.html">Shop</a>
+            <a href="mens.html" >Men</a>
+            <a href="women.html" class="active">Women</a>
+            <!-- <a href="#">New Arrivals</a> -->
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="Search for products...">
+            <button type="submit"><i class="fas fa-search"></i></button>
+        </div>
+        <div class="nav-icons">
+            <a href="#" class="cart-icon"><i class="fas fa-shopping-cart"></i><span class="cart-count">2</span></a>
+            <a href="#"><i class="fas fa-heart"></i></a>
+            <a href="#"><i class="fas fa-user"></i></a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Women's Collection</h1>
+            <p>Discover our premium selection of Womens's clothing and accessories</p>
+            <div class="hero-buttons">
+                <a href="#" class="btn primary-btn">Shop New Arrivals</a>
+                <!-- <a href="#" class="btn secondary-btn">View Collections</a> -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="feature-card">
+            <i class="fas fa-shipping-fast"></i>
+            <h3>Free Shipping</h3>
+            <p>On orders over $100</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-undo"></i>
+            <h3>Easy Returns</h3>
+            <p>30 day money back</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-lock"></i>
+            <h3>Secure Checkout</h3>
+            <p>100% protected</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-headset"></i>
+            <h3>Support 24/7</h3>
+            <p>Ready to help</p>
+        </div>
+    </section>
+
+    <!-- Category Filter -->
+    <!-- <section class="category-filter">
+        <button class="filter-btn active" data-category="all">All (12)</button>
+        <button class="filter-btn" data-category="tshirts">T-Shirts (1)</button>
+        <button class="filter-btn" data-category="shirts">Shirts (1)</button>
+        <button class="filter-btn" data-category="jeans">Jeans (1)</button>
+        <button class="filter-btn" data-category="jackets">Jackets (1)</button>
+        <button class="filter-btn" data-category="accessories">Accessories (4)</button>
+        <button class="filter-btn" data-category="shoes">Shoes (1)</button>
+    </section> -->
+ 
+    <h1 style="text-align: center;">Our Products</h1>
+    <br><br>
+
+    <!-- Products Section -->
+    <section class="products">
+        <div class="product-card" data-category="jackets">
+            <div class="product-image">
+                <img src="https://via.placeholder.com/300x300" alt="Leather Bomber Jacket">
+                <div class="product-actions">
+                    <button class="action-btn"><i class="fas fa-heart"></i></button>
+                    <button class="action-btn"><i class="fas fa-shopping-cart"></i></button>
+                    <button class="action-btn"><i class="fas fa-eye"></i></button>
+                </div>
+            </div>
+            <div class="product-info">
+                <h3>Leather Bomber Jacket</h3>
+                <p class="product-category">Jackets</p>
+                <p class="product-price">$129.99</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Section -->
+    <section class="newsletter">
+        <div class="newsletter-content">
+            <h2>Join Our Newsletter</h2>
+            <p>Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.</p>
+            <form class="newsletter-form">
+                <input type="email" placeholder="Your email address">
+                <button type="submit" class="btn primary-btn">Subscribe</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-column">
+                <h3>StyleHub</h3>
+                <p>Your destination for premium fashion and accessories.</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-pinterest"></i></a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h3>Shop</h3>
+                <a href="#">Men's Collection</a>
+                <a href="#">Women's Collection</a>
+                <a href="#">Accessories</a>
+                <a href="#">New Arrivals</a>
+                <a href="#">Sale</a>
+            </div>
+            <div class="footer-column">
+                <h3>Customer Service</h3>
+                <a href="#">Contact Us</a>
+                <a href="#">Shipping & Returns</a>
+                <a href="#">FAQ</a>
+                <a href="#">Size Guide</a>
+                <a href="#">Terms & Conditions</a>
+            </div>
+            <div class="footer-column">
+                <h3>Contact</h3>
+                <p><i class="fas fa-map-marker-alt"></i> 123 Fashion Street, NY 10001</p>
+                <p><i class="fas fa-phone"></i> +1 (123) 456-7890</p>
+                <p><i class="fas fa-envelope"></i> info@stylehub.com</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 StyleHub. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script src="womens.js"></script>
+</body>
+</html>

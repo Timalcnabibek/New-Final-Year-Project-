@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup Page</title>
+    <link rel="stylesheet" href="./css/signup.css">
+    <link rel="stylesheet" href="./css/loading.css">
+    <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-minimal/minimal.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="navbar">
+        <div class="logo">Logo</div>
+        <div class="menu">
+            <a href="#">Home</a>
+            <a href="#">Products</a>
+            <a href="#">Men</a>
+            <a href="#">Ladies</a>
+        </div>
+        <div class="search">
+            <input type="text" placeholder="Search Bar">
+        </div>
+        <div class="settings">
+            <a href="#">🛒</a>
+            <a href="#">🔄</a>
+            <a href="#">⚙️</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Create a New Account</h2>
+        <form id="signupForm">
+            <div class="form-group">
+                <label for="username">Full Name</label>
+                <input type="text" id="username" name="username" placeholder="Enter your name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirm-password">Confirm Password</label>
+                <input type="password" id="confirm-password" name="confirm-password" placeholder="Confirm your password"
+                    required>
+            </div>
+            <div class="form-footer">
+                <div class="already">
+                    <p>Already have an account? <a href="./login.html">Login here...</a></p>
+                </div>
+                <div>
+                    <button type="submit">Next</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="load-wrapp">
+            <div class="load-9">
+                <p>Please wait...</p>
+                <div class="spinner">
+                    <div class="bubble-1"></div>
+                    <div class="bubble-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const loader = document.querySelector('.load-wrapp');
+        
+        function showLoader() {
+            loader.style.display = 'flex';
+        }
+        
+        function hideLoader() {
+            loader.style.display = 'none';
+        }
+        
+        const signupForm = document.getElementById('signupForm');
+        
+        signupForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            showLoader();
+        
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+        
+            if (password !== confirmPassword) {
+                hideLoader();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Passwords do not match!',
+                });
+                return;
+            }
+        
+            const userData = { username, email, phone, password };
+        
+            try {
+                const response = await fetch('http://localhost:3000/api/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+        
+                const data = await response.json();
+        
+                if (response.ok) {
+                    hideLoader();
+        
+                    // ✅ Remove existing user data
+                    localStorage.clear();
+        
+                    // ✅ Store new user data
+                    localStorage.setItem("user", JSON.stringify({
+                        userId: data.userId,
+                        username: data.username,
+                        email: data.email,
+                        token: data.token // ⬅️ added token
+                    }));
+                    localStorage.setItem("customerId", data.userId);
+                    localStorage.setItem("userEmail", data.email);
+                    localStorage.setItem("username", data.username);
+                    localStorage.setItem("token", data.token);
+        
+                    console.log("✅ User stored:", localStorage.getItem("user"));
+        
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Signup successful!',
+                        timer: 1000,
+                        showConfirmButton: true
+                    });
+        
+                    // ✅ Redirect to OTP verification page
+                    window.location.href = './authenticate.html';
+                    signupForm.reset();
+                } else {
+                    hideLoader();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Signup Failed',
+                        text: data.message || 'An error occurred during signup',
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                hideLoader();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Connection Error',
+                    text: 'There was a problem connecting to the server. Please try again.',
+                });
+            }
+        });
+        </script>
+        
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+</body>
+
+</html>

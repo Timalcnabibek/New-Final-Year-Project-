@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoyaltyOasis - Customer Loyalty Program</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+
+    <link rel="stylesheet" href="./css/loyalty.css">
+</head>
+<body>
+   <!-- Navbar -->
+<div class="navbar">
+    <div class="logo">StyleHub</div>
+    <div class="menu">
+        <a href="dashboard.html">Home</a>
+        <a href="viewall.html">Shop</a>
+        <a href="mens.html">Men</a>
+        <a href="women.html">Women</a>
+        <!-- <a href="">New Arrivals</a> -->
+    </div>
+    <div class="search">
+        <input type="text" placeholder="Search for products...">
+    </div>
+    <div class="settings">
+        <a href="cart.html" class="cart-icon">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="cart-count">3</span>
+        </a>
+        <a href="#"><i class="fas fa-heart"></i></a>
+        
+        <!-- Profile Icon with Dropdown -->
+        <div class="profile-dropdown">
+            <a href="#" class="profile-icon" onclick="toggleDropdown(event)">
+                <i class="fas fa-user"></i>
+            </a>
+            <div class="dropdown-menu" id="profileDropdown">
+                <a href="profile.html">My Profile</a>
+                <a href="orders.html">My Orders</a>
+                <a href="loyalty.html">🎉 Loyalty Program</a>  <!-- New Option -->
+                <a href="settings.html">Settings</a>
+                <a href="#" onclick="logout()">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="hero-content">
+            <h3>Exclusive Member Benefits</h3>
+            <h1>Customer<br>Loyalty Program</h1>
+            <p>Earn points with every purchase and redeem them for exclusive rewards and experiences.</p>
+            <button class="dashboard-button">View Your Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <div class="nav-menu">
+        <div class="brand">
+            <div class="brand-name">Loyalty<span>Oasis</span></div>
+        </div>
+        <div class="nav-links">
+            <a href="#" class="nav-link active">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </a>
+            <a href="#" class="nav-link">
+                <i class="fas fa-gift"></i> Rewards
+            </a>
+            <a href="#" class="nav-link">
+                <i class="fas fa-history"></i> Purchase History
+            </a>
+        </div>
+        <div class="points-display">
+            <div class="points-count">1,250 points</div>
+            <div class="tier-badge">Silver</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Dashboard Section -->
+        <h1 class="section-title">Your Loyalty Dashboard</h1>
+        <p class="section-subtitle">Track your loyalty points, tier status, and unlock exclusive rewards as you shop with us.</p>
+
+        <div class="dashboard-cards">
+            <!-- Current Tier Card -->
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-medal"></i>
+                </div>
+                <div class="card-label">Current Tier</div>
+                <div class="card-value">Silver Member</div>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: 25%;"></div>
+                </div>
+                <div class="card-footer">
+                    Earn 750 more points to reach the next tier!
+                </div>
+            </div>
+
+            <!-- Available Points Card -->
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-gift"></i>
+                </div>
+                <div class="card-label">Available Points</div>
+                <div class="card-value">1,250</div>
+                <div class="card-footer">
+                    You've earned 1,250 points through your purchases. Redeem them for exclusive rewards!
+                </div>
+            </div>
+
+            <!-- Simulate Purchase -->
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="card-label">Simulate Purchase</div>
+                <div class="card-value">Earn Points</div>
+                <div class="card-footer">
+                    Earn 1 point for every 100 Rupees spent. Add a purchase to see your points grow!
+                </div>
+                <button class="simulate-button">Simulate Purchase</button>
+            </div>
+        </div>
+
+        <!-- Rewards Store Section -->
+        <div class="rewards-store">
+            <h2 class="section-title">Rewards Store</h2>
+            <p class="section-subtitle">Redeem your hard-earned points for exclusive rewards and experiences.</p>
+
+            <!-- Search Bar -->
+            <div class="search-bar">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Search rewards...">
+            </div>
+
+            <!-- Categories -->
+            <div class="categories">
+                <div class="category active">All Categories</div>
+                <div class="category">Discount</div>
+                <div class="category">Gift</div>
+                <div class="category">Exclusive</div>
+                <div class="category">Experience</div>
+            </div>
+
+            <!-- Reward Cards -->
+            <div class="reward-cards">
+                <!-- $5 Store Credit -->
+                <div class="reward-card">
+                    <div class="reward-image">
+                        <div class="points-badge">500 points</div>
+                    </div>
+                    <div class="reward-details">
+                        <h3 class="reward-title">$5 Store Credit</h3>
+                        <p class="reward-description">Get $5 credit on your next purchase</p>
+                        <button class="redeem-button">
+                            <i class="fas fa-gift"></i> Redeem Reward
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Free Shipping -->
+                <div class="reward-card">
+                    <div class="reward-image">
+                        <div class="points-badge">300 points</div>
+                    </div>
+                    <div class="reward-details">
+                        <h3 class="reward-title">Free Shipping</h3>
+                        <p class="reward-description">Free shipping on your next order</p>
+                        <button class="redeem-button">
+                            <i class="fas fa-gift"></i> Redeem Reward
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Limited Edition Product -->
+                <div class="reward-card">
+                    <div class="reward-image">
+                        <div class="points-badge">1,500 points</div>
+                    </div>
+                    <div class="reward-details">
+                        <h3 class="reward-title">Limited Edition Product</h3>
+                        <p class="reward-description">Exclusive access to limited edition items</p>
+                        <button class="redeem-button disabled">
+                            <i class="fas fa-gift"></i> Not Enough Points
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 10% Discount -->
+                <div class="reward-card">
+                    <div class="reward-image">
+                        <div class="points-badge">700 points</div>
+                    </div>
+                    <div class="reward-details">
+                        <h3 class="reward-title">10% Discount</h3>
+                        <p class="reward-description">Get 10% off on your next purchase</p>
+                        <button class="redeem-button">
+                            <i class="fas fa-gift"></i> Redeem Reward
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Gift Card -->
+                <div class="reward-card">
+                    <div class="reward-image">
+                        <div class="points-badge">2,000 points</div>
+                    </div>
+                    <div class="reward-details">
+                        <h3 class="reward-title">Gift Card</h3>
+                        <p class="reward-description">$20 gift card for any purchase</p>
+                        <button class="redeem-button disabled">
+                            <i class="fas fa-gift"></i> Not Enough Points
+                        </button>
+                    </div>
+                </div>
+
+                <!-- VIP Experience -->
+                <div class="reward-card">
+                    <div class="reward-image">
+                        <div class="points-badge">5,000 points</div>
+                    </div>
+                    <div class="reward-details">
+                        <h3 class="reward-title">VIP Experience</h3>
+                        <p class="reward-description">Exclusive VIP shopping experience</p>
+                        <button class="redeem-button disabled">
+                            <i class="fas fa-gift"></i> Not Enough Points
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="transaction-history">
+            <h2 class="section-title">Transaction History</h2>
+            <p class="section-subtitle">View your purchase history and redeemed rewards.</p>
+
+            <!-- Tabs -->
+            <div class="tab-buttons">
+                <button class="tab-button active">Purchases</button>
+                <button class="tab-button">Redeemed Rewards</button>
+            </div>
+
+            <!-- Transaction List -->
+            <div class="transaction-list">
+                <div class="transaction-item">
+                    <div class="transaction-icon">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="transaction-title">Order #ORD-12345</div>
+                        <div class="transaction-date">Nov 15, 2023</div>
+                    </div>
+                    <div class="transaction-amount">
+                        <div>$120.50</div>
+                        <div class="transaction-points">+12 points</div>
+                    </div>
+                </div>
+                <div class="transaction-item">
+                    <div class="transaction-icon">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="transaction-title">Order #ORD-12346</div>
+                        <div class="transaction-date">Nov 05, 2023</div>
+                    </div>
+                    <div class="transaction-amount">
+                        <div>$78.25</div>
+                        <div class="transaction-points">+8 points</div>
+                    </div>
+                </div>
+                <div class="transaction-item">
+                    <div class="transaction-icon">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="transaction-title">Order #ORD-12347</div>
+                        <div class="transaction-date">Oct 28, 2023</div>
+                    </div>
+                    <div class="transaction-amount">
+                        <div>$245.75</div>
+                        <div class="transaction-points">+25 points</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+       document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching functionality
+    const tabs = document.querySelectorAll('.tab-button');
+    const transactionList = document.querySelector('.transaction-list');
+    
+    // Sample data for transactions
+    const purchaseData = [
+        { id: 'ORD-12345', date: 'Nov 15, 2023', amount: '$120.50', points: '+12 points' },
+        { id: 'ORD-12346', date: 'Nov 05, 2023', amount: '$78.25', points: '+8 points' },
+        { id: 'ORD-12347', date: 'Oct 28, 2023', amount: '$245.75', points: '+25 points' }
+    ];
+    
+    const rewardsData = [
+        { id: 'RWD-5678', date: 'Nov 10, 2023', reward: '$5 Store Credit', points: '-500 points' },
+        { id: 'RWD-5679', date: 'Oct 22, 2023', reward: 'Free Shipping', points: '-300 points' }
+    ];
+    
+    tabs.forEach((tab, index) => {
+        tab.addEventListener('click', function() {
+            tabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Display corresponding data
+            if (index === 0) {
+                displayPurchases();
+            } else {
+                displayRewards();
+            }
+        });
+    });
+    
+    function displayPurchases() {
+        transactionList.innerHTML = '';
+        purchaseData.forEach(item => {
+            transactionList.innerHTML += `
+                <div class="transaction-item">
+                    <div class="transaction-icon">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="transaction-title">Order #${item.id}</div>
+                        <div class="transaction-date">${item.date}</div>
+                    </div>
+                    <div class="transaction-amount">
+                        <div>${item.amount}</div>
+                        <div class="transaction-points">${item.points}</div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    function displayRewards() {
+        transactionList.innerHTML = '';
+        rewardsData.forEach(item => {
+            transactionList.innerHTML += `
+                <div class="transaction-item">
+                    <div class="transaction-icon">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="transaction-title">Reward #${item.id}</div>
+                        <div class="transaction-date">${item.date}</div>
+                    </div>
+                    <div class="transaction-amount">
+                        <div>${item.reward}</div>
+                        <div class="transaction-points" style="color: #e53e3e;">${item.points}</div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    // Simulate purchase functionality
+    const simulateButton = document.querySelector('.simulate-button');
+    let currentPoints = 1250;
+    const pointsDisplay = document.querySelector('.points-count');
+    const progressBar = document.querySelector('.progress-bar');
+    
+    if (simulateButton) {
+        simulateButton.addEventListener('click', function() {
+            // Generate random purchase amount
+            const purchaseAmount = Math.floor(Math.random() * 300) + 50;
+            const pointsEarned = Math.floor(purchaseAmount / 10);
+            
+            // Update points
+            currentPoints += pointsEarned;
+            pointsDisplay.textContent = currentPoints.toLocaleString() + ' points';
+            
+            // Update progress bar
+            const progress = Math.min((currentPoints / 2000) * 100, 100);
+            progressBar.style.width = progress + '%';
+            
+            // Update message
+            const cardFooter = document.querySelector('.dashboard-card:first-child .card-footer');
+            const pointsToNextTier = 2000 - currentPoints;
+            
+            if (pointsToNextTier > 0) {
+                cardFooter.textContent = `Earn ${pointsToNextTier} more points to reach the next tier!`;
+            } else {
+                cardFooter.textContent = "Congratulations! You've reached Gold tier!";
+                document.querySelector('.tier-badge').textContent = 'Gold';
+                document.querySelector('.tier-badge').style.background = '#fbbf24';
+                document.querySelector('.tier-badge').style.color = '#92400e';
+                document.querySelector('.card-value').textContent = 'Gold Member';
+            }
+            
+            // Add to transaction history
+            const today = new Date();
+            const formattedDate = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const newOrderId = 'ORD-' + (12347 + purchaseData.length + 1);
+            
+            purchaseData.unshift({
+                id: newOrderId,
+                date: formattedDate,
+                amount: '$' + purchaseAmount.toFixed(2),
+                points: '+' + pointsEarned + ' points'
+            });
+            
+            if (tabs[0].classList.contains('active')) {
+                displayPurchases();
+            }
+            
+            // Show confirmation
+            showToast(`Purchase simulated! You've earned ${pointsEarned} points.`);
+        });
+    }
+    
+    // Category selection
+    const categories = document.querySelectorAll('.category');
+    const rewardCards = document.querySelectorAll('.reward-card');
+    
+    categories.forEach(category => {
+        category.addEventListener('click', function() {
+            categories.forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            
+            const categoryName = this.textContent.trim();
+            
+            if (categoryName === 'All Categories') {
+                rewardCards.forEach(card => {
+                    card.style.display = 'block';
+                });
+            } else {
+                rewardCards.forEach((card, index) => {
+                    // This is a simplified filter - in a real app, you'd have category data
+                    // For demo purposes, we'll just filter based on patterns
+                    const cardTitle = card.querySelector('.reward-title').textContent;
+                    const shouldShow = 
+                        (categoryName === 'Discount' && (cardTitle.includes('Discount') || cardTitle.includes('Credit'))) ||
+                        (categoryName === 'Gift' && (cardTitle.includes('Gift'))) ||
+                        (categoryName === 'Exclusive' && (cardTitle.includes('Limited'))) ||
+                        (categoryName === 'Experience' && (cardTitle.includes('VIP') || cardTitle.includes('Experience')));
+                    
+                    card.style.display = shouldShow || categoryName === 'All Categories' ? 'block' : 'none';
+                });
+            }
+        });
+    });
+    
+    // Search functionality
+    const searchInput = document.querySelector('.search-input');
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        rewardCards.forEach(card => {
+            const title = card.querySelector('.reward-title').textContent.toLowerCase();
+            const description = card.querySelector('.reward-description').textContent.toLowerCase();
+            
+            if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+    
+    // Redeem reward functionality
+    const redeemButtons = document.querySelectorAll('.redeem-button:not(.disabled)');
+    
+    redeemButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const rewardCard = this.closest('.reward-card');
+            const rewardTitle = rewardCard.querySelector('.reward-title').textContent;
+            const pointsRequired = rewardCard.querySelector('.points-badge').textContent.split(' ')[0];
+            const pointsValue = parseInt(pointsRequired);
+            
+            if (currentPoints >= pointsValue) {
+                currentPoints -= pointsValue;
+                pointsDisplay.textContent = currentPoints.toLocaleString() + ' points';
+                
+                // Add to redeemed rewards
+                const today = new Date();
+                const formattedDate = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const newRewardId = 'RWD-' + (5679 + rewardsData.length + 1);
+                
+                rewardsData.unshift({
+                    id: newRewardId,
+                    date: formattedDate,
+                    reward: rewardTitle,
+                    points: '-' + pointsRequired + ' points'
+                });
+                
+                if (tabs[1].classList.contains('active')) {
+                    displayRewards();
+                }
+                
+                showToast(`Reward redeemed! ${pointsRequired} points have been deducted.`);
+                
+                // Update progress bar
+                const progress = Math.min((currentPoints / 2000) * 100, 100);
+                progressBar.style.width = progress + '%';
+                
+                // Update message for next tier
+                const cardFooter = document.querySelector('.dashboard-card:first-child .card-footer');
+                const pointsToNextTier = 2000 - currentPoints;
+                
+                if (currentPoints < 2000) {
+                    cardFooter.textContent = `Earn ${pointsToNextTier} more points to reach the next tier!`;
+                    
+                    // If user was gold and fell below, update back to silver
+                    if (document.querySelector('.tier-badge').textContent === 'Gold') {
+                        document.querySelector('.tier-badge').textContent = 'Silver';
+                        document.querySelector('.tier-badge').style.background = '';
+                        document.querySelector('.tier-badge').style.color = '';
+                        document.querySelector('.card-value').textContent = 'Silver Member';
+                    }
+                }
+            } else {
+                showToast('Not enough points to redeem this reward.');
+            }
+        });
+    });
+    
+    // Toast notification function
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.textContent = message;
+        
+        // Create and append toast if it doesn't exist in the document
+        if (!document.querySelector('.toast-notification')) {
+            document.body.appendChild(toast);
+            
+            // Add inline styles for the toast
+            toast.style.position = 'fixed';
+            toast.style.bottom = '20px';
+            toast.style.left = '50%';
+            toast.style.transform = 'translateX(-50%)';
+            toast.style.backgroundColor = '#3b82f6';
+            toast.style.color = 'white';
+            toast.style.padding = '12px 24px';
+            toast.style.borderRadius = '8px';
+            toast.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+            toast.style.zIndex = '1000';
+            toast.style.transition = 'all 0.3s ease';
+            
+            // Animate the toast
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+        }
+    }
+    
+    // Navigation links
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('.container > div');
+    
+    navLinks.forEach((link, index) => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            navLinks.forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Simple navigation - in a real app would use proper routing
+            if (index === 0) { // Dashboard
+                sections[0].style.display = 'block'; // Dashboard cards
+                sections[1].style.display = 'none'; // Rewards store
+                sections[2].style.display = 'none'; // Transaction history
+            } else if (index === 1) { // Rewards
+                sections[0].style.display = 'none';
+                sections[1].style.display = 'block';
+                sections[2].style.display = 'none';
+            } else if (index === 2) { // Purchase History
+                sections[0].style.display = 'none';
+                sections[1].style.display = 'none';
+                sections[2].style.display = 'block';
+            }
+        });
+    });
+    
+    // Initialize the display
+    displayPurchases();
+});
+    </script>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const customerId = localStorage.getItem("customerId");
+      const customerEndpoint = `http://localhost:3000/api/getcustomer/${customerId}`;
+      const orderEndpoint = `http://localhost:3000/api/trackorder/${customerId}`;
+    
+      try {
+        // Fetch customer info
+        const res = await fetch(customerEndpoint);
+        if (!res.ok) throw new Error("Failed to fetch customer");
+        const customer = await res.json();
+    
+        // Update Points Display in Nav Menu
+        document.querySelector(".points-count").textContent = `${customer.loyaltyPoints.toLocaleString()} points`;
+    
+        // Loyalty Tier
+        const tier = getLoyaltyTier(customer.loyaltyPoints);
+        document.querySelector(".tier-badge").textContent = tier.label;
+        document.querySelector(".card-value").textContent = tier.fullTitle;
+        document.querySelector(".progress-bar").style.width = `${tier.progress}%`;
+        document.querySelector(".card-footer").textContent = tier.message;
+    
+        // Available Points Card
+        document.querySelectorAll(".dashboard-card")[1].querySelector(".card-value").textContent = customer.loyaltyPoints.toLocaleString();
+        document.querySelectorAll(".dashboard-card")[1].querySelector(".card-footer").textContent =
+          `You've earned ${customer.loyaltyPoints.toLocaleString()} points through your purchases. Redeem them for exclusive rewards!`;
+    
+        // Handle tab switching
+        setupTransactionTabs();
+    
+        // Render purchases by default
+        renderOrders(orderEndpoint);
+    
+        // Store customer rewards in global (for reuse)
+        window.redeemedRewardsData = customer.redeemedRewards || [];
+    
+      } catch (err) {
+        console.error("❌ Error fetching customer data:", err);
+      }
+    });
+    
+    // Helper: Loyalty Tier Mapping
+    function getLoyaltyTier(points) {
+      if (points >= 2000) return {
+        label: "Platinum",
+        fullTitle: "Platinum Member",
+        progress: 100,
+        message: "You're at the highest tier!"
+      };
+      if (points >= 1500) return {
+        label: "Gold",
+        fullTitle: "Gold Member",
+        progress: 75,
+        message: `Earn ${2000 - points} more points to reach Platinum!`
+      };
+      if (points >= 500) return {
+        label: "Silver",
+        fullTitle: "Silver Member",
+        progress: 50,
+        message: `Earn ${1500 - points} more points to reach Gold!`
+      };
+      return {
+        label: "Bronze",
+        fullTitle: "Bronze Member",
+        progress: 25,
+        message: `Earn ${500 - points} more points to reach Silver!`
+      };
+    }
+    
+    // 🛒 Render purchase history orders
+    async function renderOrders(apiUrl) {
+      const listContainer = document.querySelector(".transaction-list");
+      listContainer.innerHTML = "";
+    
+      try {
+        const res = await fetch(apiUrl);
+        const orders = await res.json();
+    
+        if (!Array.isArray(orders)) throw new Error("Invalid order data");
+    
+        orders.forEach(order => {
+          const item = document.createElement("div");
+          item.className = "transaction-item";
+    
+          const date = new Date(order.orderedAt).toLocaleDateString("en-US", {
+            year: "numeric", month: "short", day: "numeric"
+          });
+    
+          item.innerHTML = `
+            <div class="transaction-icon">
+                <i class="fas fa-shopping-bag"></i>
+            </div>
+            <div class="transaction-details">
+                <div class="transaction-title">Order #${order.orderReference}</div>
+                <div class="transaction-date">${date}</div>
+            </div>
+            <div class="transaction-amount">
+                <div>Rs. ${order.totalAmount.toFixed(2)}</div>
+                <div class="transaction-points">+${order.pointsEarned || 0} points</div>
+            </div>
+          `;
+          listContainer.appendChild(item);
+        });
+      } catch (err) {
+        console.error("❌ Error fetching orders:", err);
+        listContainer.innerHTML = `<p style="color:red">Failed to load orders</p>`;
+      }
+    }
+    
+    // 🎁 Render redeemed rewards
+    function renderRedeemedRewards(rewards = []) {
+      const listContainer = document.querySelector(".transaction-list");
+      listContainer.innerHTML = "";
+    
+      if (!rewards.length) {
+        listContainer.innerHTML = "<p>No redeemed rewards found.</p>";
+        return;
+      }
+    
+      rewards.forEach(reward => {
+        const item = document.createElement("div");
+        item.className = "transaction-item";
+    
+        const date = new Date(reward.redeemedAt).toLocaleDateString("en-US", {
+          year: "numeric", month: "short", day: "numeric"
+        });
+    
+        item.innerHTML = `
+          <div class="transaction-icon">
+              <i class="fas fa-gift"></i>
+          </div>
+          <div class="transaction-details">
+              <div class="transaction-title">${reward.rewardName}</div>
+              <div class="transaction-date">${date}</div>
+          </div>
+          <div class="transaction-amount">
+              <div>${reward.pointsUsed} pts</div>
+          </div>
+        `;
+        listContainer.appendChild(item);
+      });
+    }
+    
+    // 🔀 Switch tabs between Purchases and Redeemed Rewards
+    function setupTransactionTabs() {
+      const tabButtons = document.querySelectorAll(".tab-button");
+    
+      tabButtons.forEach((button, index) => {
+        button.addEventListener("click", () => {
+          // Update tab active class
+          tabButtons.forEach(btn => btn.classList.remove("active"));
+          button.classList.add("active");
+    
+          // Toggle content
+          if (index === 0) {
+            // Purchases
+            const customerId = localStorage.getItem("customerId");
+            renderOrders(`http://localhost:3000/api/trackorder/${customerId}`);
+          } else {
+            // Redeemed rewards
+            renderRedeemedRewards(window.redeemedRewardsData);
+          }
+        });
+      });
+    }
+    </script>
+    
+
+    </script>
+    <script src="profile.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</body>
+</html>

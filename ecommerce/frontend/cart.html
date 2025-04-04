@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping Cart</title>
+  <link rel="stylesheet" href="./css/cart.css">
+</head>
+<body>
+  <a href="dashboard.html" class="back-link">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+      <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
+    </svg>
+    Continue shopping
+  </a>
+  
+  <h1>Shopping Cart</h1>
+  
+  <div class="cart-container">
+    <div class="cart-items">
+      <table>
+        <thead>
+          <tr>
+            <th colspan="2">Product Details</th>
+            <th>Price</th>
+          </tr>
+        </thead>
+        <tbody id="cart-table-body">
+          <tr><td colspan="3">🛒 Loading cart...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="order-summary">
+      <div class="summary-card">
+        <div class="summary-title">Order Summary</div>
+        <div class="summary-row"><div>Subtotal</div><div id="subtotal">Rs0.00</div></div>
+        <div class="summary-row"><div>Shipping</div><div id="shipping">Free</div></div>
+        <div class="summary-row">
+          <div>Discount</div>
+          <div id="discount">- Rs0.00</div>
+        </div>        
+        <div class="summary-row"><div>Tax</div><div id="tax">Rs0.00</div></div>
+        <div class="summary-row"><div>Total</div><div id="total">Rs0.00</div></div>
+       
+        
+        
+        <a href="payment.html"><button class="checkout-btn">Proceed to Checkout</button></a>
+        
+        <div class="secure-checkout">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+          </svg>
+          Secure checkout
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="cart.js"></script>
+</body>
+</html>

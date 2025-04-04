@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Page</title>
+    <link rel="stylesheet" href="./css/product_description.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+</head>
+<body>
+<!-- Navbar -->
+<div class="navbar">
+    <a href="dashboard.html"><div class="logo">StyleHub</div></a>
+    <div class="menu">
+        <a href="dashboard.html">Home</a>
+        <a href="viewall.html">Shop</a>
+        <a href="mens.html">Men</a>
+        <a href="women.html">Women</a>
+    </div>
+    <div class="search">
+        <input type="text" placeholder="Search for products...">
+    </div>
+    <div class="settings">
+        <a href="cart.html" class="cart-icon">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="cart-count" id="cartCount">0</span>
+        </a>
+        <a href="#"><i class="fas fa-heart"></i></a>
+        
+        <!-- Profile Icon with Dropdown -->
+        <div class="profile-dropdown">
+            <a href="#" class="profile-icon" onclick="toggleDropdown(event)">
+                <i class="fas fa-user"></i>
+            </a>
+            <div class="dropdown-menu" id="profileDropdown">
+                <a href="profile.html">My Profile</a>
+                <a href="orders.html">My Orders</a>
+                <a href="loyalty.html">🎉 Loyalty Program</a>  <!-- New Option -->
+                <a href="settings.html">Settings</a>
+                <a href="#" onclick="logout()">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="container">
+
+
+        <div class="product-display">
+            <div class="product-gallery">
+                <div class="main-image" id="main-image"></div>
+                <div class="image-thumbs">
+                    <div class="arrow arrow-prev">❮</div>
+                    <div class="thumb active" data-img="1"></div>
+                    <div class="thumb" data-img="2"></div>
+                    <div class="thumb" data-img="3"></div>
+                    <div class="thumb" data-img="4"></div>
+                    <div class="arrow arrow-next">❯</div>
+                </div>
+            </div>
+
+            <div class="product-info">
+                <h1 class="product-title">Dress Description</h1>
+                <div class="product-details">
+                    <div class="price-section">
+                        <div class="product-price">Price: $<span id="product-price">99.99</span></div>
+                    </div>
+                    <div class="size-options">
+                        <label class="size-option">
+                            <input type="radio" name="size" value="Small"> size Small
+                        </label>
+                        <label class="size-option">
+                            <input type="radio" name="size" value="Medium"> size Medium
+                        </label>
+                        <label class="size-option">
+                            <input type="radio" name="size" value="Large"> size Large
+                        </label>
+                        <label class="size-option">
+                            <input type="radio" name="size" value="Extra Large"> size Extra large
+                        </label>
+                    </div>
+                </div>
+                <div class="quantity-control">
+                    <button class="quantity-btn" id="decrease-qty">-</button>
+                    <input type="text" class="quantity-input" id="quantity" value="1" readonly>
+                    <button class="quantity-btn" id="increase-qty">+</button>
+                </div>
+                <div class="action-buttons">
+                    <button class="buy-now" id="buy-now-btn">Buy Now</button>
+                    <button class="add-to-cart" id="add-to-cart-btn">Add to Cart</button>
+                </div>
+                <div class="selected-size" id="selected-size-display"></div>
+            </div>
+        </div>
+
+        <div class="product-description">
+            <h2 class="description-title">Description of product</h2>
+            <div class="description-content">
+                <p>Description</p>
+                <p>This elegant dress features a modern design with premium quality fabric that ensures comfort and style. Perfect for both casual and formal occasions, this versatile piece can be dressed up or down depending on the event. The flattering cut enhances your silhouette while the breathable material keeps you comfortable all day.</p>
+                <p>Available in multiple sizes to ensure the perfect fit. Machine washable for easy care.</p>
+            </div>
+        </div>
+
+        <section class="product-section">
+          <div class="container">
+            <div class="section-heading">
+              <h2>Similar Products</h2>
+            </div>
+            <div class="product-grid" id="similarProductsContainer">
+              <!-- Similar products will be inserted here dynamically -->
+            </div>
+          </div>
+        </section>
+        
+      
+      
+
+        <div class="services">
+            <div class="service">
+                <div class="service-icon"></div>
+                <div class="service-text">Delivery all over nepal</div>
+            </div>
+            <div class="service">
+                <div class="service-icon"></div>
+                <div class="service-text">Product replace</div>
+            </div>
+            <div class="service">
+                <div class="service-icon"></div>
+                <div class="service-text">24/7 Support</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>StyleHub</h3>
+                    <p style="color: #9ca3af; font-size: 14px; margin-bottom: 20px;">Your destination for premium
+                        fashion and lifestyle products. Quality, style, and affordability in one place.</p>
+                    <div class="social-media">
+                        <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-pinterest-p"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Shop</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">New Arrivals</a></li>
+                        <li><a href="#">Bestsellers</a></li>
+                        <li><a href="#">Men's Collection</a></li>
+                        <li><a href="#">Women's Collection</a></li>
+                        <li><a href="#">Sale & Offers</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Help & Support</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">FAQs</a></li>
+                        <li><a href="#">Shipping Information</a></li>
+                        <li><a href="#">Returns & Exchanges</a></li>
+                        <li><a href="#">Size Guide</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Information</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Sustainability</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Terms & Conditions</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Subscribe</h3>
+                    <p style="color: #9ca3af; font-size: 14px; margin-bottom: 15px;">Stay updated with our latest offers
+                        and promotions.</p>
+                    <div class="newsletter">
+                        <form class="newsletter-form">
+                            <input type="email" class="newsletter-input" placeholder="Your email address">
+                            <button type="submit" class="newsletter-button">Subscribe</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 StyleHub. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- <script src="productshowcase.js"></script> -->
+    <script>
+ // DOM Elements
+const mainImage = document.getElementById('main-image');
+const thumbs = document.querySelectorAll('.thumb');
+const prevArrow = document.querySelector('.arrow-prev');
+const nextArrow = document.querySelector('.arrow-next');
+const decreaseBtn = document.getElementById('decrease-qty');
+const increaseBtn = document.getElementById('increase-qty');
+const quantityInput = document.getElementById('quantity');
+const buyNowBtn = document.getElementById("buy-now-btn");
+const addToCartBtn = document.getElementById("add-to-cart-btn");
+const sizeOptions = document.querySelectorAll('input[name="size"]');
+const selectedSizeDisplay = document.getElementById('selected-size-display');
+let currentProduct = null;
+
+// Variables
+let currentImg = 1;
+const totalImages = thumbs.length;
+let selectedSize = '';
+let quantity = 1;
+
+// Create toast element for notifications
+const toast = document.createElement('div');
+toast.className = 'toast';
+document.body.appendChild(toast);
+
+// Functions
+function showToast(message) {
+  toast.textContent = message;
+  toast.style.display = 'block';
+  
+  // Hide toast after 3 seconds
+  setTimeout(() => {
+    toast.style.display = 'none';
+  }, 3000);
+}
+
+function updateMainImage(imgNum) {
+  mainImage.style.backgroundColor = getRandomColor(imgNum); // For demo, using different colors
+  currentImg = imgNum;
+  
+  // Update active thumb
+  thumbs.forEach(thumb => {
+    if (parseInt(thumb.getAttribute('data-img')) === currentImg) {
+      thumb.classList.add('active');
+    } else {
+      thumb.classList.remove('active');
+    }
+  });
+}
+
+function nextImage() {
+  currentImg = currentImg >= totalImages ? 1 : currentImg + 1;
+  updateMainImage(currentImg);
+}
+
+function prevImage() {
+  currentImg = currentImg <= 1 ? totalImages : currentImg - 1;
+  updateMainImage(currentImg);
+}
+
+function updateQuantity(val) {
+  quantity = Math.max(1, parseInt(quantityInput.value) + val);
+  quantityInput.value = quantity;
+}
+
+function getRandomColor(seed) {
+  // Generate semi-random colors for demonstration
+  const hue = (seed * 60) % 360;
+  return `hsl(${hue}, 70%, 85%)`;
+}
+
+async function loadProductDetails() {
+  const params = new URLSearchParams(window.location.search);
+  const productId = params.get("productId");
+
+  if (!productId) {
+    showToast("Missing product ID.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`http://localhost:3000/api/products/${productId}`);
+    if (!res.ok) throw new Error("Product not found");
+
+    const product = await res.json();
+    // Set the currentProduct globally so it can be accessed by buyNow
+    currentProduct = product; // FIXED: Correctly set currentProduct
+    renderProductDetails(product);
+  } catch (err) {
+    console.error("Error fetching product:", err);
+    showToast("Failed to load product details.");
+  }
+}
+
+function renderProductDetails(product) {
+  const titleEl = document.querySelector(".product-title");
+  const priceEl = document.getElementById("product-price");
+  const mainImageEl = document.getElementById("main-image");
+  const descContent = document.querySelector(".description-content");
+
+  if (titleEl) titleEl.textContent = product.name || "Product";
+  if (priceEl) priceEl.textContent = product.price?.toFixed(2) || "0.00";
+
+  if (mainImageEl && product.images && product.images.length > 0) {
+    const image = product.images[0];
+    const imageUrl = typeof image === "string" ? image : image.url;
+    mainImageEl.style.backgroundImage = `url('${imageUrl}')`;
+    mainImageEl.style.backgroundSize = 'cover';
+    mainImageEl.style.backgroundPosition = 'center';
+  }
+
+  if (descContent) {
+    descContent.innerHTML = `
+      <p><strong></strong></p>
+      <p>${product.description || "No description provided."}</p>
+    `;
+  }
+}
+
+function updateSelectedSize() {
+  sizeOptions.forEach(option => {
+    if (option.checked) {
+      selectedSize = option.value;
+      selectedSizeDisplay.textContent = `Selected size: ${selectedSize}`;
+    }
+  });
+}
+
+async function addToCart() {
+  const customerId = localStorage.getItem("customerId");
+  const productId = new URLSearchParams(window.location.search).get("productId");
+
+  if (!customerId) {
+    alert("❌ User not logged in! Redirecting to login page.");
+    window.location.href = "login.html";
+    return;
+  }
+
+  if (!productId) {
+    showToast("Product ID missing in URL.");
+    return;
+  }
+
+  if (!selectedSize) {
+    showToast("Please select a size first.");
+    return;
+  }
+
+  const quantity = parseInt(document.getElementById("quantity").value);
+
+  const requestData = {
+    customerId,
+    productId,
+    quantity,
+    // Optional: if your API accepts size, include it
+    // size: selectedSize
+  };
+
+  try {
+    const response = await fetch("http://localhost:3000/api/cart/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestData),
+    });
+
+    const result = await response.json();
+    console.log("🛒 Cart Response:", result);
+
+    if (response.ok) {
+      showToast(`✅ Added ${quantity} item(s) of size ${selectedSize} to cart!`);
+    } else {
+      showToast(`❌ Failed to add to cart: ${result.message}`);
+    }
+  } catch (error) {
+    console.error("❌ Error adding to cart:", error);
+    showToast("❌ Server error. Please try again later.");
+  }
+}
+
+function buyNow() {
+  const params = new URLSearchParams(window.location.search);
+  const productId = params.get("productId");
+
+  // Log the currentProduct to see if it's properly set
+  console.log("Current product in buyNow:", currentProduct);
+
+  if (!currentProduct) {
+    showToast("Product information not loaded yet. Please try again.");
+    return;
+  }
+
+  // Now we can safely access the category
+  const category = currentProduct.category || "uncategorized";
+  const productTitle = document.querySelector(".product-title").textContent;
+  const price = parseFloat(document.getElementById("product-price").textContent);
+  const quantity = parseInt(document.getElementById("quantity").value);
+  const selectedSize = document.querySelector('input[name="size"]:checked')?.value;
+
+  if (!selectedSize) {
+    alert("❗ Please select a size before proceeding.");
+    return;
+  }
+
+  // Delivery calculation
+  const deliveryCharge = 150;
+  const discount = 200;
+  const tax = 50;
+  const subtotal = price * quantity;
+  const total = subtotal + deliveryCharge + tax - discount;
+
+  const estimatedDelivery = getEstimatedDeliveryDate(3); // 3 business days from now
+
+  // Store everything including category
+  const productData = {
+    productId,
+    category, // This should now properly store the category
+    title: productTitle,
+    price,
+    quantity,
+    size: selectedSize,
+    subtotal,
+    deliveryCharge,
+    discount,
+    tax,
+    total,
+    estimatedDelivery
+  };
+
+  // Log the data being stored to verify
+  console.log("Storing product data:", productData);
+
+  sessionStorage.setItem("selectedProduct", JSON.stringify(productData));
+  window.location.href = "payment.html";
+}
+
+// Simple estimated delivery (3-5 days logic)
+function getEstimatedDeliveryDate(daysToAdd) {
+  const date = new Date();
+  date.setDate(date.getDate() + daysToAdd);
+  return date.toLocaleDateString("en-US", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+// Initialize product images
+function initializeProductImages() {
+  // Set colors for thumbnails (in a real implementation, these would be images)
+  thumbs.forEach(thumb => {
+    const imgNum = parseInt(thumb.getAttribute('data-img'));
+    thumb.style.backgroundColor = getRandomColor(imgNum);
+  });
+  
+  // Set initial main image
+  updateMainImage(1);
+}
+
+// Event Listeners
+if (prevArrow) prevArrow.addEventListener('click', prevImage);
+if (nextArrow) nextArrow.addEventListener('click', nextImage);
+
+thumbs.forEach(thumb => {
+  thumb.addEventListener('click', () => {
+    const imgNum = parseInt(thumb.getAttribute('data-img'));
+    updateMainImage(imgNum);
+  });
+});
+
+if (decreaseBtn) decreaseBtn.addEventListener('click', () => updateQuantity(-1));
+if (increaseBtn) increaseBtn.addEventListener('click', () => updateQuantity(1));
+
+sizeOptions.forEach(option => {
+  option.addEventListener('change', updateSelectedSize);
+});
+
+if (buyNowBtn) buyNowBtn.addEventListener('click', buyNow);
+if (addToCartBtn) addToCartBtn.addEventListener('click', addToCart);
+
+// Similar products hover effect
+const similarProducts = document.querySelectorAll('.similar-product');
+similarProducts.forEach((product, index) => {
+  product.style.backgroundColor = getRandomColor(index + 10);
+  
+  product.addEventListener('click', () => {
+    showToast('Similar product selected');
+  });
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+  initializeProductImages();
+  // Use only one method to load product details
+  loadProductDetails();
+  
+});// simulatePageLoad();
+    </script>
+
+<script>
+
+  document.addEventListener("DOMContentLoaded", () => {
+      const selectedProduct = JSON.parse(sessionStorage.getItem("selectedProduct"));
+  
+      if (!selectedProduct) {
+          console.warn("No product data found in sessionStorage.");
+          return;
+      }
+  
+      // 1. Set product content
+      document.querySelector(".product-title").textContent = selectedProduct.name || "Unnamed Product";
+      document.getElementById("product-price").textContent = selectedProduct.discount_price || selectedProduct.price || "N/A";
+  
+      const descriptionContent = document.querySelector(".description-content p");
+      if (descriptionContent) {
+          descriptionContent.textContent = selectedProduct.description || "No description available.";
+      }
+  
+      // 2. Main Image
+      // const mainImage = document.getElementById("main-image");
+      // mainImage.innerHTML = `<img src="${selectedProduct.images?.[0]?.url || 'default.jpg'}" alt="${selectedProduct.name}" />`;
+  
+      // 3. Fetch similar products by category
+      const category = selectedProduct.category;
+      if (category) {
+          fetch(`http://localhost:3000/api/products/category/${encodeURIComponent(category)}`)
+              .then(res => res.json())
+              .then(data => {
+                  const similarProducts = data.filter(p => p._id !== selectedProduct._id); // Exclude current product
+                  displaySimilarProducts(similarProducts);
+              })
+              .catch(err => {
+                  console.error("Error fetching similar products:", err);
+              });
+      }
+  });
+  
+  function displaySimilarProducts(products) {
+  const container = document.getElementById("similarProductsContainer");
+  container.innerHTML = "";
+
+  if (products.length === 0) {
+    container.innerHTML = "<p>No similar products found.</p>";
+    return;
+  }
+
+  const limitedProducts = products.slice(0, 4);
+
+  limitedProducts.forEach((product, index) => {
+    const originalPrice = product.original_price || (product.price * 1.2).toFixed(2);
+    const discountPrice = product.discount_price || product.price;
+    const featuredTag = index < 2 ? `<div class="product-badge">Featured</div>` : "";
+
+    const card = document.createElement("div");
+    card.className = "product-card";
+    card.innerHTML = `
+      ${featuredTag}
+      <div class="product-image">
+        <img src="${product.images?.[0]?.url || 'default.jpg'}" alt="${product.name}">
+      </div>
+      <div class="product-info">
+        <div class="product-category">${product.category || 'Category'}</div>
+        <div class="product-title">${product.name}</div>
+        <div class="product-price">
+          <div class="current-price">$${discountPrice}</div>
+          <div class="original-price">$${originalPrice}</div>
+        </div>
+        <div class="product-actions">
+          <button class="add-to-cart" onclick="goToProduct('${product._id}', '${product.category}')">
+            <i class="fas fa-shopping-cart"></i> Add to Cart
+          </button>
+          <button class="wishlist-btn" onclick="toggleWishlist('${product._id}')">
+            <i class="fas fa-heart"></i>
+          </button>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+
+function toggleWishlist(productId) {
+    const wishlistBtn = event.currentTarget;
+    const isCurrentlyInWishlist = wishlistBtn.classList.contains('active');
+
+    try {
+        const customerId = localStorage.getItem("customerId");
+        if (!customerId) {
+            alert("Please log in to add items to wishlist");
+            return;
+        }
+
+        if (isCurrentlyInWishlist) {
+            // Remove from wishlist
+            fetch(`http://localhost:3000/api/wishlist/remove`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    customerId,
+                    productId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    wishlistBtn.classList.remove('active');
+                    showToast("Removed from wishlist");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast("Failed to remove from wishlist");
+            });
+        } else {
+            // Add to wishlist
+            fetch(`http://localhost:3000/api/wishlist/add`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    customerId,
+                    productId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    wishlistBtn.classList.add('active');
+                    showToast("Added to wishlist");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast("Failed to add to wishlist");
+            });
+        }
+    } catch (error) {
+        console.error('Wishlist error:', error);
+        alert("An error occurred. Please try again.");
+    }
+}
+
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.position = 'fixed';
+    toast.style.bottom = '20px';
+    toast.style.right = '20px';
+    toast.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    toast.style.color = 'white';
+    toast.style.padding = '10px 20px';
+    toast.style.borderRadius = '5px';
+    toast.style.zIndex = '1000';
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        document.body.removeChild(toast);
+    }, 3000);
+}
+
+function goToProduct(productId, category) {
+    fetch(`http://localhost:3000/api/products/${productId}`)
+        .then(res => res.json())
+        .then(data => {
+            sessionStorage.setItem("selectedProduct", JSON.stringify(data));
+            window.location.href = `products_description.html?productId=${productId}&category=${encodeURIComponent(category)}`;
+        })
+        .catch(err => {
+            console.error("Failed to load product:", err);
+        });
+}
+
+function toggleWishlist(productId) {
+    const wishlistBtn = event.currentTarget;
+    const isCurrentlyInWishlist = wishlistBtn.classList.contains('active');
+
+    try {
+        const customerId = localStorage.getItem("customerId");
+        if (!customerId) {
+            alert("Please log in to add items to wishlist");
+            return;
+        }
+
+        if (isCurrentlyInWishlist) {
+            // Remove from wishlist
+            fetch(`http://localhost:3000/api/wishlist/remove`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    customerId,
+                    productId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    wishlistBtn.classList.remove('active');
+                    showToast("Removed from wishlist");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast("Failed to remove from wishlist");
+            });
+        } else {
+            // Add to wishlist
+            fetch(`http://localhost:3000/api/wishlist/add`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    customerId,
+                    productId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    wishlistBtn.classList.add('active');
+                    showToast("Added to wishlist");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast("Failed to add to wishlist");
+            });
+        }
+    } catch (error) {
+        console.error('Wishlist error:', error);
+        alert("An error occurred. Please try again.");
+    }
+}
+
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.position = 'fixed';
+    toast.style.bottom = '20px';
+    toast.style.right = '20px';
+    toast.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    toast.style.color = 'white';
+    toast.style.padding = '10px 20px';
+    toast.style.borderRadius = '5px';
+    toast.style.zIndex = '1000';
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        document.body.removeChild(toast);
+    }, 3000);
+}
+
+function goToProduct(productId, category) {
+    fetch(`http://localhost:3000/api/products/${productId}`)
+        .then(res => res.json())
+        .then(data => {
+            sessionStorage.setItem("selectedProduct", JSON.stringify(data));
+            window.location.href = `products_description.html?productId=${productId}&category=${encodeURIComponent(category)}`;
+        })
+        .catch(err => {
+            console.error("Failed to load product:", err);
+        });
+}
+
+// Modify the existing goToProduct function to match the design
+function goToProduct(productId, category) {
+    fetch(`http://localhost:3000/api/products/${productId}`)
+        .then(res => res.json())
+        .then(data => {
+            sessionStorage.setItem("selectedProduct", JSON.stringify(data));
+            window.location.href = `products_description.html?productId=${productId}&category=${encodeURIComponent(category)}`;
+        })
+        .catch(err => {
+            console.error("Failed to load product:", err);
+        });
+}
+
+  
+  function goToProduct(productId, category) {
+      // Optional: fetch and store the new product's full data in sessionStorage
+      fetch(`http://localhost:3000/api/products/${productId}`)
+          .then(res => res.json())
+          .then(data => {
+              sessionStorage.setItem("selectedProduct", JSON.stringify(data));
+              window.location.href = `products_description.html?productId=${productId}&category=${encodeURIComponent(category)}`;
+          })
+          .catch(err => {
+              console.error("Failed to load product:", err);
+          });
+  }
+  </script>
+  
+    </body>
+    </html>

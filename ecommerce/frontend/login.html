@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Page</title>
+    <link rel="stylesheet" href="./css/login.css">
+    <link rel="stylesheet" href="./css/loading.css">
+</head>
+<body>
+    <div class="login-container">
+        <h2 class="login-title">Log Into Your Account</h2>
+        <form id="signup-form">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" required>
+            </div>
+            <div class="forgot-password">
+                <a href="#">Forgot Password?</a>
+            </div>
+            <div class="action-row">
+                <div class="create-account">
+                    Don't have an account?<br>
+                    <a href="./signup.html">Create here</a>
+                </div>
+                <button type="submit" class="next-button">Next</button>
+            </div>
+            <div class="divider">OR</div>
+            <button type="button" class="google-login">Login with Google</button>
+        </form>
+    </div>
+
+    <div class="load-wrapp">
+        <div class="load-9">
+            <p>Please wait...</p>
+            <div class="spinner">
+                <div class="bubble-1"></div>
+                <div class="bubble-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+const loader = document.querySelector('.load-wrapp');
+
+function showLoader() {
+    loader.style.display = 'flex';
+}
+
+function hideLoader() {
+    loader.style.display = 'none';
+}
+
+// Add an event listener to the login form
+document.getElementById("signup-form").addEventListener("submit", async (e) => {
+    e.preventDefault(); // Prevent the form from refreshing the page
+
+    // Show loader before API call
+    showLoader();
+
+    // Collect form data
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try {
+        const response = await fetch("http://localhost:3000/api/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email, password }),
+        });
+
+        // Handle the response
+        const data = await response.json();
+        if (response.ok) {
+            // ✅ Store customerId, token, and email in localStorage
+            localStorage.setItem("token", data.token);  // Store JWT token
+            localStorage.setItem("customerId", data.customerId);  // Store customerId
+            localStorage.setItem("userEmail", data.email);  // Store email
+            localStorage.setItem("username", data.username);  // Store username
+
+            await swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Login successful!',
+                timer: 1400,
+                showConfirmButton: false
+            });
+
+            window.location.href = "./dashboard.html";  // Redirect to dashboard
+        } else {
+            await swal.fire({
+                icon: 'error',
+                title: 'Login Failed',
+                text: data.message || "An error occurred during login. Please try again later.",
+            });
+        }
+    } catch (error) {
+        console.error("Error connecting to the server:", error);
+        alert("An error occurred. Please try again later.");
+    } finally {
+        // Hide loader after API call completes (success or error)
+        hideLoader();
+    }
+});
+
+    </script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</body>
+</html>

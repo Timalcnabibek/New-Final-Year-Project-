@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Tracking</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        /* Navbar Styling */
+        .navbar {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 5%;
+            position: fixed;
+            top: 0;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar .logo {
+            font-size: 24px;
+            color: #3b82f6;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .navbar .menu {
+            display: flex;
+            gap: 10px;
+        }
+
+        .navbar .menu a {
+            color: #4b5563;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .navbar .menu a:hover {
+            color: #3b82f6;
+        }
+
+        .navbar .menu a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background-color: #3b82f6;
+            transition: width 0.3s ease;
+        }
+
+        .navbar .menu a:hover::after {
+            width: 100%;
+        }
+
+        .navbar .search {
+            position: relative;
+            width: 300px;
+        }
+
+        .navbar .search input {
+            width: 100%;
+            padding: 10px 40px 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            background-color: #f3f4f6;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .navbar .search input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+
+        .navbar .search::after {
+            content: '\f002';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        .navbar .settings {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .navbar .settings a {
+            color: #4b5563;
+            text-decoration: none;
+            font-size: 20px;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .navbar .settings a:hover {
+            color: #3b82f6;
+        }
+
+        .profile-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 40px;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            width: 180px;
+            z-index: 10;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: #333;
+            transition: background 0.3s ease;
+        }
+
+        .dropdown-menu a:hover {
+            background: #f5f5f5;
+        }
+
+        .profile-icon {
+            cursor: pointer;
+        }
+
+        .cart-icon {
+            position: relative;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+        h1 {
+            margin-top:100px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        .orders-summary {
+            display: flex;
+            margin-top: 20px;
+            gap: 15px;
+            border-radius: 2px solid black;
+            justify-content:space-evenly;
+        }
+
+        .order-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 120px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top:60px;
+        }
+
+        .order-count {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .order-label {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .icon-container {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .all-orders-icon {
+            background-color: #e6effd;
+        }
+
+        .processing-icon {
+            background-color: #f5e6ff;
+        }
+
+        .shipped-icon {
+            background-color: #fff8e6;
+        }
+
+        .delivered-icon {
+            background-color: #e6f7ef;
+        }
+
+        .orders-list {
+            margin-top: 30px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .orders-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .orders-list-header h2 {
+            margin: 0;
+            font-size: 18px;            
+        }
+
+        .manage-text {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+            flex: 1;
+        }
+
+        .tab.active {
+            color: #0066cc;
+            border-bottom: 2px solid #0066cc;
+        }
+
+        .order-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .order-number {
+            font-weight: bold;
+        }
+
+        .order-status {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-delivered {
+            color: #28a745;
+            background-color: #e6f7ef;
+        }
+
+        .status-shipped {
+            color: #0066cc;
+            background-color: #e6effd;
+        }
+
+        .status-processing {
+            color: #9933cc;
+            background-color: #f5e6ff;
+        }
+
+        .order-date {
+            color: #666;
+            font-size: 14px;
+            margin-top: 3px;
+        }
+
+        .order-details {
+            margin-top: 10px;
+        }
+
+        .order-info {
+            margin-bottom: 3px;
+            font-size: 14px;
+        }
+
+        .order-price {
+            font-weight: bold;
+        }
+
+        .order-tracking {
+            color: #666;
+            font-size: 14px;
+            text-align: right;
+        }
+
+        .tracking-number {
+            color: #0066cc;
+        }
+
+        .est-delivery {
+            margin-top: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <div class="logo">StyleHub</div>
+        <div class="menu">
+            <a href="dashboard.html">Home</a>
+            <a href="viewall.html">Shop</a>
+            <a href="mens.html">Men</a>
+            <a href="women.html">Women</a>
+        </div>
+        <div class="search">
+            <input type="text" placeholder="Search for orders with orderReference">
+        </div>
+        <div class="settings">
+            <a href="cart.html" class="cart-icon">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-count" id="cartCount">0</span>
+            </a>
+            <a href="#"><i class="fas fa-heart"></i></a>
+
+            <!-- Profile Icon with Dropdown -->
+            <div class="profile-dropdown">
+                <a href="#" class="profile-icon" onclick="toggleDropdown(event)">
+                    <i class="fas fa-user"></i>
+                </a>
+                <div class="dropdown-menu" id="profileDropdown">
+                    <a href="profile.html">My Profile</a>
+                    <a href="orders.html">My Orders</a>
+                    <a href="loyalty.html">🎉 Loyalty Program</a> <!-- New Option -->
+                    <a href="settings.html">Settings</a>
+                    <a href="#" onclick="logout()">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h1>Order Tracking</h1>
+    <div class="subtitle">Track your orders, view your recent purchases and stay updated on shipping and delivery.</div>
+
+    <div class="orders-summary">
+        <div class="order-card">
+            <div>
+                <div class="order-label">All Orders</div>
+                <div class="order-count">4</div>
+            </div>
+            <div class="icon-container all-orders-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#0066cc" viewBox="0 0 16 16">
+                    <path
+                        d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5z" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="order-card">
+            <div>
+                <div class="order-label">Processing</div>
+                <div class="order-count">1</div>
+            </div>
+            <div class="icon-container processing-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#9933cc" viewBox="0 0 16 16">
+                    <path
+                        d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z" />
+                    <path
+                        d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="order-card">
+            <div>
+                <div class="order-label">Shipped</div>
+                <div class="order-count">1</div>
+            </div>
+            <div class="icon-container shipped-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#e6a700" viewBox="0 0 16 16">
+                    <path
+                        d="M0 3.5A1.5 1.5 0 0 1 1.5 2h9A1.5 1.5 0 0 1 12 3.5V5h1.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5H14a2 2 0 1 1-4 0H5a2 2 0 1 1-3.998-.085A1.5 1.5 0 0 1 0 10.5v-7zm1.294 7.456A1.999 1.999 0 0 1 4.732 11h5.536a2.01 2.01 0 0 1 .732-.732V3.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .294.456zM12 10a2 2 0 1 1 .001 4A2 2 0 0 1 12 10zm-8 0a2 2 0 1 1 .001 4A2 2 0 0 1 4 10z" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="order-card">
+            <div>
+                <div class="order-label">Delivered</div>
+                <div class="order-count">1</div>
+            </div>
+            <div class="icon-container delivered-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#28a745" viewBox="0 0 16 16">
+                    <path
+                        d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="orders-list">
+        <div class="orders-list-header">
+            <h2>Recent Orders</h2>
+            <div class="manage-text">Track and manage your orders</div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active">All</div>
+            <div class="tab">Pending</div>
+            <div class="tab">Processing</div>
+            <div class="tab">Shipped</div>
+            <div class="tab">Delivered</div>
+        </div>
+
+        <div class="order-item">
+            <div class="order-header">
+                <div class="order-number">Order #ORD-2023-1001</div>
+                <div class="order-status status-delivered">Delivered</div>
+            </div>
+            <div class="order-date">Oct 15, 2023</div>
+            <div class="order-details">
+                <div class="order-info">Items: 2</div>
+                <div class="order-info order-price">$129.99</div>
+                <div class="order-tracking">
+                    Tracking #: <span class="tracking-number">TRK92837465</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="order-item">
+            <div class="order-header">
+                <div class="order-number">Order #ORD-2023-1002</div>
+                <div class="order-status status-shipped">Shipped</div>
+            </div>
+            <div class="order-date">Nov 2, 2023</div>
+            <div class="order-details">
+                <div class="order-info">Items: 1</div>
+                <div class="order-info order-price">$149.95</div>
+                <div class="est-delivery">Est. Delivery: Nov 10, 2023</div>
+                <div class="order-tracking">
+                    Tracking #: <span class="tracking-number">TRK78643182</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="order-item">
+            <div class="order-header">
+                <div class="order-number">Order #ORD-2023-1003</div>
+                <div class="order-status status-processing">Processing</div>
+            </div>
+            <div class="order-date">Dec 5, 2023</div>
+            <div class="order-details">
+                <div class="order-info">Items: 1</div>
+                <div class="order-info order-price">$85.50</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript for tab functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            const tabs = document.querySelectorAll('.tab');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function () {
+                    // Remove active class from all tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+
+                    // In a real application, this would filter the orders
+                    // based on the selected tab
+                });
+            });
+        });
+    </script>
+
+<script>
+   document.addEventListener("DOMContentLoaded", async () => {
+  // Get order count elements
+  const allOrdersCount = document.querySelector(".All.Orders, .order-card:nth-child(1) .order-count");
+  const processingCount = document.querySelector(".Processing, .order-card:nth-child(2) .order-count");
+  const shippedCount = document.querySelector(".Shipped, .order-card:nth-child(3) .order-count");
+  const deliveredCount = document.querySelector(".Delivered, .order-card:nth-child(4) .order-count");
+  
+  // Get orders container
+  const ordersContainer = document.querySelector(".Recent.Orders, .orders-list");
+  
+  try {
+    // Get the customer ID from localStorage
+    const user = JSON.parse(localStorage.getItem("user"));
+    const customerId = user?.userId;
+
+    if (!customerId) {
+      throw new Error("No customer ID found in localStorage. Please log in again.");
+    }
+    
+    console.log("Fetching orders for customer:", customerId);
+    
+    // UPDATED: Use the correct API endpoint matching your backend routes
+    const response = await fetch(`/api/trackorder/${customerId}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("API Error Response:", errorText);
+      throw new Error(`API request failed with status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log("API Response:", result);
+    
+    // Handle different response formats - extract the orders array
+    const orders = Array.isArray(result) ? result : 
+                   (result.data || result.orders || []);
+    
+    console.log(`Found ${orders.length} orders for this customer`);
+    
+    // Reset counters
+    let totalOrders = orders.length;
+    let processingOrders = 0;
+    let shippedOrders = 0;
+    let deliveredOrders = 0;
+    
+    // Count orders by status
+    orders.forEach(order => {
+      // Make sure to handle case differences in status
+      const status = (order.status || '').toLowerCase();
+      switch(status) {
+        case "processing":
+          processingOrders++;
+          break;
+        case "shipped":
+          shippedOrders++;
+          break;
+        case "delivered":
+          deliveredOrders++;
+          break;
+      }
+    });
+    
+    // Update count displays
+    if (allOrdersCount) allOrdersCount.textContent = totalOrders;
+    if (processingCount) processingCount.textContent = processingOrders;
+    if (shippedCount) shippedCount.textContent = shippedOrders;
+    if (deliveredCount) deliveredCount.textContent = deliveredOrders;
+    
+    // Clear existing order items
+    const orderItems = document.querySelectorAll(".order-item");
+    orderItems.forEach(item => item.remove());
+    
+    // Create order items from actual data
+    if (orders.length === 0) {
+      // Display message if no orders
+      const noOrdersMessage = document.createElement("div");
+      noOrdersMessage.className = "order-item";
+      noOrdersMessage.innerHTML = `
+        <div style="text-align: center; padding: 20px;">
+          <p>You don't have any orders yet.</p>
+          <a href="/dashboard" style="color: #3b82f6; text-decoration: none;">Start shopping</a>
+        </div>
+      `;
+      
+      if (ordersContainer) {
+        ordersContainer.querySelector(".tabs + *") ? 
+          ordersContainer.querySelector(".tabs").insertAdjacentElement("afterend", noOrdersMessage) :
+          ordersContainer.appendChild(noOrdersMessage);
+      }
+    } else {
+      // Create elements for each order
+      orders.forEach(order => {
+        // Format date properly
+        const orderDate = order.orderedAt || order.createdAt;
+        const formattedDate = orderDate ? 
+          new Date(orderDate).toLocaleDateString() : 
+          "Invalid Date";
+        
+        // Determine status class
+        const status = (order.status || "Processing");
+        const statusClass = {
+          "Processing": "status-processing",
+          "Shipped": "status-shipped", 
+          "Delivered": "status-delivered"
+        }[status] || "status-processing";
+        
+        // Calculate item count from products array or default to 1
+        const itemCount = order.products?.length || 1;
+        
+        // Format currency based on your region (using Nepali Rupees symbol)
+        const formattedPrice = `Rs. ${(order.totalAmount || 0).toFixed(2)}`;
+        
+        // Create order HTML element
+        const orderElement = document.createElement("div");
+        orderElement.className = "order-item";
+        orderElement.setAttribute("data-status", (order.status || "processing").toLowerCase());
+        
+        orderElement.innerHTML = `
+          <div class="order-header">
+            <div class="order-number">Order #${order.orderReference || order._id || "undefined"}</div>
+            <div class="order-status ${statusClass}">${status}</div>
+          </div>
+          <div class="order-date">${formattedDate}</div>
+          <div class="order-details">
+            <div class="order-info">Items: ${itemCount}</div>
+            <div class="order-info order-price">${formattedPrice}</div>
+            ${order.estimatedDeliveryDate ? 
+              `<div class="est-delivery">Est. Delivery: ${new Date(order.estimatedDeliveryDate).toLocaleDateString()}</div>` : ''}
+            ${order.trackingNumber ? 
+              `<div class="order-tracking">Tracking #: <span class="tracking-number">${order.trackingNumber}</span></div>` : ''}
+          </div>
+        `;
+        
+        // Add to container after tabs or at the end
+        if (ordersContainer) {
+          const targetElement = ordersContainer.querySelector(".tabs");
+          if (targetElement) {
+            targetElement.insertAdjacentElement("afterend", orderElement);
+          } else {
+            ordersContainer.appendChild(orderElement);
+          }
+        }
+      });
+    }
+    
+    // Set up tab filtering functionality
+    const tabs = document.querySelectorAll(".tab");
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        // Update active tab
+        tabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        
+        // Get filter status
+        const filterStatus = tab.textContent.trim().toLowerCase();
+        
+        // Filter orders
+        document.querySelectorAll(".order-item").forEach(item => {
+          if (filterStatus === "all" || item.dataset.status === filterStatus) {
+            item.style.display = "block";
+          } else {
+            item.style.display = "none";
+          }
+        });
+      });
+    });
+    
+  } catch (error) {
+    console.error("Error loading orders:", error);
+    
+    // Display error message
+    const errorMessage = document.createElement("div");
+    errorMessage.className = "order-item";
+    errorMessage.innerHTML = `
+      <div style="color: #e74c3c; text-align: center; padding: 20px;">
+        <p>Could not load your orders. ${error.message}</p>
+        <p>Please refresh the page or contact support if the problem persists.</p>
+      </div>
+    `;
+    
+    if (ordersContainer) {
+      const existingItems = ordersContainer.querySelectorAll(".order-item");
+      existingItems.forEach(item => item.remove());
+      
+      ordersContainer.appendChild(errorMessage);
+    }
+  }
+});
+</script>
+</body>
+</html>

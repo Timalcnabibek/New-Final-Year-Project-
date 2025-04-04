@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StyleHub - Modern Fashion E-commerce</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="./css/dashboard.css">
+</head>
+
+<body>
+<!-- Navbar -->
+<div class="navbar">
+    <div class="logo">StyleHub</div>
+    <div class="menu">
+        <a href="dashboard.html">Home</a>
+        <a href="viewall.html">Shop</a>
+        <a href="mens.html">Men</a>
+        <a href="women.html">Women</a>
+    </div>
+    <div class="search">
+        <input type="text" placeholder="Search for products...">
+    </div>
+    <div class="settings">
+        <a href="cart.html" class="cart-icon">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="cart-count" id="cartCount">0</span>
+        </a>
+        <a href="#"><i class="fas fa-heart"></i></a>
+        
+        <!-- Profile Icon with Dropdown -->
+        <div class="profile-dropdown">
+            <a href="#" class="profile-icon" onclick="toggleDropdown(event)">
+                <i class="fas fa-user"></i>
+            </a>
+            <div class="dropdown-menu" id="profileDropdown">
+                <a href="profile.html">My Profile</a>
+                <a href="orders.html">My Orders</a>
+                <a href="loyalty.html">🎉 Loyalty Program</a>  <!-- New Option -->
+                <a href="settings.html">Settings</a>
+                <a href="#" onclick="logout()">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Slider Section -->
+    <div class="container">
+        <div class="slider-container">
+            <div class="slide active">
+                <div class="slide-content">
+                    <h1>Elevate Your Style This Season</h1>
+                    <p>Discover our new collection of premium fashion pieces designed for the modern trendsetter.</p>
+                    <a href="viewall.html" class="cta-button">Shop Collection <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="image-container" style="background-image: url('./image/lv.jpg');">
+                </div>
+            </div>
+
+            <div class="slide">
+                <div class="slide-content">
+                    <h1>Luxury Accessories Now Available</h1>
+                    <p>Complete your look with our exclusive selection of designer accessories and statement pieces.</p>
+                    <a href="viewall.html" class="cta-button">Explore Now <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="image-container" style="background-image: url('./image/lv.jpg');">
+                </div>
+            </div>
+
+            <div class="slide">
+                <div class="slide-content">
+                    <h1>Spring Sale: Up to 50% Off</h1>
+                    <p>Refresh your wardrobe with season's hottest styles at unbeatable prices for a limited time.</p>
+                    <a href="viewall.html" class="cta-button">Shop Now <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="image-container" style="background-image: url('./image/lv.jpg');">
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <button class="prev" onclick="changeSlide(-1)"><i class="fas fa-chevron-left"></i></button>
+            <button class="next" onclick="changeSlide(1)"><i class="fas fa-chevron-right"></i></button>
+        </div>
+    </div>
+
+    <!-- Promotion Banner -->
+    <div class="container">
+        <div class="promotion-banner">
+            <h2>⚡ NEW CUSTOMER SPECIAL: Get 20% Off Your First Order with Code: WELCOME20</h2>
+        </div>
+    </div>
+
+    <!-- Category Section -->
+    <section class="category-section">
+        <div class="container">
+            <div class="section-heading">
+                <h2>Shop by Category</h2>
+            </div>
+            <div class="category-grid">
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-tshirt"></i>
+                    </div>
+                    <div class="category-name">Clothing</div>
+                </div>
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-shoe-prints"></i>
+                    </div>
+                    <div class="category-name">Footwear</div>
+                </div>
+
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="category-name">Summer Wear</div>
+                </div>
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <div class="category-name">Gift Sets</div>
+                </div>
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="category-name">Sale</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- New Products Section -->
+    <section class="product-section">
+        <div class="container">
+            <div class="section-heading">
+                <h2>New Arrivals</h2>
+            </div>
+            <div class="product-grid" id="newProducts">
+                <!-- Products will be loaded dynamically via JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Product -->
+    <div class="container">
+        <div class="featured-product">
+            <div class="featured-product-image">
+                <img src="./image/lv.jpg" alt="Featured Product">
+            </div>
+            <div class="featured-product-info">
+                <div class="featured-product-subtitle">FEATURED PRODUCT</div>
+                <h3 class="featured-product-title">Luxury Designer Collection</h3>
+                <p class="featured-product-description">Explore our premium collection crafted with the finest materials
+                    and attention to detail. Each piece is designed to make a statement and elevate your personal style.
+                </p>
+                <div class="featured-product-price">$249.99</div>
+                <a href="#" class="cta-button">Shop Now <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trending Products Section -->
+    <section class="product-section">
+        <div class="container">
+            <div class="section-heading">
+                <h2>Trending Now</h2>
+            </div>
+            <div class="product-grid" id="trendingProducts">
+                <!-- Products will be loaded dynamically via JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>StyleHub</h3>
+                    <p style="color: #9ca3af; font-size: 14px; margin-bottom: 20px;">Your destination for premium
+                        fashion and lifestyle products. Quality, style, and affordability in one place.</p>
+                    <div class="social-media">
+                        <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-pinterest-p"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Shop</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">New Arrivals</a></li>
+                        <li><a href="#">Bestsellers</a></li>
+                        <li><a href="#">Men's Collection</a></li>
+                        <li><a href="#">Women's Collection</a></li>
+                        <li><a href="#">Sale & Offers</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Help & Support</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">FAQs</a></li>
+                        <li><a href="#">Shipping Information</a></li>
+                        <li><a href="#">Returns & Exchanges</a></li>
+                        <li><a href="#">Size Guide</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Information</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Sustainability</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Terms & Conditions</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Subscribe</h3>
+                    <p style="color: #9ca3af; font-size: 14px; margin-bottom: 15px;">Stay updated with our latest offers
+                        and promotions.</p>
+                    <div class="newsletter">
+                        <form class="newsletter-form">
+                            <input type="email" class="newsletter-input" placeholder="Your email address">
+                            <button type="submit" class="newsletter-button">Subscribe</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 StyleHub. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Slider functionality
+        let slideIndex = 0;
+        const slides = document.querySelectorAll(".slide");
+
+        function showSlides() {
+            for (let i = 0; i < slides.length; i++) {
+                slides[i].classList.remove("active");
+            }
+            slideIndex++;
+            if (slideIndex > slides.length) {
+                slideIndex = 1;
+            }
+            slides[slideIndex - 1].classList.add("active");
+            setTimeout(showSlides, 2000); // Change slide every 5 seconds
+        }
+
+        function changeSlide(n) {
+            slideIndex += n - 1;
+            showSlides();
+        }
+
+        // Initialize slider
+        showSlides();
+
+        // ✅ Generate star ratings dynamically
+        function generateStars(rating) {
+            let stars = "";
+            const fullStars = Math.floor(rating);
+            const halfStar = rating % 1 !== 0;
+
+            for (let i = 0; i < fullStars; i++) {
+                stars += '<i class="fas fa-star"></i>';
+            }
+
+            if (halfStar) {
+                stars += '<i class="fas fa-star-half-alt"></i>';
+            }
+
+            const emptyStars = 5 - Math.ceil(rating);
+            for (let i = 0; i < emptyStars; i++) {
+                stars += '<i class="far fa-star"></i>';
+            }
+
+            return stars;
+        }
+
+
+        async function fetchCartCount() {
+            const user = JSON.parse(localStorage.getItem("user"));
+            const customerId = user?.userId;
+    const cartCountElement = document.getElementById("cartCount");
+
+    if (!customerId || !cartCountElement) return;
+
+    try {
+        const response = await fetch(`http://localhost:3000/api/cart/${customerId}`);
+        if (!response.ok) throw new Error("Failed to fetch cart");
+
+        const cartData = await response.json();
+
+        // Assuming cartData.items is an array
+        const totalItems = cartData.items.reduce((sum, item) => sum + item.quantity, 0);
+
+        cartCountElement.textContent = totalItems;
+    } catch (error) {
+        console.error("Error fetching cart count:", error);
+    }
+}
+
+
+        // ✅ Store products in cart (updated logic)
+        async function addToCart(productId, productName) {
+    const customerId = localStorage.getItem("customerId");
+
+    if (!customerId) {
+        alert("❌ User not logged in! Redirecting to login page.");
+        window.location.href = "login.html";
+        return;
+    }
+
+    const requestData = {
+        customerId,
+        productId,
+        quantity: 1
+    };
+
+    try {
+        const response = await fetch("http://localhost:3000/api/cart/add", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestData),
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            alert(`✅ ${productName} added to cart!`);
+            fetchCartCount(); // ✅ Fetch updated count from DB
+        } else {
+            alert(`❌ Failed to add to cart: ${result.message}`);
+        }
+    } catch (error) {
+        console.error("❌ Error adding to cart:", error);
+        alert("❌ Server error. Please try again later.");
+    }
+}
+
+
+        // ✅ Attach event listeners for "Add to Cart" buttons
+        function attachCartEventListeners() {
+            document.querySelectorAll(".add-to-cart").forEach((button) => {
+    button.onclick = function () {
+        const productCard = this.closest(".product-card");
+        if (!productCard) return;
+
+        const productId = productCard.dataset.id;
+        const productName = productCard.querySelector(".product-title").innerText;
+
+        addToCart(productId, productName);
+        
+
+    };
+});
+
+
+            // ✅ Wishlist button logic
+            document.querySelectorAll(".wishlist-btn").forEach((button) => {
+                button.addEventListener("click", function () {
+                    this.innerHTML = '<i class="fas fa-heart"></i>';
+                    this.style.backgroundColor = "#fee2e2";
+                    this.style.color = "#ef4444";
+                    alert("❤️ Product added to wishlist!");
+                });
+            });
+        }
+
+        // ✅ Newsletter Subscription
+        document.addEventListener("DOMContentLoaded", function () {
+    fetchCartCount(); // ✅ Add this here
+
+    // Newsletter form logic
+    document.querySelector(".newsletter-form").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const email = this.querySelector(".newsletter-input").value;
+        if (email) {
+            alert("📩 Thank you for subscribing to our newsletter!");
+            this.reset();
+        } else {
+            alert("❌ Please enter a valid email address.");
+        }
+    });
+});
+
+
+    </script>
+    <script src="dashboard.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script> -->
+
+<script src="profile.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</body>
+</html>
