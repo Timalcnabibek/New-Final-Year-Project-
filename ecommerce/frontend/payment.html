@@ -937,14 +937,33 @@ const khaltiTotalElement = document.querySelector('#khalti-details .summary-row 
 });
 
 async function submitOrder(paymentMethod) {
-  const product = JSON.parse(sessionStorage.getItem("selectedProduct")) || JSON.parse(sessionStorage.getItem("orderSummary"));
-  const customerId = localStorage.getItem("customerId");
+    const selectedProductStr = sessionStorage.getItem("selectedProduct");
+const orderSummaryStr = sessionStorage.getItem("orderSummary");
 
-  if (!product || !customerId) {
-    alert("❌ Missing data. Redirecting to homepage.");
-    window.location.href = "dashboard.html";
-    return;
-  }
+let product = null;
+try {
+  product = selectedProductStr
+    ? JSON.parse(selectedProductStr)
+    : orderSummaryStr
+    ? JSON.parse(orderSummaryStr)
+    : null;
+} catch (e) {
+  console.error("❌ Failed to parse sessionStorage data:", e);
+}
+
+const customerId = localStorage.getItem("customerId");
+
+if (!product) {
+  alert("❌ Missing data. Redirecting to homepage.");
+  window.location.href = "dashboard.html";
+  return;
+}
+// if (!product || !customerId) {
+//   alert("❌ Missing data. Redirecting to homepage.");
+//   window.location.href = "dashboard.html";
+//   return;
+// }
+
 
   const formattedProducts = Array.isArray(product.items)
     ? product.items.map(item => ({
@@ -1023,6 +1042,46 @@ document.getElementById("pay-khalti").addEventListener("click", (e) => {
   }, 2000);
 });
   </script>
+
+
+
+
+<!-- script for khalti integration -->
+<script>
+    document.getElementById("pay-khalti").addEventListener("click", async () => {
+      const orderData = JSON.parse(sessionStorage.getItem("selectedProduct"));
+      if (!orderData) return alert("Order data missing!");
+  
+      const payload = {
+        itemId: orderData.productId, // _id of the product
+        quantity: orderData.quantity,
+        unitPrice: orderData.price,
+        website_url: "http://localhost:3000"
+      };
+  
+      try {
+        const res = await fetch("http://localhost:3000/api/payment/initialize-khali", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+  
+        const data = await res.json();
+  
+        if (data.success && data.payment?.payment_url) {
+          window.location.href = data.payment.payment_url; // Redirect to Khalti payment
+        } else {
+          alert("Payment initiation failed: " + (data.message || "Something went wrong"));
+        }
+      } catch (err) {
+        console.error("Error initializing payment", err);
+        alert("Error initiating Khalti payment");
+      }
+    });
+  </script>
+ 
   
 </body>
 </html>

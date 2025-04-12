@@ -21,6 +21,9 @@ const cartRoutes = require("./routes/cart.js"); // ✅ Added Cart Routes
 const wishlistRoutes = require("./routes/wishlist.js"); // ✅ Added Wishlist Routes
 const trackorders = require("./routes/order.js")
 const loyaltyRoutes = require("./routes/loyalty");
+const redeemRewards = require('./controllers/redeem.js')
+const khalti = require('./controllers/initializekhalti.js')
+
 
 // Middleware
 app.use(cors());
@@ -62,6 +65,9 @@ app.get("/trackorder",(req,res) =>{
   res.sendFile(path.join(__dirname, "../frontend/trackorder.html"));
 })
 
+app.get("/invoice", (req, res) => {
+  res.sendFile(path.join(__dirname,"../frontend/invoice.html"))
+})
 // ✅ API Routes
 
 app.use("/api/loyalty", loyaltyRoutes);
@@ -74,6 +80,8 @@ app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes); // ✅ Cart API
 app.use("/api/wishlist", wishlistRoutes); // ✅ Wishlist API
 app.use('/api', trackorders);
+app.use('/api', redeemRewards);
+app.use('/api/payment', khalti);
 
 // Database connection
 const MONGO_URL = process.env.MONGO_URL;
