@@ -14,21 +14,21 @@
 
 <body>
     <div class="container">
-                <!-- Navigation -->
-                <nav class="navbar">
-                    <div class="sidebar">
-                        <h2>Logo</h2>
-                        <ul>
-                            <li><a href="{{url_for('dashboard_page')}}" >Dashboard</a></li>
-                            <li><a href="{{url_for('average_page')}}">Average Data</a></li>
-                            <li><a href="{{url_for('prediction_page')}}">Prediction Data</a></li>
-                            <li><a href="{{ url_for('new_page') }}" class="active">Customer Data</a></li>
-                            <li><a href="{{url_for('order_page')}}">Orders</a></li>
-                            <li><a href="{{ url_for('index') }}">Products</a></li>
-                            <li><a href="#" id="logoutButton">Log Out</a></li>
-                        </ul>
-                    </div>
-                </nav>
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="sidebar">
+                <h2>Logo</h2>
+                <ul>
+                    <li><a href="{{url_for('dashboard_page')}}">Dashboard</a></li>
+                    <li><a href="{{url_for('average_page')}}">Average Data</a></li>
+                    <li><a href="{{url_for('prediction_page')}}">Prediction Data</a></li>
+                    <li><a href="{{ url_for('new_page') }}" class="active">Customer Data</a></li>
+                    <li><a href="{{url_for('order_page')}}">Orders</a></li>
+                    <li><a href="{{ url_for('index') }}">Products</a></li>
+                    <li><a href="#" id="logoutButton">Log Out</a></li>
+                </ul>
+            </div>
+        </nav>
 
         <!-- Content -->
         <div class="content">
@@ -38,52 +38,56 @@
             </div>
 
             <div class="dashboard-metrics">
-    <!-- Total Customers -->
-    <div class="metric-card">
-        <h3>Total Customers</h3>
-        <div class="metric-icon user-icon"><i class="fas fa-users"></i></div>
-        <div class="metric-value">
-            <h2 id="totalCustomersCount">0</h2>  <!-- Updated by JavaScript -->
-            <span class="growth positive">+12%</span>
-        </div>
-        <div class="metric-comparison">vs. previous month</div>
-    </div>
+                <!-- Total Customers -->
+                <div class="metric-card">
+                    <h3>Total Customers</h3>
+                    <div class="metric-icon user-icon"><i class="fas fa-users"></i></div>
+                    <div class="metric-value">
+                        <h2 id="totalCustomersCount">0</h2> <!-- Updated by JavaScript -->
+                        <span class="growth positive">+12%</span>
+                    </div>
+                    <div class="metric-comparison">vs. previous month</div>
+                </div>
 
-    <!-- Active Customers -->
-    <div class="metric-card">
-        <h3>Active Customers</h3>
-        <div class="metric-icon active-icon"><i class="fas fa-user-check"></i></div>
-        <div class="metric-value">
-            <h2 id="activeCustomersCount">0</h2>  <!-- Updated by JavaScript -->
-            <span class="growth positive">+8%</span>
-        </div>
-        <div class="metric-comparison">0% of total</div>
-    </div>
 
-    <!-- Total Revenue -->
-    <div class="metric-card">
-        <h3>Total Revenue</h3>
-        <div class="metric-icon revenue-icon"><i class="fas fa-dollar-sign"></i></div>
-        <div class="metric-value">
-            <h2 id="totalRevenue">$0</h2>  <!-- Updated by JavaScript -->
-            <span class="growth positive">+15%</span>
-        </div>
-        <div class="metric-comparison">vs. previous month</div>
-    </div>
+                <!-- Active Customers -->
+                <div class="metric-card">
+                    <h3>Active Customers</h3>
+                    <div class="metric-icon active-icon"><i class="fas fa-user-check"></i></div>
+                    <div class="metric-value">
+                        <h2 id="activeCustomersCount">0</h2> <!-- Updated by JavaScript -->
+                        <span class="growth positive">+8%</span>
+                    </div>
+                    <div class="metric-comparison">
+                        <span id="activeCustomerPercent">0% of total</span>
+                    </div>
+                </div>
 
-    <!-- Average Spend -->
-    <div class="metric-card">
-        <h3>Average Spend</h3>
-        <div class="metric-icon spend-icon"><i class="fas fa-shopping-cart"></i></div>
-        <div class="metric-value">
-            <h2 id="averageSpend">$0.00</h2>  <!-- Updated by JavaScript -->
-            <span class="growth positive">+5%</span>
-        </div>
-        <div class="metric-comparison">per customer</div>
-    </div>
-</div>
 
-            
+                <!-- Total Revenue -->
+                <div class="metric-card">
+                    <h3>Total Revenue</h3>
+                    <div class="metric-icon revenue-icon"><i class="fas fa-dollar-sign"></i></div>
+                    <div class="metric-value">
+                        <h2 id="totalRevenue">0</h2> <!-- Updated by JavaScript -->
+                        <span class="growth positive">+15%</span>
+                    </div>
+                    <div class="metric-comparison">vs. previous month</div>
+                </div>
+
+                <!-- Average Spend -->
+                <div class="metric-card">
+                    <h3>Average Spend</h3>
+                    <div class="metric-icon spend-icon"><i class="fas fa-shopping-cart"></i></div>
+                    <div class="metric-value">
+                        <h2 id="averageSpend">$0.00</h2> <!-- Updated by JavaScript -->
+                        <span class="growth positive">+5%</span>
+                    </div>
+                    <div class="metric-comparison">per customer</div>
+                </div>
+            </div>
+
+
 
 
             <!-- Dashboard Charts -->
@@ -135,95 +139,150 @@
         </div>
     </div>
 
-    <script>
-        // Fetch recent customers data
-        document.addEventListener("DOMContentLoaded", function () {
-            fetch('http://localhost:5000/api/customers')
-    .then(response => response.json())
-    .then(data => {
-        console.log("API Response:", data);
+<script>
+    function fetchCustomerStats() {
+    fetch('/api/customers/stats')
+        .then(response => response.json())
+        .then(data => {
+            // Update total customers count
+            document.getElementById('totalCustomersCount').textContent = data.totalCustomers;
+            
+            // Update active customers count
+            document.getElementById('activeCustomersCount').textContent = data.activeCustomers;
+            
+            // Update active customer percentage
+            const activePercentText = document.getElementById('activeCustomerPercent');
+            if (activePercentText) {
+                activePercentText.textContent = `${data.activeCustomerPercentage}% of total`;
+                activePercentText.classList.toggle("positive", data.activeCustomerPercentage >= 20);
+                activePercentText.classList.toggle("negative", data.activeCustomerPercentage < 20);
+            }
+            
+            console.log("Customer stats updated:", data);
+        })
+        .catch(error => console.error('Error fetching customer statistics:', error));
+}
 
-        // ✅ Extract the customers array
-        const customers = data.customers || []; 
-
-        if (!Array.isArray(customers)) {
-            console.error("❌ Error: Expected an array but got:", customers);
-            return;
-        }
-
-        const sortedCustomers = customers.sort((a, b) => 
-            new Date(b.registration_date || 0) - new Date(a.registration_date || 0)
-        ).slice(0, 5);
-
-        const recentCustomersTable = document.getElementById('recentCustomersTable');
-        if (!recentCustomersTable) {
-            console.error("❌ Table element not found");
-            return;
-        }
-
-        recentCustomersTable.innerHTML = '';
-
-        sortedCustomers.forEach(customer => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${customer.username || 'N/A'}</td>
-                <td>${customer.email || 'N/A'}</td>
-                <td><span class="status-badge">${customer.status || 'N/A'}</span></td>
-                <td>$${(customer.total_spent || 0).toFixed(2)}</td>
-                <td>${customer.registration_date ? new Date(customer.registration_date).toLocaleDateString() : 'N/A'}</td>
-            `;
-            recentCustomersTable.appendChild(row);
+function fetchTotalRevenue() {
+    fetch('/api/metrics/total-revenue')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && typeof data.totalRevenue === 'number') {
+                // Format with commas and currency
+                const formattedRevenue = `Rs. ${data.totalRevenue.toLocaleString()}`;
+                document.getElementById('totalRevenue').textContent = formattedRevenue;
+            } else {
+                console.warn("Unexpected response from /api/metrics/total-revenue");
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching total revenue:", error);
         });
-    })
-    .catch(error => console.error('❌ Fetch error:', error));
+}
 
+function fetchRecentCustomers() {
+    fetch('http://localhost:5000/api/customers')
+        .then(response => response.json())
+        .then(data => {
+            console.log("API Response:", data);
 
-            fetch('/api/metrics')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById("totalCustomersCount").innerText = data.total_customers;
-                    document.getElementById("activeCustomersCount").innerText = data.active_customers;
-                    document.getElementById("totalRevenue").innerText = `$${data.total_revenue.toFixed(2)}`;
-                    document.getElementById("averageSpend").innerText = `$${data.average_spend.toFixed(2)}`;
-                })
-                .catch(error => console.error("Error fetching metrics:", error));
+            // Extract the customers array
+            const customers = data.customers || [];
 
-
-
-            // Fetch customer statistics and update the UI
-            function fetchCustomerStats() {
-                fetch('/api/customers/stats')
-                    .then(response => response.json())
-                    .then(data => {
-                        // Update total customers count
-                        document.getElementById('totalCustomersCount').textContent = data.totalCustomers;
-
-                        // Update active customers count
-                        document.getElementById('activeCustomersCount').textContent = data.activeCustomers;
-
-                        // Update customer growth percentage
-                        const growthElement = document.querySelector('#totalCustomersCount + .growth');
-                        growthElement.textContent = `+${data.customerGrowthPercentage}%`;
-
-                        // Change color based on growth (if negative, make it red)
-                        if (data.customerGrowthPercentage < 0) {
-                            growthElement.classList.remove("positive");
-                            growthElement.classList.add("negative");
-                        } else {
-                            growthElement.classList.remove("negative");
-                            growthElement.classList.add("positive");
-                        }
-                    })
-                    .catch(error => console.error('Error fetching customer statistics:', error));
+            if (!Array.isArray(customers)) {
+                console.error("Error: Expected an array but got:", customers);
+                return;
             }
 
-            // Run function when page loads
-            document.addEventListener('DOMContentLoaded', fetchCustomerStats);
+            const sortedCustomers = customers.sort((a, b) =>
+                new Date(b.registration_date || 0) - new Date(a.registration_date || 0)
+            ).slice(0, 5);
 
+            const recentCustomersTable = document.getElementById('recentCustomersTable');
+            if (!recentCustomersTable) {
+                console.error("Table element not found");
+                return;
+            }
+
+            recentCustomersTable.innerHTML = '';
+
+            sortedCustomers.forEach(customer => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${customer.username || 'N/A'}</td>
+                    <td>${customer.email || 'N/A'}</td>
+                    <td><span class="status-badge ${customer.status ? customer.status.toLowerCase() : ''}">${customer.status || 'N/A'}</span></td>
+                    <td>$${(customer.total_spent || 0).toFixed(2)}</td>
+                    <td>${customer.registration_date ? new Date(customer.registration_date).toLocaleDateString() : 'N/A'}</td>
+                `;
+                recentCustomersTable.appendChild(row);
+            });
+        })
+        .catch(error => console.error('Fetch error:', error));
+}
+
+function fetchStatusChart() {
+    fetch("/api/customers")
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.customers) {
+                const statusCounts = {
+                    Active: 0,
+                    Inactive: 0,
+                    Pending: 0
+                };
+
+                // Count each status
+                data.customers.forEach(customer => {
+                    const status = customer.status || "Unknown";
+                    if (statusCounts.hasOwnProperty(status)) {
+                        statusCounts[status]++;
+                    }
+                });
+
+                const labels = Object.keys(statusCounts);
+                const values = Object.values(statusCounts);
+
+                const ctx = document.getElementById("statusChart").getContext("2d");
+                new Chart(ctx, {
+                    type: "doughnut",
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: [
+                                "#4CAF50", // Active - green
+                                "#9E9E9E", // Inactive - gray
+                                "#FFC107" // Pending - yellow
+                            ],
+                            borderWidth: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Customer Status Distribution'
+                            }
+                        }
+                    }
+                });
+            } else {
+                console.warn("No customers found or API failed.");
+            }
+        })
+        .catch(err => {
+            console.error("Error fetching customer status data:", err);
         });
+}
 
-
-        // Initialize Growth Chart
+function initializeGrowthChart() {
+    try {
         const monthlyData = JSON.parse('{{ monthly_data|safe }}');
         const growthCtx = document.getElementById('growthChart').getContext('2d');
         new Chart(growthCtx, {
@@ -251,42 +310,61 @@
                 }
             }
         });
+    } catch (error) {
+        console.error("Error initializing growth chart:", error);
+    }
+}
 
-        // Initialize Status Chart
-        const statusData = JSON.parse('{{ status_distribution|safe }}');
-        const statusCtx = document.getElementById('statusChart').getContext('2d');
-        new Chart(statusCtx, {
-            type: 'doughnut',
-            data: {
-                labels: statusData.map(item => item.status),
-                datasets: [{
-                    data: statusData.map(item => item.count),
-                    backgroundColor: [
-                        'rgba(40, 167, 69, 0.7)', // Active - green
-                        'rgba(108, 117, 125, 0.7)', // Inactive - gray
-                        'rgba(255, 193, 7, 0.7)' // Pending - yellow
-                    ],
-                    borderColor: [
-                        'rgba(40, 167, 69, 1)',
-                        'rgba(108, 117, 125, 1)',
-                        'rgba(255, 193, 7, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
+function fetchAverageSpend() {
+    fetch('/api/metrics/average-customer-spend') // <-- This endpoint returns per-customer average
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && typeof data.avgCustomerSpend === 'number') {
+                const formattedAverage = `$${data.avgCustomerSpend.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })}`;
+
+                const averageSpendElement = document.getElementById('averageSpend');
+                if (averageSpendElement) {
+                    averageSpendElement.textContent = formattedAverage;
+                    console.log("✅ Average spend per customer updated:", formattedAverage);
+                } else {
+                    console.error("Element with ID 'averageSpend' not found");
                 }
+            } else {
+                console.warn("⚠️ Unexpected response from /api/metrics/average-customer-spend");
+            }
+        })
+        .catch(error => {
+            console.error("❌ Error fetching average customer spend:", error);
+        });
+}
+
+
+// Make sure to call this function in your DOMContentLoaded event
+document.addEventListener("DOMContentLoaded", function() {
+    // Other fetch calls
+    fetchCustomerStats();
+    fetchTotalRevenue();
+    fetchRecentCustomers();
+    fetchStatusChart();
+    fetchAverageSpend(); // Add this line to call the new function
+    initializeGrowthChart();
+    
+    // Add logout functionality
+    const logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('Are you sure you want to log out?')) {
+                window.location.href = '/logout';
             }
         });
-    </script>
+    }
+});
 
-<script src="{{ url_for('static', filename='js/customerstats.js') }}"></script>
+</script>
 
 </body>
 

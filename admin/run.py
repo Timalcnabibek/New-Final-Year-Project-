@@ -11,6 +11,8 @@ from datetime import datetime, timedelta
 import calendar
 import json
 import bcrypt
+from bson.son import SON
+
 # from products import *
 
 # Load environment variables
@@ -56,7 +58,8 @@ products_collection = db["products"]
 customers_collection = db["customers"]  # Changed to lowercase to match MongoDB conventions
 orders_collection = db["orders"]  # Replace with your actual collection name if different
 sales_data_collection = db["sales_datas"]
-# average_data_collection  = db[""]
+promo_codes_collection = db["promo_codes"]
+
 
 # Cloudinary configuration
 cloudinary.config(
@@ -176,10 +179,16 @@ def new_page():
     except Exception as e:
         print(f"Error in new_page route: {str(e)}")
         return jsonify({"error": str(e)}), 500
+ 
 
+#  Render HTML page
 @app.route('/customers')
 def customers_page():
     return render_template('customer.html')
+
+@app.route('/promo')
+def promo_page():
+    return render_template('promo.html')
 
 @app.route('/analytics')
 def analytics_page():
@@ -203,6 +212,10 @@ def prediction_page():
 @app.route('/orders')
 def order_page():
     return render_template('orders.html')
+
+
+
+#API starts from here
 @app.route('/api/customers', methods=['GET'])
 def get_customers():
     try:
@@ -353,47 +366,44 @@ def get_metrics():
 @app.route('/api/customers/stats', methods=['GET'])
 def get_customer_stats():
     try:
-        # Get total customers
         total_customers = customers_collection.count_documents({})
-        
-        # Get verified customers
         verified_customers = customers_collection.count_documents({"isVerified": True})
-        
-        # Get first day of current and last month
+        active_customers = customers_collection.count_documents({"status": "Active"})  # <-- ADD THIS
+
         today = datetime.utcnow()
         first_day_of_current_month = datetime(today.year, today.month, 1)
-        
         if today.month > 1:
             first_day_of_last_month = datetime(today.year, today.month - 1, 1)
         else:
             first_day_of_last_month = datetime(today.year - 1, 12, 1)
-        
-        # Get total new customers this month
+
         customers_this_month = customers_collection.count_documents({
             "createdAt": {"$gte": first_day_of_current_month}
         })
-        
-        # Get total new customers last month
+
         customers_last_month = customers_collection.count_documents({
             "createdAt": {"$gte": first_day_of_last_month, "$lt": first_day_of_current_month}
         })
-        
-        # Calculate percentage increase
+
         customer_growth_percentage = 0
         if customers_last_month > 0:
             customer_growth_percentage = ((customers_this_month - customers_last_month) / customers_last_month) * 100
         elif customers_this_month > 0:
             customer_growth_percentage = 100
-        
+
         return jsonify({
             "totalCustomers": total_customers,
             "verifiedCustomers": verified_customers,
+            "activeCustomers": active_customers,
+            "activeCustomerPercentage": round((active_customers / total_customers) * 100, 2) if total_customers > 0 else 0,
             "customerGrowthPercentage": round(customer_growth_percentage, 2)
         })
-    
+
+
     except Exception as e:
         print(f"Error in get_customer_stats API: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/showproducts')
 def index():
@@ -695,21 +705,43 @@ def get_order_count():
         return jsonify({"success": False, "message": str(e)}), 500
 
 
+
+
+
+
 #route to find the total sales, average order value, total revenue and conversion
 
-#total sales
-@app.route('/api/metrics/total-sales')
-def total_sales():
+#total salesfrom bson.son import SON  # Make sure you import this for sorting
+
+@app.route('/api/metrics/total-sales-monthly')
+def total_sales_monthly():
     try:
         pipeline = [
             {"$unwind": "$products"},
-            {"$group": {"_id": None, "totalSold": {"$sum": "$products.quantity"}}}
+            {
+                "$group": {
+                    "_id": {
+                        "month": {"$dateToString": {"format": "%Y-%m", "date": "$createdAt"}}
+                    },
+                    "monthlyTotalSales": {"$sum": "$products.quantity"}
+                }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "month": "$_id.month",
+                    "monthlyTotalSales": 1
+                }
+            },
+            {
+                "$sort": SON([("month", 1)])
+            }
         ]
         result = list(orders_collection.aggregate(pipeline))
-        total_sold = result[0]["totalSold"] if result else 0
-        return jsonify({"success": True, "totalSales": total_sold})
+        return jsonify({"success": True, "monthlySales": result})
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
+
 
 
 #total revenue
@@ -724,26 +756,71 @@ def total_revenue():
         return jsonify({"success": False, "message": str(e)}), 500
 
 #average order value
-@app.route('/api/metrics/average-order-value')
-def average_order_value():
+@app.route('/api/metrics/average-order-value-monthly')
+def average_order_value_monthly():
+    try:
+        pipeline = [
+            {
+                "$group": {
+                    "_id": {
+                        "month": {"$dateToString": {"format": "%Y-%m", "date": "$createdAt"}}
+                    },
+                    "monthlyRevenue": {"$sum": "$totalAmount"},
+                    "orderCount": {"$sum": 1}
+                }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "month": "$_id.month",
+                    "averageOrderValue": {
+                        "$cond": [{"$eq": ["$orderCount", 0]}, 0, {"$divide": ["$monthlyRevenue", "$orderCount"]}]
+                    }
+                }
+            },
+            {
+                "$sort": SON([("month", 1)])  # Sort by month ascending
+            }
+        ]
+
+        result = list(orders_collection.aggregate(pipeline))
+        return jsonify({"success": True, "monthlyAOV": result})
+
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+
+#average customer spend API
+@app.route('/api/metrics/average-customer-spend')
+def average_customer_spend():
     try:
         pipeline = [
             {"$group": {
+                "_id": "$customerId",  # group by customer
+                "totalSpentByCustomer": {"$sum": "$totalAmount"}
+            }},
+            {"$group": {
                 "_id": None,
-                "totalRevenue": {"$sum": "$totalAmount"},
-                "orderCount": {"$sum": 1}
+                "totalCustomerSpend": {"$sum": "$totalSpentByCustomer"},
+                "customerCount": {"$sum": 1}
             }},
             {"$project": {
-                "averageOrderValue": {
-                    "$cond": [{"$eq": ["$orderCount", 0]}, 0, {"$divide": ["$totalRevenue", "$orderCount"]}]
+                "averageSpendPerCustomer": {
+                    "$cond": [
+                        {"$eq": ["$customerCount", 0]},
+                        0,
+                        {"$divide": ["$totalCustomerSpend", "$customerCount"]}
+                    ]
                 }
             }}
         ]
         result = list(orders_collection.aggregate(pipeline))
-        avg_value = result[0]["averageOrderValue"] if result else 0
-        return jsonify({"success": True, "avgOrderValue": round(avg_value, 2)})
+        avg = result[0]["averageSpendPerCustomer"] if result else 0
+        return jsonify({"success": True, "avgCustomerSpend": round(avg, 2)})
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
+
 
 
 
@@ -751,7 +828,7 @@ def average_order_value():
 def conversion_rate():
     try:
         total_orders = orders_collection.count_documents({})
-        total_visitors = 50000  # Mock value; replace with real data if available
+        total_visitors = 50000 
         rate = (total_orders / total_visitors) * 100 if total_visitors > 0 else 0
         return jsonify({"success": True, "conversionRate": round(rate, 2)})
     except Exception as e:
@@ -881,7 +958,7 @@ def get_analytics_overview():
         
         # 7. Conversion Rate
         # This might require session data, so using a placeholder or calculation based on available data
-        total_visitors = 2000  # This could be fetched from another collection if available
+        total_visitors = 2000  
         conversion_rate = round((order_count / total_visitors * 100), 1) if total_visitors > 0 else 0
         
         # 8. Average Session Duration (placeholder or calculated value)
@@ -1041,7 +1118,6 @@ def update_order(order_id):
             return jsonify({"success": False, "error": "Status field is required"}), 400
         
         # Convert string ID to ObjectId for MongoDB
-        from bson.objectid import ObjectId
         order_id_obj = ObjectId(order_id)
         
         # Update the order
@@ -1077,7 +1153,6 @@ def delete_order(order_id):
             return jsonify({"success": False, "error": "Invalid order ID format"}), 400
             
         # Convert string ID to ObjectId for MongoDB
-        from bson.objectid import ObjectId
         order_id_obj = ObjectId(order_id)
         
         # Ensure orders_collection is defined
@@ -1106,7 +1181,272 @@ def delete_order(order_id):
             return jsonify({"success": False, "error": "Invalid order ID format"}), 400
             
         return jsonify({"success": False, "error": f"Failed to delete order. Details: {error_message}"}), 500
+    
 
+#promo code section
+# Route to show the admin promo code dashboard
+@app.route('/admin/promo-codes', methods=['GET'])
+def admin_promo_codes():
+    promo_codes = list(promo_codes_collection.find())
+    promo_codes = convert_object_ids(promo_codes)
+    return render_template('promo.html', promo_codes=promo_codes)
+
+@app.route('/api/admin/promo-codes/add', methods=['POST'])
+def add_promo_code():
+    try:
+        data = request.get_json()
+        print("📥 Received promo data:", data)
+
+        if not data:
+            return jsonify({'success': False, 'message': 'Invalid JSON data'}), 400
+
+        # Validate required fields
+        if not data.get('code'):
+            return jsonify({'success': False, 'message': 'Promo code is required'}), 400
+
+        if not data.get('start_date'):
+            return jsonify({'success': False, 'message': 'Start date is required'}), 400
+
+        # Status
+        status = True if data.get('status') == 'on' else False
+
+        # Discount amount
+        try:
+            discount_amount = float(data.get('discount_amount') or 0)
+        except ValueError:
+            return jsonify({'success': False, 'message': 'Invalid discount amount'}), 400
+
+        # Usage limit
+        try:
+            usage_limit = int(data.get('usage_limit') or 0)
+        except ValueError:
+            return jsonify({'success': False, 'message': 'Invalid usage limit'}), 400
+
+        # Dates
+        try:
+            start_date = datetime.strptime(data['start_date'], '%Y-%m-%d')
+        except ValueError:
+            return jsonify({'success': False, 'message': 'Invalid start date format (expected YYYY-MM-DD)'}), 400
+
+        end_date = None
+        if data.get('end_date'):
+            try:
+                end_date = datetime.strptime(data['end_date'], '%Y-%m-%d')
+            except ValueError:
+                return jsonify({'success': False, 'message': 'Invalid end date format (expected YYYY-MM-DD)'}), 400
+
+        # Check if promo code already exists
+        existing_code = promo_codes_collection.find_one({'code': data['code']})
+        if existing_code:
+            return jsonify({'success': False, 'message': 'Promo code already exists'}), 400
+
+        # Prepare document
+        promo_code = {
+            'code': data['code'],
+            'status': status,
+            'discount_amount': discount_amount,
+            'discount_type': data.get('discount_type', 'percentage'),
+            'start_date': start_date,
+            'end_date': end_date,
+            'usage_limit': usage_limit,
+            'usage_count': 0,
+            'created_at': datetime.now()
+        }
+
+        # Insert
+        result = promo_codes_collection.insert_one(promo_code)
+
+        if result.inserted_id:
+            return jsonify({'success': True, 'message': 'Promo code added successfully'}), 201
+        else:
+            return jsonify({'success': False, 'message': 'Failed to insert promo code'}), 500
+
+    except Exception as e:
+        print(f"🔥 Error adding promo code: {str(e)}")
+        return jsonify({'success': False, 'message': f'Internal Server Error: {str(e)}'}), 500
+
+# Route to get all promo codes (for the listing page)
+@app.route('/admin/promo-codes/list', methods=['GET'])
+def list_promo_codes():
+    try:
+        # Get filter parameter
+        filter_status = request.args.get('filter', 'all')
+        
+        # Build query based on filter
+        query = {}
+        if filter_status == 'active':
+            query['status'] = True
+        elif filter_status == 'inactive':
+            query['status'] = False
+        
+        # Get all promo codes
+        promo_codes = list(promo_codes_collection.find(query).sort('created_at', -1))
+        
+        # Process data for JSON response
+        for code in promo_codes:
+            code['_id'] = str(code['_id'])
+            if 'start_date' in code:
+                code['start_date'] = code['start_date'].strftime('%Y-%m-%d')
+            if 'end_date' in code and code['end_date']:
+                code['end_date'] = code['end_date'].strftime('%Y-%m-%d')
+            if 'created_at' in code:
+                code['created_at'] = code['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+        
+        return jsonify({'success': True, 'data': promo_codes})
+    
+    except Exception as e:
+        print(f"Error listing promo codes: {str(e)}")
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+# Route to update a promo code
+@app.route('/admin/promo-codes/update/<code_id>', methods=['POST'])
+def update_promo_code(code_id):
+    try:
+        data = request.form
+        
+        # Process status value
+        status = True if data.get('status') == 'on' else False
+        
+        # Convert discount amount to float
+        discount_amount = float(data.get('discount_amount', 0))
+        
+        # Process dates
+        start_date = datetime.strptime(data.get('start_date'), '%Y-%m-%d')
+        end_date = None
+        if data.get('end_date'):
+            end_date = datetime.strptime(data.get('end_date'), '%Y-%m-%d')
+        
+        # Process usage limit
+        usage_limit = int(data.get('usage_limit', 0))
+        
+        # Update values
+        update_values = {
+            '$set': {
+                'code': data.get('code'),
+                'status': status,
+                'discount_amount': discount_amount,
+                'discount_type': data.get('discount_type'),
+                'start_date': start_date,
+                'end_date': end_date,
+                'usage_limit': usage_limit,
+                'updated_at': datetime.now()
+            }
+        }
+        
+        # Check if code with new name already exists (if code was changed)
+        existing_code = promo_codes_collection.find_one({'code': data.get('code'), '_id': {'$ne': ObjectId(code_id)}})
+        if existing_code:
+            return jsonify({'success': False, 'message': 'Another promo code with this code already exists'}), 400
+        
+        # Update the promo code
+        result = promo_codes_collection.update_one({'_id': ObjectId(code_id)}, update_values)
+        
+        if result.modified_count > 0:
+            return jsonify({'success': True, 'message': 'Promo code updated successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'No changes made or promo code not found'}), 404
+            
+    except Exception as e:
+        print(f"Error updating promo code: {str(e)}")
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+# Route to delete a promo code
+@app.route('/admin/promo-codes/delete/<code_id>', methods=['POST'])
+def delete_promo_code(code_id):
+    try:
+        result = promo_codes_collection.delete_one({'_id': ObjectId(code_id)})
+        
+        if result.deleted_count > 0:
+            return jsonify({'success': True, 'message': 'Promo code deleted successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Promo code not found'}), 404
+            
+    except Exception as e:
+        print(f"Error deleting promo code: {str(e)}")
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+# Function to validate a promo code (to be used in checkout)
+def validate_promo_code(code):
+    try:
+        # Find the promo code
+        promo_code = promo_codes_collection.find_one({'code': code})
+        
+        if not promo_code:
+            return {'valid': False, 'message': 'Promo code not found'}
+        
+        # Check if active
+        if not promo_code['status']:
+            return {'valid': False, 'message': 'This promo code is inactive'}
+        
+        # Check date range
+        current_date = datetime.now()
+        if current_date < promo_code['start_date']:
+            return {'valid': False, 'message': 'This promo code is not yet active'}
+        
+        if promo_code.get('end_date') and current_date > promo_code['end_date']:
+            return {'valid': False, 'message': 'This promo code has expired'}
+        
+        # Check usage limit
+        if promo_code['usage_limit'] > 0 and promo_code['usage_count'] >= promo_code['usage_limit']:
+            return {'valid': False, 'message': 'This promo code has reached its usage limit'}
+        
+        # Promo code is valid
+        discount_info = {
+            'type': promo_code['discount_type'],
+            'amount': promo_code['discount_amount']
+        }
+        
+        return {
+            'valid': True, 
+            'discount': discount_info,
+            'promo_code_id': str(promo_code['_id']),
+            'message': 'Promo code applied successfully'
+        }
+        
+    except Exception as e:
+        print(f"Error validating promo code: {str(e)}")
+        return {'valid': False, 'message': f'Error: {str(e)}'}
+
+# API route to validate a promo code
+@app.route('/api/validate-promo-code', methods=['POST'])
+def api_validate_promo_code():
+    try:
+        data = request.json
+        code = data.get('code', '').strip()
+        
+        if not code:
+            return jsonify({'valid': False, 'message': 'Please enter a promo code'}), 400
+        
+        result = validate_promo_code(code)
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"Error in promo code API: {str(e)}")
+        return jsonify({'valid': False, 'message': f'Error: {str(e)}'}), 500
+
+# Function to apply discount to an order amount
+def apply_discount(amount, discount_info):
+    if discount_info['type'] == 'percentage':
+        discount = amount * (discount_info['amount'] / 100)
+    else:  # fixed amount
+        discount = discount_info['amount']
+        # Ensure discount doesn't exceed amount
+        if discount > amount:
+            discount = amount
+            
+    return amount - discount, discount
+
+# Function to increment usage count when a promo code is used
+def increment_promo_code_usage(promo_code_id):
+    try:
+        promo_codes_collection.update_one(
+            {'_id': ObjectId(promo_code_id)},
+            {'$inc': {'usage_count': 1}}
+        )
+        return True
+    except Exception as e:
+        print(f"Error incrementing promo code usage: {str(e)}")
+        return False
 
 @app.route('/list-routes')
 def list_routes():

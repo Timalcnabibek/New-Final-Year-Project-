@@ -91,6 +91,37 @@
             font-weight: 600;
         }
 
+        /* for search bar */
+        .search-container {
+  display: flex;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.search-container input {
+  padding: 8px 12px 8px 35px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #555;
+  background-color: #f9f9f9;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23888" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: 10px center;
+  width: 280px;
+  height: 20px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.search-container input::placeholder {
+  color: #888;
+}
+
+/* Hide the search button since the image shows just an input with a search icon */
+.search-container button {
+  display: none;
+}
+
         .subtitle {
             color: #666;
             margin-top: 5px;
@@ -284,11 +315,11 @@
         <div class="sidebar">
             <h2>Logo</h2>
             <ul>
-                <li><a href="{{url_for('dashboard_page')}}" class="active">Dashboard</a></li>
+                <li><a href="{{url_for('dashboard_page')}}" >Dashboard</a></li>
                 <li><a href="{{url_for('average_page')}}">Average Data</a></li>
                 <li><a href="{{url_for('prediction_page')}}">Prediction Data</a></li>
                 <li><a href="{{ url_for('new_page') }}">Customer Data</a></li>
-                <li><a href="{{url_for('order_page')}}">Orders</a></li>
+                <li><a href="{{url_for('order_page')}}" class="active">Orders</a></li>
                 <li><a href="{{ url_for('index') }}">Products</a></li>
                 <li><a href="#" id="logoutButton">Log Out</a></li>
             </ul>
@@ -313,6 +344,11 @@
 
         <div class="order-management">
             <h2>Order Management</h2>
+
+            <div class="search-container">
+                <input type="text" id="customerSearch" placeholder="Search by customer name...">
+                <button id="searchButton"><i class="fas fa-search"></i> Search</button>
+              </div>
 
             <table>
                 <thead>
@@ -673,6 +709,49 @@
         });
     </script>
 
+
+<!-- script file for search input -->
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('customerSearch');
+    const searchButton = document.getElementById('searchButton');
+    
+    // Function to filter table rows based on customer name
+    function filterOrders() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const tableRows = document.querySelectorAll('#order-table-body tr');
+      
+      tableRows.forEach(row => {
+        const customerCell = row.querySelector('td:nth-child(3)');
+        if (customerCell) {
+          const customerName = customerCell.textContent.toLowerCase();
+          
+          if (customerName.includes(searchTerm)) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        }
+      });
+    }
+    
+    // Event listeners
+    searchButton.addEventListener('click', filterOrders);
+    
+    // Also filter as user types (for real-time filtering)
+    searchInput.addEventListener('keyup', filterOrders);
+    
+    // Clear search and show all orders when input is cleared
+    searchInput.addEventListener('input', function() {
+      if (this.value === '') {
+        document.querySelectorAll('#order-table-body tr').forEach(row => {
+          row.style.display = '';
+        });
+      }
+    });
+  });
+  </script>
 
 
 </body>

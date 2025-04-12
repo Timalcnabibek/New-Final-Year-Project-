@@ -46,7 +46,7 @@
         <div class="metrics-container">
             <div class="metric-card">
                 <div class="metric-title">
-                    Total Sales
+                    Total Sales Per Month
                     <i class="fas fa-dollar-sign" style="color: var(--primary-color)"></i>
                 </div>
                 <div class="metric-value" id="total-sales">Loading...</div>
@@ -272,8 +272,27 @@
     </div>
 
     <script src="{{url_for('static',filename = 'js/dashboard.js')}}"> </script>
+
+
+    <!-- orders and other things -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            fetch("/api/metrics/total-sales-monthly")
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && Array.isArray(data.monthlySales) && data.monthlySales.length > 0) {
+                    const latestMonthData = data.monthlySales[data.monthlySales.length - 1];
+                    const totalSales = latestMonthData.monthlyTotalSales || 0;
+
+                    document.getElementById("total-sales").textContent = totalSales.toLocaleString();
+                } else {
+                    document.getElementById("total-sales").textContent = "0";
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching total sales:", error);
+                document.getElementById("total-sales").textContent = "Error";
+            });
             fetch("/api/orders/count")
                 .then(response => response.json())
                 .then(data => {
@@ -288,20 +307,6 @@
                     console.error("Error fetching order count:", error);
                     document.getElementById("order-count").textContent = "Error";
                 });
-        });
-    </script>
-
-    <!-- orders and other things -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            fetch("/api/metrics/total-sales")
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById("total-sales").textContent = data.totalSales
-                            .toLocaleString();
-                    }
-                });
 
             fetch("/api/metrics/total-revenue")
                 .then(res => res.json())
@@ -312,13 +317,25 @@
                     }
                 });
 
-            fetch("/api/metrics/average-order-value")
+                fetch("/api/metrics/average-order-value-monthly")
                 .then(res => res.json())
                 .then(data => {
-                    if (data.success) {
-                        document.getElementById("avg-order-value").textContent = "$" + data.avgOrderValue;
+                    if (data.success && Array.isArray(data.monthlyAOV) && data.monthlyAOV.length > 0) {
+                        const latestMonth = data.monthlyAOV[data.monthlyAOV.length - 1];
+                        const formattedAOV = `Rs. ${latestMonth.averageOrderValue.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        })}`;
+                        document.getElementById("avg-order-value").textContent = formattedAOV;
+                    } else {
+                        document.getElementById("avg-order-value").textContent = "Rs. 0.00";
                     }
+                })
+                .catch(error => {
+                    console.error("Error fetching monthly AOV:", error);
+                    document.getElementById("avg-order-value").textContent = "Rs. 0.00";
                 });
+
 
             fetch("/api/metrics/conversion-rate")
                 .then(res => res.json())

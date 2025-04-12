@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/promo.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+</head>
+<body>
+    <div class="container">
+        <header>
+          <h1>Promo Codes Management</h1>
+          <p class="subtitle">Create and manage your promotional codes system</p>
+        </header>
+        <a href="{{ url_for('index') }}" class="fancy-link">
+            <i class="fas fa-arrow-left"></i> Go Back To Products
+        </a>
+        
+        
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="add">Add Promo Code</button>
+          <button class="tab-btn" data-tab="view">View Promo Codes</button>
+        </div>
+        
+        <div id="add-tab" class="tab-content active">
+          <form id="add-promo-form">
+            <div class="form-row">
+              <div class="form-col">
+                <div class="form-group">
+                  <label for="promo-code">Promo Code</label>
+                  <input type="text" id="promo-code" placeholder="E.G. SUMMER25" required>
+                </div>
+              </div>
+              <div class="form-col">
+                <div class="form-group">
+                  <label for="status">Status</label>
+                  <div class="toggle-switch">
+                    <input type="checkbox" id="status" checked>
+                    <span class="slider"></span>
+                  </div>
+                  <span id="status-text" style="margin-left: 70px; font-size: 14px; color: var(--text-light);">
+                    Active
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-col">
+                <div class="form-group">
+                  <label for="discount-amount">Discount Amount</label>
+                  <input type="number" id="discount-amount" min="0" placeholder="0" required>
+                </div>
+              </div>
+              <div class="form-col">
+                <div class="form-group">
+                  <label for="discount-type">Discount Type</label>
+                  <select id="discount-type" required>
+                    <option value="percentage">Percentage (%)</option>
+                    <option value="fixed">Fixed Amount ($)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-col">
+                <div class="form-group">
+                  <label for="start-date">Start Date</label>
+                  <input type="date" id="start-date" required>
+                </div>
+              </div>
+              <div class="form-col">
+                <div class="form-group">
+                  <label for="end-date">End Date</label>
+                  <input type="date" id="end-date" required>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="usage-limit">Usage Limit</label>
+              <input type="number" id="usage-limit" min="1" placeholder="100" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Create Promo Code</button>
+          </form>
+        </div>
+        
+        <div id="view-tab" class="tab-content">
+          <div class="search-container">
+            <input type="text" id="search-input" placeholder="Search promo codes...">
+            <select id="status-filter">
+              <option value="all">All</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          
+          <div class="promo-cards" id="promo-cards-container">
+            <!-- Promo cards will be inserted here dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          // Tab switching functionality
+          const tabButtons = document.querySelectorAll('.tab-btn');
+          const tabContents = document.querySelectorAll('.tab-content');
+          
+          tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+              // Remove active class from all buttons and contents
+              tabButtons.forEach(btn => btn.classList.remove('active'));
+              tabContents.forEach(content => content.classList.remove('active'));
+              
+              // Add active class to clicked button and corresponding content
+              button.classList.add('active');
+              document.getElementById(`${button.dataset.tab}-tab`).classList.add('active');
+            });
+          });
+          
+          // Status toggle text update
+          const statusToggle = document.getElementById('status');
+          const statusText = document.getElementById('status-text');
+          
+          statusToggle.addEventListener('change', () => {
+            statusText.textContent = statusToggle.checked ? 'Active' : 'Inactive';
+          });
+          
+          // Initialize sample promo codes
+          const samplePromoCodes = [
+            {
+              code: 'SUMMER25',
+              status: 'active',
+              startDate: '2025-05-01',
+              endDate: '2025-08-31',
+              discount: 25,
+              discountType: 'percentage',
+              usageLimit: 100,
+              usageCount: 45
+            },
+            {
+              code: 'WELCOME10',
+              status: 'active',
+              startDate: '2025-01-01',
+              endDate: '2025-12-31',
+              discount: 10,
+              discountType: 'fixed',
+              usageLimit: 500,
+              usageCount: 123
+            },
+            {
+              code: 'FLASH50',
+              status: 'inactive',
+              startDate: '2025-04-10',
+              endDate: '2025-04-12',
+              discount: 50,
+              discountType: 'percentage',
+              usageLimit: 50,
+              usageCount: 50
+            }
+          ];
+          
+          // Store promo codes in local storage or use sample data
+          let promoCodes = JSON.parse(localStorage.getItem('promoCodes')) || samplePromoCodes;
+          
+          // Format date for display
+          function formatDate(dateString) {
+            const date = new Date(dateString);
+            return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+          }
+          
+          // Update promo cards display
+          function updatePromoCards(codes = promoCodes) {
+            const container = document.getElementById('promo-cards-container');
+            container.innerHTML = '';
+            
+            if (codes.length === 0) {
+              container.innerHTML = '<p style="text-align: center; grid-column: 1 / -1; padding: 30px;">No promo codes found.</p>';
+              return;
+            }
+            
+            codes.forEach(promo => {
+              const usagePercentage = (promo.usageCount / promo.usageLimit) * 100;
+              const discountDisplay = promo.discountType === 'percentage' ? `${promo.discount}%` : `$${promo.discount.toFixed(2)}`;
+              
+              const card = document.createElement('div');
+              card.className = 'promo-card';
+              card.innerHTML = `
+                <span class="status-badge ${promo.status === 'active' ? 'status-active' : 'status-inactive'}">
+                  ${promo.status}
+                </span>
+                <h3 class="promo-code">${promo.code}</h3>
+                <p class="promo-dates">${formatDate(promo.startDate)} - ${formatDate(promo.endDate)}</p>
+                <p class="promo-detail"><strong>Discount:</strong> ${discountDisplay}</p>
+                <p class="promo-detail"><strong>Usage:</strong></p>
+                <div class="usage-bar">
+                  <div class="usage-progress" style="width: ${usagePercentage}%"></div>
+                </div>
+                <p class="usage-text">${promo.usageCount} / ${promo.usageLimit}</p>
+                
+                <div class="card-controls">
+                  <div class="card-toggle">
+                    <label class="toggle-switch">
+                      <input type="checkbox" class="status-toggle" data-code="${promo.code}" ${promo.status === 'active' ? 'checked' : ''}>
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+                  <div class="card-actions">
+                    <button class="btn-icon edit" data-code="${promo.code}">✏️</button>
+                    <button class="btn-icon delete" data-code="${promo.code}">🗑️</button>
+                  </div>
+                </div>
+              `;
+              
+              container.appendChild(card);
+            });
+            
+            // Add event listeners for card actions
+            document.querySelectorAll('.status-toggle').forEach(toggle => {
+              toggle.addEventListener('change', (e) => {
+                const code = e.target.dataset.code;
+                togglePromoStatus(code, e.target.checked);
+              });
+            });
+            
+            document.querySelectorAll('.btn-icon.delete').forEach(btn => {
+              btn.addEventListener('click', (e) => {
+                const code = e.target.dataset.code;
+                deletePromoCode(code);
+              });
+            });
+            
+            document.querySelectorAll('.btn-icon.edit').forEach(btn => {
+              btn.addEventListener('click', (e) => {
+                const code = e.target.dataset.code || e.target.parentElement.dataset.code;
+                editPromoCode(code);
+              });
+            });
+          }
+          
+          // Toggle promo code status
+          function togglePromoStatus(code, isActive) {
+            const index = promoCodes.findIndex(p => p.code === code);
+            if (index !== -1) {
+              promoCodes[index].status = isActive ? 'active' : 'inactive';
+              savePromoCodes();
+              updatePromoCards();
+            }
+          }
+          
+          // Delete promo code
+          function deletePromoCode(code) {
+            if (confirm(`Are you sure you want to delete the promo code "${code}"?`)) {
+              promoCodes = promoCodes.filter(p => p.code !== code);
+              savePromoCodes();
+              updatePromoCards();
+            }
+          }
+          
+          // Edit promo code (redirect to add tab with filled data)
+          function editPromoCode(code) {
+            const promo = promoCodes.find(p => p.code === code);
+            if (!promo) return;
+            
+            // Switch to add tab
+            document.querySelector('.tab-btn[data-tab="add"]').click();
+            
+            // Fill the form
+            document.getElementById('promo-code').value = promo.code;
+            document.getElementById('promo-code').readOnly = true; // Can't edit the code itself
+            document.getElementById('status').checked = promo.status === 'active';
+            document.getElementById('status-text').textContent = promo.status === 'active' ? 'Active' : 'Inactive';
+            document.getElementById('discount-amount').value = promo.discount;
+            document.getElementById('discount-type').value = promo.discountType;
+            document.getElementById('start-date').value = promo.startDate;
+            document.getElementById('end-date').value = promo.endDate;
+            document.getElementById('usage-limit').value = promo.usageLimit;
+            
+            // Change button text
+            const submitBtn = document.querySelector('#add-promo-form .btn-primary');
+            submitBtn.textContent = 'Update Promo Code';
+            submitBtn.dataset.editMode = 'true';
+            submitBtn.dataset.originalCode = code;
+          }
+          
+          // Save promo codes to local storage
+          function savePromoCodes() {
+            localStorage.setItem('promoCodes', JSON.stringify(promoCodes));
+          }
+          
+          // Add form submission handler
+          document.getElementById('add-promo-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.querySelector('#add-promo-form .btn-primary');
+            const isEditMode = submitBtn.dataset.editMode === 'true';
+            
+            const newPromo = {
+              code: document.getElementById('promo-code').value.toUpperCase(),
+              status: document.getElementById('status').checked ? 'active' : 'inactive',
+              startDate: document.getElementById('start-date').value,
+              endDate: document.getElementById('end-date').value,
+              discount: parseFloat(document.getElementById('discount-amount').value),
+              discountType: document.getElementById('discount-type').value,
+              usageLimit: parseInt(document.getElementById('usage-limit').value),
+              usageCount: 0
+            };
+            
+            if (isEditMode) {
+              // Update existing promo
+              const originalCode = submitBtn.dataset.originalCode;
+              const index = promoCodes.findIndex(p => p.code === originalCode);
+              
+              if (index !== -1) {
+                // Preserve usage count when updating
+                newPromo.usageCount = promoCodes[index].usageCount;
+                promoCodes[index] = newPromo;
+              }
+              
+              // Reset button
+              submitBtn.textContent = 'Create Promo Code';
+              submitBtn.dataset.editMode = 'false';
+              delete submitBtn.dataset.originalCode;
+            } else {
+              // Check if code already exists
+              if (promoCodes.some(p => p.code === newPromo.code)) {
+                alert('This promo code already exists. Please use a different code.');
+                return;
+              }
+              
+              // Add new promo
+              promoCodes.push(newPromo);
+            }
+            
+            // Save and update
+            savePromoCodes();
+            this.reset();
+            document.getElementById('promo-code').readOnly = false;
+            
+            // Show success message
+            alert(`Promo code ${isEditMode ? 'updated' : 'created'} successfully!`);
+            
+            // Switch to view tab
+            document.querySelector('.tab-btn[data-tab="view"]').click();
+            updatePromoCards();
+          });
+          
+          // Search and filter functionality
+          document.getElementById('search-input').addEventListener('input', filterPromoCodes);
+          document.getElementById('status-filter').addEventListener('change', filterPromoCodes);
+          
+          function filterPromoCodes() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const statusFilter = document.getElementById('status-filter').value;
+            
+            const filteredCodes = promoCodes.filter(promo => {
+              const matchesSearch = promo.code.toLowerCase().includes(searchTerm);
+              const matchesStatus = statusFilter === 'all' || promo.status === statusFilter;
+              return matchesSearch && matchesStatus;
+            });
+            
+            updatePromoCards(filteredCodes);
+          }
+          
+          // Initialize date fields with current date
+          const today = new Date();
+          const tomorrow = new Date(today);
+          tomorrow.setDate(today.getDate() + 1);
+          
+          document.getElementById('start-date').value = today.toISOString().split('T')[0];
+          document.getElementById('end-date').value = tomorrow.toISOString().split('T')[0];
+          
+          // Initial display of promo codes
+          updatePromoCards();
+        });
+      </script> -->
+
+
+<script>
+ document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching functionality
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tabId = this.getAttribute('data-tab');
+            
+            // Remove active class from all buttons and tabs
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+            
+            // Add active class to current button and tab
+            this.classList.add('active');
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+            
+            // If view tab is activated, load promo codes
+            if (tabId === 'view') {
+                loadPromoCodes();
+            }
+        });
+    });
+    
+    // Status toggle functionality
+    const statusToggle = document.getElementById('status');
+    const statusText = document.getElementById('status-text');
+    
+    statusToggle.addEventListener('change', function() {
+        if (this.checked) {
+            statusText.textContent = 'Active';
+            statusText.style.color = 'var(--success-color, #28a745)';
+        } else {
+            statusText.textContent = 'Inactive';
+            statusText.style.color = 'var(--danger-color, #dc3545)';
+        }
+    });
+    
+    // Set today's date as default start date
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0];
+    document.getElementById('start-date').value = formattedDate;
+    
+    // Form submission handler
+    const addPromoForm = document.getElementById('add-promo-form');
+    addPromoForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const promoCode = document.getElementById('promo-code').value.trim();
+    const status = document.getElementById('status').checked;
+    const discountAmount = document.getElementById('discount-amount').value.trim();
+    const discountType = document.getElementById('discount-type').value;
+    const startDate = document.getElementById('start-date').value;
+    const endDate = document.getElementById('end-date').value;
+    const usageLimit = document.getElementById('usage-limit').value.trim();
+
+    // 🛑 Validate required fields
+    if (!promoCode || !discountAmount || !startDate || !usageLimit) {
+        showNotification('Please fill in all required fields.', 'error');
+        return;
+    }
+        
+        const promoData = {
+            code: promoCode,
+            status: status ? 'on' : 'off',
+            discount_amount: discountAmount,
+            discount_type: discountType,
+            start_date: startDate,
+            end_date: endDate,
+            usage_limit: usageLimit
+        };
+        console.log("✅ Submitting promo data:", promoData);
+        addPromoCode(promoData);
+    });
+    
+    // Filter and search functionality
+    const statusFilter = document.getElementById('status-filter');
+    const searchInput = document.getElementById('search-input');
+    
+    statusFilter.addEventListener('change', function() {
+        loadPromoCodes(this.value, searchInput.value);
+    });
+    
+    searchInput.addEventListener('input', function() {
+        loadPromoCodes(statusFilter.value, this.value);
+    });
+    
+    // Load promo codes initially
+    loadPromoCodes();
+});
+
+// Function to add a new promo code
+function addPromoCode(promoData) {
+    fetch('/api/admin/promo-codes/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(promoData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            document.getElementById('add-promo-form').reset();
+            
+            // Set today's date again after form reset
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('start-date').value = today;
+            
+            // Switch to view tab
+            document.querySelector('.tab-btn[data-tab="view"]').click();
+        } else {
+            showNotification(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred while adding the promo code', 'error');
+    });
+}
+
+// Function to load promo codes
+function loadPromoCodes(filter = 'all', search = '') {
+    let url = `/admin/promo-codes/list?filter=${filter}`;
+    
+    fetch(url)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayPromoCodes(data.data, search);
+        } else {
+            showNotification(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred while loading promo codes', 'error');
+    });
+}
+
+// Function to display promo codes
+function displayPromoCodes(promoCodes, searchTerm = '') {
+    const container = document.getElementById('promo-cards-container');
+    container.innerHTML = '';
+    
+    // Filter by search term if provided
+    if (searchTerm) {
+        searchTerm = searchTerm.toLowerCase();
+        promoCodes = promoCodes.filter(code => 
+            code.code.toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    if (promoCodes.length === 0) {
+        container.innerHTML = '<div class="no-results">No promo codes found</div>';
+        return;
+    }
+    
+    promoCodes.forEach(promo => {
+        const card = document.createElement('div');
+        card.className = 'promo-card';
+        
+        // Calculate expiry status
+        const today = new Date();
+        const startDate = new Date(promo.start_date);
+        const endDate = promo.end_date ? new Date(promo.end_date) : null;
+        
+        let statusClass = promo.status ? 'status-active' : 'status-inactive';
+        let statusText = promo.status ? 'Active' : 'Inactive';
+        
+        if (promo.status) {
+            if (today < startDate) {
+                statusClass = 'status-pending';
+                statusText = 'Pending';
+            } else if (endDate && today > endDate) {
+                statusClass = 'status-expired';
+                statusText = 'Expired';
+            } else if (promo.usage_limit > 0 && promo.usage_count >= promo.usage_limit) {
+                statusClass = 'status-depleted';
+                statusText = 'Depleted';
+            }
+        }
+        
+        // Calculate discount display
+        const discountDisplay = promo.discount_type === 'percentage' ? 
+            `${promo.discount_amount}%` : 
+            `$${promo.discount_amount.toFixed(2)}`;
+        
+        card.innerHTML = `
+            <div class="promo-header">
+                <h3 class="promo-code">${promo.code}</h3>
+                <span class="promo-status ${statusClass}">${statusText}</span>
+            </div>
+            <div class="promo-details">
+                <div class="detail-item">
+                    <span class="detail-label">Discount:</span>
+                    <span class="detail-value">${discountDisplay}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Valid:</span>
+                    <span class="detail-value">${promo.start_date} ${promo.end_date ? ' to ' + promo.end_date : ''}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Usage:</span>
+                    <span class="detail-value">${promo.usage_count} / ${promo.usage_limit > 0 ? promo.usage_limit : '∞'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Created:</span>
+                    <span class="detail-value">${promo.created_at}</span>
+                </div>
+            </div>
+            <div class="promo-actions">
+                <button class="btn btn-edit" onclick="editPromoCode('${promo._id}', ${JSON.stringify(promo).replace(/"/g, "'")})">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-delete" onclick="deletePromoCode('${promo._id}', '${promo.code}')">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        `;
+        
+        container.appendChild(card);
+    });
+}
+
+// Function to show edit modal
+function editPromoCode(id, promo) {
+    // Convert single quotes back to double quotes and parse the stringified JSON
+    const promoData = JSON.parse(JSON.stringify(promo).replace(/'/g, '"'));
+    
+    // Create modal HTML
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'edit-modal';
+    
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Promo Code</h2>
+                <span class="close-modal" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="edit-promo-form">
+                    <div class="form-group">
+                        <label for="edit-promo-code">Promo Code</label>
+                        <input type="text" id="edit-promo-code" value="${promoData.code}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-status">Status</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="edit-status" ${promoData.status ? 'checked' : ''}>
+                            <span class="slider"></span>
+                        </div>
+                        <span id="edit-status-text" style="margin-left: 70px; font-size: 14px; color: var(--text-light);">
+                            ${promoData.status ? 'Active' : 'Inactive'}
+                        </span>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="edit-discount-amount">Discount Amount</label>
+                                <input type="number" id="edit-discount-amount" min="0" value="${promoData.discount_amount}" required>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="edit-discount-type">Discount Type</label>
+                                <select id="edit-discount-type" required>
+                                    <option value="percentage" ${promoData.discount_type === 'percentage' ? 'selected' : ''}>Percentage (%)</option>
+                                    <option value="fixed" ${promoData.discount_type === 'fixed' ? 'selected' : ''}>Fixed Amount ($)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="edit-start-date">Start Date</label>
+                                <input type="date" id="edit-start-date" value="${promoData.start_date}" required>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="edit-end-date">End Date</label>
+                                <input type="date" id="edit-end-date" value="${promoData.end_date || ''}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-usage-limit">Usage Limit</label>
+                        <input type="number" id="edit-usage-limit" min="0" value="${promoData.usage_limit}" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-block">Update Promo Code</button>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Add event listener for status toggle
+    const editStatusToggle = document.getElementById('edit-status');
+    const editStatusText = document.getElementById('edit-status-text');
+    
+    editStatusToggle.addEventListener('change', function() {
+        if (this.checked) {
+            editStatusText.textContent = 'Active';
+            editStatusText.style.color = 'var(--success-color, #28a745)';
+        } else {
+            editStatusText.textContent = 'Inactive';
+            editStatusText.style.color = 'var(--danger-color, #dc3545)';
+        }
+    });
+    
+    // Add event listener for form submission
+    const editForm = document.getElementById('edit-promo-form');
+    editForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData();
+        formData.append('code', document.getElementById('edit-promo-code').value);
+        formData.append('status', document.getElementById('edit-status').checked ? 'on' : 'off');
+        formData.append('discount_amount', document.getElementById('edit-discount-amount').value);
+        formData.append('discount_type', document.getElementById('edit-discount-type').value);
+        formData.append('start_date', document.getElementById('edit-start-date').value);
+        formData.append('end_date', document.getElementById('edit-end-date').value);
+        formData.append('usage_limit', document.getElementById('edit-usage-limit').value);
+        
+        updatePromoCode(id, formData);
+    });
+    
+    // Show modal
+    modal.style.display = 'block';
+}
+
+// Function to close modal
+function closeModal() {
+    const modal = document.getElementById('edit-modal');
+    if (modal) {
+        document.body.removeChild(modal);
+    }
+}
+
+// Function to update promo code
+function updatePromoCode(id, formData) {
+    fetch(`/admin/promo-codes/update/${id}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            closeModal();
+            loadPromoCodes();
+        } else {
+            showNotification(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred while updating the promo code', 'error');
+    });
+}
+
+// Function to confirm and delete promo code
+function deletePromoCode(id, code) {
+    if (confirm(`Are you sure you want to delete the promo code "${code}"?`)) {
+        fetch(`/admin/promo-codes/delete/${id}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                loadPromoCodes();
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('An error occurred while deleting the promo code', 'error');
+        });
+    }
+}
+
+// Function to show notification
+function showNotification(message, type) {
+    // Check if notification container exists, if not create it
+    let notifContainer = document.getElementById('notification-container');
+    if (!notifContainer) {
+        notifContainer = document.createElement('div');
+        notifContainer.id = 'notification-container';
+        document.body.appendChild(notifContainer);
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+            <span>${message}</span>
+        </div>
+        <button class="notification-close" onclick="this.parentElement.remove();">&times;</button>
+    `;
+    
+    notifContainer.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+</script>
+</body>
+</html>

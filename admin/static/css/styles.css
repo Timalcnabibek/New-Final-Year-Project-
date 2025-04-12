@@ -158,6 +158,37 @@ body {
     border-bottom: 1px solid #eee;
 }
 
+
+.page-header a {
+    text-decoration: none;
+    color: var(--primary);
+    font-weight: 600;
+    position: relative;
+    display: inline-block;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.page-header a::after {
+    content: "";
+    position: absolute;
+    width: 0%;
+    height: 2px;
+    bottom: -3px;
+    left: 0;
+    background-color: #0056b3;
+    transition: width 0.3s ease;
+}
+
+.page-header a:hover {
+    color: #0056b3;
+    transform: scale(1.05);
+}
+
+.page-header a:hover::after {
+    width: 100%;
+}
+
+
 /* Tabs */
 .tabs {
     display: flex;

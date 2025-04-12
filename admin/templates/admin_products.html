@@ -30,6 +30,7 @@
                 <div class="main-content">
                     <div class="page-header">
                         <h1>Product Management</h1>
+                        <a href="{{url_for('promo_page')}}">Add Promo Code</a>
                     </div>
                     
                     <!-- Tabs -->
@@ -298,6 +299,243 @@
                 </path>
             </svg>
         </div>
+
+
+
+        <!-- Promo Code Management Section -->
+<div class="tab-content" id="promo-codes" style="margin-top: 40px; border-top: 1px solid #e0e0e0; padding-top: 30px;">
+    <div class="page-header">
+        <h2>Promo Code Management</h2>
+        <p>Create and manage promotional codes for discounts and gifts</p>
+    </div>
+    
+    <div class="tabs">
+        <div class="tab active" data-tab="add-promo">Add Promo Code</div>
+        <div class="tab" data-tab="all-promos">All Promo Codes</div>
+    </div>
+    
+    <!-- Success Message -->
+    <div class="success-message" id="promoSuccessMessage">
+        Promo code has been successfully saved!
+    </div>
+    
+    <!-- Error Message -->
+    <div class="error-message" id="promoErrorMessage">
+        Error saving promo code. Please try again.
+    </div>
+    
+    <!-- Add Promo Code Form -->
+    <div class="tab-content active" id="add-promo">
+        <form id="promoForm" class="form-container">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="promoCode">Promo Code *</label>
+                    <input type="text" id="promoCode" class="form-control" required placeholder="e.g., SUMMER2025">
+                </div>
+                <div class="form-group">
+                    <label for="promoType">Promo Type *</label>
+                    <select id="promoType" class="form-control" required>
+                        <option value="">Select Type</option>
+                        <option value="discount">Discount</option>
+                        <option value="gift">Gift</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="promoValue">Value *</label>
+                    <div class="input-group">
+                        <input type="number" id="promoValue" class="form-control" min="0" required>
+                        <select id="valueType" class="form-control">
+                            <option value="percent">%</option>
+                            <option value="fixed">$</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="minPurchase">Minimum Purchase ($)</label>
+                    <input type="number" id="minPurchase" class="form-control" min="0" step="0.01">
+                </div>
+            </div>
+            
+            <!-- Gift section (conditionally shown based on promo type) -->
+            <div id="giftSection" class="form-row" style="display: none;">
+                <div class="form-group">
+                    <label for="giftProduct">Gift Product</label>
+                    <select id="giftProduct" class="form-control">
+                        <option value="">Select Product</option>
+                        <!-- Will be populated dynamically -->
+                        <option value="1">Sample Product 1</option>
+                        <option value="2">Sample Product 2</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="giftQuantity">Gift Quantity</label>
+                    <input type="number" id="giftQuantity" class="form-control" min="1" value="1">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="startDate">Start Date *</label>
+                    <input type="date" id="startDate" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="endDate">End Date *</label>
+                    <input type="date" id="endDate" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="usageLimit">Usage Limit</label>
+                    <input type="number" id="usageLimit" class="form-control" min="0" placeholder="Leave blank for unlimited">
+                </div>
+                <div class="form-group">
+                    <label for="customerLimit">Per Customer Limit</label>
+                    <input type="number" id="customerLimit" class="form-control" min="0" placeholder="Leave blank for unlimited">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="promoDescription">Description</label>
+                    <textarea id="promoDescription" class="form-control" placeholder="Describe what this promotion offers"></textarea>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Apply To</label>
+                    <div class="radio-group">
+                        <label class="radio-container">
+                            <input type="radio" name="applyTo" value="all" checked> All Products
+                        </label>
+                        <label class="radio-container">
+                            <input type="radio" name="applyTo" value="category"> Specific Categories
+                        </label>
+                        <label class="radio-container">
+                            <input type="radio" name="applyTo" value="products"> Specific Products
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Category selection (conditionally shown) -->
+            <div id="categorySelection" class="form-row" style="display: none;">
+                <div class="form-group">
+                    <label>Select Categories</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox" name="categories" value="mens-clothing"> Men's Clothing
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" name="categories" value="womens-clothing"> Women's Clothing
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" name="categories" value="kids-clothing"> Kids' Clothing
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" name="categories" value="footwear"> Footwear
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" name="categories" value="accessories"> Accessories
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Product selection (conditionally shown) -->
+            <div id="productSelection" class="form-row" style="display: none;">
+                <div class="form-group">
+                    <label>Select Products</label>
+                    <select id="selectedProducts" class="form-control" multiple size="5">
+                        <!-- Will be populated dynamically -->
+                        <option value="1">Sample Product 1</option>
+                        <option value="2">Sample Product 2</option>
+                        <option value="3">Sample Product 3</option>
+                    </select>
+                    <p class="help-text">Hold Ctrl (or Cmd) to select multiple products</p>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Status</label>
+                    <div style="display: flex; align-items: center;">
+                        <label class="switch">
+                            <input type="checkbox" id="promoActive" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Active</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group" style="margin-top: 20px;">
+                <button type="submit" class="btn btn-primary" id="savePromo">
+                    <span class="loader" id="promoSaveLoader"></span>
+                    Save Promo Code
+                </button>
+                <button type="button" class="btn btn-outline" id="resetPromoForm">Reset Form</button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- All Promo Codes List -->
+    <div class="tab-content" id="all-promos">
+        <div class="products-container">
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Type</th>
+                        <th>Value</th>
+                        <th>Validity</th>
+                        <th>Usage</th>
+                        <th>Min Purchase</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="promoCodesList">
+                    <!-- Sample promo data - will be populated dynamically -->
+                    <tr>
+                        <td>SUMMER25</td>
+                        <td>Discount</td>
+                        <td>25%</td>
+                        <td>Apr 15 - May 30, 2025</td>
+                        <td>43/100</td>
+                        <td>$50.00</td>
+                        <td><span class="badge badge-success">Active</span></td>
+                        <td>
+                            <div class="actions">
+                                <div class="action-btn edit-btn">✏️</div>
+                                <div class="action-btn delete-btn">🗑️</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>FREESHIRT</td>
+                        <td>Gift</td>
+                        <td>Basic T-shirt</td>
+                        <td>Apr 1 - Apr 30, 2025</td>
+                        <td>12/50</td>
+                        <td>$100.00</td>
+                        <td><span class="badge badge-success">Active</span></td>
+                        <td>
+                            <div class="actions">
+                                <div class="action-btn edit-btn">✏️</div>
+                                <div class="action-btn delete-btn">🗑️</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
  
         <script src="{{url_for('static',filename = 'js/script.js')}}"> </script>
         <!-- <script src="{{url_for('static',filename = 'js/app.js')}}"> </script> -->
