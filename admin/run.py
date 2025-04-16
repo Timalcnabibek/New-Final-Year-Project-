@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, url_for
+from flask import Flask, render_template,Blueprint, request, jsonify, url_for
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
@@ -12,6 +12,8 @@ import calendar
 import json
 import bcrypt
 from bson.son import SON
+import joblib
+import numpy as np
 
 # from products import *
 
@@ -47,6 +49,80 @@ def serialize(value):
         return {k: serialize(v) for k, v in value.items()}
     else:
         return value
+
+predict_bp = Blueprint('predict', __name__)
+
+# Load model and scaler from the models folder
+model_path = os.path.join('models', 'linear_model.pkl')
+scaler_path = os.path.join('models', 'scaler.pkl')
+model = joblib.load(model_path)
+scaler = joblib.load(scaler_path)
+
+
+@predict_bp.route('/predict-sales', methods=['POST'])
+def predict_sales():
+    try:
+        data = request.get_json()
+
+        # ✅ Required base features
+        required_fields = [
+            'month', 'quarter', 'month_of_quarter', 'year',
+            'lag_values',
+            'rolling_mean_3', 'rolling_mean_6', 'rolling_mean_12',
+            'mom_change', '3m_momentum', '6m_momentum', '12m_momentum',
+            'last_actual'
+        ]
+
+        for field in required_fields:
+            if field not in data:
+                return jsonify({"error": f"Missing field: {field}"}), 400
+
+        # ✅ Validate lag values length
+        lag_values = data['lag_values']
+        if not isinstance(lag_values, list) or len(lag_values) != 12:
+            return jsonify({"error": "lag_values must be a list of 12 values"}), 400
+
+        # ✅ Build input in the exact order model expects
+        feature_vector = [
+            data['month'],
+            data['quarter'],
+            data['month_of_quarter'],
+            data['year'],
+            *lag_values,
+            data['rolling_mean_3'],
+            data['rolling_mean_6'],
+            data['rolling_mean_12'],
+            data['mom_change'],
+            data['3m_momentum'],
+            data['6m_momentum'],
+            data['12m_momentum']
+        ]
+
+        # ✅ Convert to NumPy array and reshape for model
+        input_array = np.array(feature_vector).reshape(1, -1)
+
+        # ✅ Scale input
+        input_scaled = scaler.transform(input_array)
+
+        # ✅ Predict sales difference and reconstruct actual sales
+        predicted_diff = model.predict(input_scaled)[0]
+        predicted_sales = data['last_actual'] + predicted_diff
+
+        print(f"Predicted Diff: {predicted_diff}")
+        print(f"Last Actual: {data['last_actual']}")
+        print(f"Forecasted Sales: {predicted_sales}")
+
+
+        return jsonify({
+            "forecasted_sales": round(predicted_sales, 2)
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+
 
 app = Flask(__name__, static_folder="static")
 
@@ -212,6 +288,10 @@ def prediction_page():
 @app.route('/orders')
 def order_page():
     return render_template('orders.html')
+
+@app.route('/login-signup')
+def login_sign_page():
+    return render_template('login.html')
 
 
 
@@ -1456,6 +1536,10 @@ def list_routes():
         line = f"{rule.endpoint}: {rule.rule} [{methods}]"
         output.append(line)
     return "<pre>" + "\n".join(output) + "</pre>"
+
+
+app.register_blueprint(predict_bp)
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
