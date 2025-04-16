@@ -294,9 +294,73 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleAddToCart(productId) {
-        console.log('Added to cart:', productId);
-        // Implement add to cart logic
+        const customerId = localStorage.getItem("customerId");
+        if (!customerId) {
+            alert("Please log in to add products to your cart.");
+            window.location.href = "login.html";
+            return;
+        }
+    
+        const requestData = {
+            customerId: customerId,
+            productId: productId,
+            quantity: 1
+        };
+    
+        fetch("http://localhost:3000/api/cart/add", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(async (data) => {
+            if (data.success || data.message?.includes("added")) {
+                showNotification("✅ Product added to cart!");
+                await updateCartCount();  // Refresh count from localStorage
+            } else {
+                showNotification("❌ Failed to add to cart.", "error");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            showNotification("❌ Server error. Try again.", "error");
+        });
     }
+
+
+    async function updateCartCount() {
+        const customerId = localStorage.getItem("customerId");
+        if (!customerId) return;
+    
+        try {
+            const response = await fetch(`http://localhost:3000/api/cart/${customerId}`);
+            const result = await response.json();
+    
+            let cartItems = [];
+    
+            if (Array.isArray(result)) {
+                cartItems = result;
+            } else if (result.items) {
+                cartItems = result.items;
+            } else if (result.cart) {
+                cartItems = result.cart;
+            }
+    
+            // Store in localStorage for persistence
+            localStorage.setItem("cartItems", JSON.stringify(cartItems));
+    
+            // Count total quantity
+            const totalCount = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+            document.querySelectorAll(".cart-count").forEach(el => el.textContent = totalCount);
+            console.log("🛒 Cart Count Updated:", totalCount);
+        } catch (err) {
+            console.error("Error updating cart count:", err);
+        }
+    }
+    
+    
 
     function handleViewDetails(productId) {
         console.log('View product details:', productId);
@@ -305,4 +369,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch men's products by default
     fetchProductsByCategory('womens-clothing');
+    updateCartCount(); // Sync initial cart count
+
 });
