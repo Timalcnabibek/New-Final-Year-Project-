@@ -290,8 +290,9 @@
 
 
         async function fetchCartCount() {
-            const user = JSON.parse(localStorage.getItem("user"));
-            const customerId = user?.userId;
+    // Get user ID from both possible sources
+    // const user = JSON.parse(localStorage.getItem("user"));
+    const customerId = localStorage.getItem("customerId");
     const cartCountElement = document.getElementById("cartCount");
 
     if (!customerId || !cartCountElement) return;
@@ -300,20 +301,40 @@
         const response = await fetch(`http://localhost:3000/api/cart/${customerId}`);
         if (!response.ok) throw new Error("Failed to fetch cart");
 
-        const cartData = await response.json();
-
-        // Assuming cartData.items is an array
-        const totalItems = cartData.items.reduce((sum, item) => sum + item.quantity, 0);
+        const data = await response.json();
+        console.log("Cart data:", data);
+        
+        // Handle different possible cart data structures
+        let totalItems = 0;
+        
+        if (Array.isArray(data)) {
+            // If response is direct array of items
+            totalItems = data.reduce((sum, item) => sum + (item.quantity || 1), 0);
+        } else if (data.cart && Array.isArray(data.cart)) {
+            // If response has cart array
+            totalItems = data.cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+        } else if (data.items && Array.isArray(data.items)) {
+            // If response has items array
+            totalItems = data.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+        } else {
+            console.warn("Unknown cart data format:", data);
+            cartCountElement.textContent = "0";
+            return;
+        }
 
         cartCountElement.textContent = totalItems;
     } catch (error) {
         console.error("Error fetching cart count:", error);
+        // Set to 0 in case of error
+        if (cartCountElement) cartCountElement.textContent = "0";
     }
 }
 
 
         // ✅ Store products in cart (updated logic)
-        async function addToCart(productId, productName) {
+   // Updated addToCart function to use consistent user ID handling
+// Update this function in paste.txt
+async function addToCart(productId, productName) {
     const customerId = localStorage.getItem("customerId");
 
     if (!customerId) {
@@ -322,31 +343,58 @@
         return;
     }
 
-    const requestData = {
-        customerId,
-        productId,
-        quantity: 1
-    };
+    const requestData = { customerId, productId, quantity: 1 };
 
     try {
         const response = await fetch("http://localhost:3000/api/cart/add", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(requestData),
         });
 
         const result = await response.json();
+        console.log("Cart Response:", result);
+        
         if (response.ok) {
             alert(`✅ ${productName} added to cart!`);
-            fetchCartCount(); // ✅ Fetch updated count from DB
+            
+            // Add this block to update localStorage
+            fetchCartAndUpdateLocalStorage(customerId);
         } else {
             alert(`❌ Failed to add to cart: ${result.message}`);
         }
     } catch (error) {
         console.error("❌ Error adding to cart:", error);
         alert("❌ Server error. Please try again later.");
+    }
+}
+
+
+async function fetchCartAndUpdateLocalStorage(customerId) {
+    try {
+        const response = await fetch(`http://localhost:3000/api/cart/${customerId}`);
+        const result = await response.json();
+        
+        // Handle different response structures
+        if (response.ok) {
+            let cartItems;
+            if (Array.isArray(result)) {
+                cartItems = result;
+            } else if (result.items) {
+                cartItems = result.items;
+            } else if (result.cart) {
+                cartItems = result.cart;
+            }
+            
+            if (cartItems) {
+                localStorage.setItem("cartItems", JSON.stringify(cartItems));
+                console.log("Cart updated in localStorage:", cartItems);
+            }
+        } else {
+            console.warn("⚠️ Could not update cart in localStorage");
+        }
+    } catch (err) {
+        console.error("❌ Failed to fetch updated cart", err);
     }
 }
 
@@ -362,8 +410,6 @@
         const productName = productCard.querySelector(".product-title").innerText;
 
         addToCart(productId, productName);
-        
-
     };
 });
 
@@ -381,7 +427,7 @@
 
         // ✅ Newsletter Subscription
         document.addEventListener("DOMContentLoaded", function () {
-    fetchCartCount(); // ✅ Add this here
+    fetchCartCount(); 
 
     // Newsletter form logic
     document.querySelector(".newsletter-form").addEventListener("submit", function (e) {

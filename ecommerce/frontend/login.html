@@ -76,6 +76,7 @@ document.getElementById("signup-form").addEventListener("submit", async (e) => {
         // Handle the response
         const data = await response.json();
         if (response.ok) {
+            localStorage.clear();
             // ✅ Store customerId, token, and email in localStorage
             localStorage.setItem("token", data.token);  // Store JWT token
             localStorage.setItem("customerId", data.customerId);  // Store customerId

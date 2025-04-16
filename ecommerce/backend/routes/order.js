@@ -3,7 +3,7 @@ const router = express.Router();
 
 const {
   createOrder,
-  deleteorder,     // gets all orders for a customer
+  getallorder,     // gets all orders for a customer
   getorder,        // gets one order by ID
   updateorder      // updates status of an order
 } = require('../controllers/order');
@@ -12,10 +12,10 @@ const {
 router.post('/trackorder', createOrder);
 
 // GET: All orders for a customer (e.g. /api/orders/customer/:customerId)
-router.get('/trackorder/:customerId', deleteorder);
+router.get('/trackorder/:customerId', getallorder);
 
 // GET: Get single order by ID
-router.get('/:orderId', getorder);
+router.get('/orders/:orderId', getorder);
 
 // PUT: Update order status
 router.put('/update/:orderId', updateorder);

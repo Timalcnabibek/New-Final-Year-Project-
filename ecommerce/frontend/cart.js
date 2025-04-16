@@ -4,8 +4,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // Fetch cart data and display in UI
 async function fetchCartData() {
+    // Get user ID from both possible sources
     const user = JSON.parse(localStorage.getItem("user"));
-    const customerId = user?.userId;
+    const customerId = user?.userId || localStorage.getItem("customerId");
+    
     if (!customerId) {
         showNotification("❌ User not logged in! Redirecting to login page.", "error");
         setTimeout(() => {
@@ -45,7 +47,29 @@ async function fetchCartData() {
         const data = await response.json();
         console.log("✅ API Response:", data);
 
-        const cartItems = Array.isArray(data.cart) ? data.cart : [];
+        // Handle different possible data structures
+        let cartItems = [];
+        
+        // Try different possible structures based on API response
+        if (Array.isArray(data)) {
+            cartItems = data;
+        } else if (data.cart && Array.isArray(data.cart)) {
+            cartItems = data.cart;
+        } else if (data.items && Array.isArray(data.items)) {
+            cartItems = data.items;
+        } else {
+            console.warn("⚠️ Unexpected cart data format:", data);
+            // If we can't determine the structure, show an error
+            cartTableBody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="error-message">
+                        <p>Unable to process cart data. Please try again later.</p>
+                        <button class="retry-btn" onclick="fetchCartData()">Try Again</button>
+                    </td>
+                </tr>`;
+            return;
+        }
+        
         console.log("✅ Extracted cart items:", cartItems);
 
         if (cartItems.length === 0) {
@@ -77,24 +101,30 @@ async function fetchCartData() {
 
         // Add items with animation
         cartItems.forEach((item, index) => {
-            const product = item.productId;
+            // Handle different possible product structures
+            const product = item.productId || item.product || item;
+            
             if (!product || !product.price) {
                 console.warn("⚠ Missing product details for item:", item);
                 return;
             }
 
-            const itemTotal = product.price * item.quantity;
+            const quantity = item.quantity || 1;
+            const itemTotal = product.price * quantity;
             subtotal += itemTotal;
 
             // Fix image path handling
             let productImage = "https://via.placeholder.com/80";
             if (product.images && product.images.length > 0) {
-                if (product.images[0].url) {
+                if (typeof product.images[0] === 'string') {
+                    productImage = product.images[0];
+                } else if (product.images[0].url) {
                     productImage = product.images[0].url;
-                    // If the image URL doesn't start with http/https, assume it's a relative path
-                    if (!productImage.startsWith('http')) {
-                        productImage = `http://localhost:3000${productImage.startsWith('/') ? '' : '/'}${productImage}`;
-                    }
+                }
+                
+                // If the image URL doesn't start with http/https, assume it's a relative path
+                if (productImage && !productImage.startsWith('http')) {
+                    productImage = `http://localhost:3000${productImage.startsWith('/') ? '' : '/'}${productImage}`;
                 }
             }
 
@@ -107,20 +137,21 @@ async function fetchCartData() {
             row.innerHTML = `
                 <td width="100">
                     <div class="img-container">
-                        <img src="${productImage}" alt="${product.name}" class="cart-item-image">
+                        <img src="${productImage}" alt="${product.name}" class="cart-item-image" 
+                             onerror="this.src='https://via.placeholder.com/80'">
                     </div>
                 </td>
                 <td>
                     <div class="cart-item-title">${product.name}</div>
                     <div class="cart-item-price">Unit price: Rs. ${product.price.toFixed(2)}</div>
                     <div class="quantity-control">
-                        <button class="quantity-btn decrease" data-id="${product._id}" data-quantity="${item.quantity}">
+                        <button class="quantity-btn decrease" data-id="${product._id}" data-quantity="${quantity}" data-min-quantity="1">
                             <svg width="12" height="2" viewBox="0 0 12 2" fill="none">
                                 <path d="M1 1H11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                             </svg>
                         </button>
-                        <input type="text" class="quantity-input" value="${item.quantity}" readonly>
-                        <button class="quantity-btn increase" data-id="${product._id}" data-quantity="${item.quantity}">
+                        <input type="text" class="quantity-input" value="${quantity}" readonly>
+                        <button class="quantity-btn increase" data-id="${product._id}" data-quantity="${quantity}">
                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                                 <path d="M6 1V11M1 6H11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                             </svg>
@@ -191,7 +222,7 @@ async function fetchCartData() {
                         <line x1="12" y1="8" x2="12" y2="12"></line>
                         <line x1="12" y1="16" x2="12.01" y2="16"></line>
                     </svg>
-                    <p>Error loading cart. Please try again.</p>
+                    <p>Error loading cart: ${error.message}</p>
                     <button class="retry-btn" onclick="fetchCartData()">Try Again</button>
                 </td>
             </tr>`;
@@ -205,6 +236,8 @@ async function fetchCartData() {
 
 // Helper function for animated count-up
 function animateCountUp(element, start, end, prefix = "", decimals = 0) {
+    if (!element) return;
+    
     const duration = 1000;
     const frameDuration = 1000/60;
     const totalFrames = Math.round(duration / frameDuration);
@@ -238,13 +271,22 @@ function setOrderSummaryValues(subtotal, tax, shipping, discount) {
     const shippingElement = document.getElementById("shipping");
     const discountElement = document.getElementById("discount");
     
-    subtotalElement.textContent = `Rs. ${subtotal.toFixed(2)}`;
-    taxElement.textContent = `Rs. ${tax.toFixed(2)}`;
-    shippingElement.textContent = shipping === 0 ? "Free" : `Rs. ${shipping.toFixed(2)}`;
-    discountElement.textContent = `Rs. ${discount.toFixed(2)}`;
+    if (subtotalElement) subtotalElement.textContent = `Rs. ${subtotal.toFixed(2)}`;
+    if (taxElement) taxElement.textContent = `Rs. ${tax.toFixed(2)}`;
+    
+    if (shippingElement) {
+        shippingElement.textContent = shipping === 0 ? "Free" : `Rs. ${shipping.toFixed(2)}`;
+        if (shipping === 0) {
+            shippingElement.classList.add("free-shipping");
+        } else {
+            shippingElement.classList.remove("free-shipping");
+        }
+    }
+    
+    if (discountElement) discountElement.textContent = `Rs. ${discount.toFixed(2)}`;
     
     const total = subtotal + tax + shipping - discount;
-    totalElement.textContent = `Rs. ${total.toFixed(2)}`;
+    if (totalElement) totalElement.textContent = `Rs. ${total.toFixed(2)}`;
 }
 
 // Show notification
@@ -299,7 +341,6 @@ function attachCartEventListeners() {
         });
     });
 
-    
     document.querySelectorAll(".decrease").forEach(button => {
         button.addEventListener("click", async function (event) {
             event.preventDefault();
@@ -328,7 +369,6 @@ function attachCartEventListeners() {
             }
         });
     });
-    
 
     document.querySelectorAll(".remove-btn").forEach(button => {
         button.addEventListener("click", async function (event) {
@@ -387,7 +427,7 @@ function updateRowPrice(productId, newQuantity) {
 // Update cart item quantity with the absolute quantity value
 async function updateCartItem(productId, newQuantity) {
     const user = JSON.parse(localStorage.getItem("user"));
-    const customerId = user?.userId;
+    const customerId = user?.userId || localStorage.getItem("customerId");
     if (!customerId) return;
 
     try {
@@ -398,7 +438,16 @@ async function updateCartItem(productId, newQuantity) {
         });
         
         const data = await response.json();
-        console.log("✅ Update response:", data);
+        console.log("✅ Remove response:", data);
+        
+        // ✅ Remove product from localStorage.cartItems
+        let localCart = JSON.parse(localStorage.getItem("cartItems")) || [];
+        localCart = localCart.filter(item => {
+            const product = item.productId || item.product || item;
+            return product._id !== productId;
+        });
+        localStorage.setItem("cartItems", JSON.stringify(localCart));
+                console.log("✅ Update response:", data);
         
         // No need to fetch the entire cart again, just update the summary
         calculateSummary();
@@ -417,7 +466,7 @@ async function updateCartItem(productId, newQuantity) {
 // Function to remove an item from the cart
 async function removeCartItem(productId) {
     const user = JSON.parse(localStorage.getItem("user"));
-    const customerId = user?.userId;
+    const customerId = user?.userId || localStorage.getItem("customerId");
     if (!customerId) return;
 
     try {

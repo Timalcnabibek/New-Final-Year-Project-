@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StyleHub - Secure Checkout</title>
     <link rel="stylesheet" href="./css/payment.css">
-    
+
 </head>
+
 <body>
     <!-- Page 1: Delivery Information -->
     <div id="page-1" class="container">
@@ -17,33 +19,36 @@
             </a>
             <div class="secure-tag">Secure Checkout</div>
         </header>
-        
+
         <p class="instruction">Please provide your delivery details</p>
-        
+
         <div class="checkout-container">
             <div class="main-content">
                 <h2>Delivery Information</h2>
-                
+
                 <form id="delivery-form">
                     <div class="form-row">
                         <div class="form-column">
                             <label for="fullName">Full Name</label>
                             <input type="text" id="fullName" placeholder="John Doe">
-                            <div id="nameError" class="error-label" style="display: none;">Full name must be at least 3 characters</div>
+                            <div id="nameError" class="error-label" style="display: none;">Full name must be at least 3
+                                characters</div>
                         </div>
                         <div class="form-column">
                             <label for="phone">Phone Number</label>
                             <input type="tel" id="phone" placeholder="98XXXXXXXX">
-                            <div id="phoneError" class="error-label" style="display: none;">Please enter a valid phone number</div>
+                            <div id="phoneError" class="error-label" style="display: none;">Please enter a valid phone
+                                number</div>
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="address">Delivery Address</label>
                         <textarea id="address" placeholder="Street address, House number"></textarea>
-                        <div id="addressError" class="error-label" style="display: none;">Please enter your complete address</div>
+                        <div id="addressError" class="error-label" style="display: none;">Please enter your complete
+                            address</div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-column">
                             <label for="city">City</label>
@@ -53,16 +58,18 @@
                         <div class="form-column">
                             <label for="zipCode">Zip/Postal Code</label>
                             <input type="text" id="zipCode" placeholder="44600">
-                            <div id="zipError" class="error-label" style="display: none;">Please enter a valid zip/postal code</div>
+                            <div id="zipError" class="error-label" style="display: none;">Please enter a valid
+                                zip/postal code</div>
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Delivery Type</label>
                         <div class="radio-group">
                             <div class="radio-option selected" data-value="standard">
                                 <div class="radio-input">
-                                    <input type="radio" name="deliveryType" value="standard" checked style="display:none;">
+                                    <input type="radio" name="deliveryType" value="standard" checked
+                                        style="display:none;">
                                 </div>
                                 <div class="radio-details">
                                     <div class="radio-title">Standard Delivery</div>
@@ -82,44 +89,50 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="instructions">Delivery Instructions (Optional)</label>
-                        <textarea id="instructions" placeholder="Add any special instructions for delivery..."></textarea>
+                        <textarea id="instructions"
+                            placeholder="Add any special instructions for delivery..."></textarea>
                     </div>
-                    
+
                     <button type="submit" class="button">Proceed to Payment</button>
                 </form>
             </div>
-            
+
             <div class="order-summary">
                 <h3>Order Summary</h3>
-                
+
                 <div class="summary-row">
                     <span class="summary-label">Subtotal</span>
                     <span>Rs. 3499.00</span>
                 </div>
-                
+
                 <div class="summary-row">
                     <span class="summary-label">Delivery</span>
                     <span>Rs. 150.00</span>
                 </div>
-                
+
                 <div class="summary-row">
                     <span class="summary-label">Discount</span>
                     <span class="discount">- Rs. 200.00</span>
                 </div>
-                
+
                 <div class="summary-row">
                     <span class="summary-label">Tax</span>
                     <span>Rs. 50.00</span>
                 </div>
-                
+
                 <div class="total-row">
                     <span>Total</span>
                     <span>Rs. 3499.00</span>
                 </div>
-                
+
+                <div class="promo">
+                    <label for="promocode">Enter your promo code</label>
+                    <input type="text" id="promocode" placeholder="Promo Code">
+                </div>
+
                 <div class="estimated-delivery">
                     <div class="delivery-date">Estimated Delivery</div>
                     <div class="delivery-time">Thursday, March 27, 2025</div>
@@ -128,7 +141,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Page 2: Payment Method -->
     <div id="page-2" class="container" style="display: none;">
         <header>
@@ -138,16 +151,16 @@
             </a>
             <div class="secure-tag">Secure Checkout</div>
         </header>
-        
+
         <div class="checkout-container">
             <div class="main-content">
                 <h2>Checkout - Payment Method</h2>
                 <p>Complete your purchase by choosing a payment method</p>
-                
+
                 <div class="form-group" style="margin-top: 30px;">
                     <h3>Payment Method</h3>
                     <a href="#" class="edit-link" id="edit-details">Edit Details</a>
-                    
+
                     <div class="delivery-address">
                         <div class="address-name">Delivery To:</div>
                         <div class="address-details" id="delivery-name">John Doe</div>
@@ -155,14 +168,20 @@
                         <div class="address-details" id="delivery-full-address">Babarmahal, Kathmandu, 44600</div>
                         <div class="delivery-type">Standard Delivery (3-5 days)</div>
                     </div>
-                    
+
                     <div class="radio-group">
                         <div class="radio-option" data-value="cash" id="cash-option">
                             <div class="radio-icon">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M3 7H21V17H3V7Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12 12C13.1046 12 14 11.1046 14 10C14 8.89543 13.1046 8 12 8C10.8954 8 10 8.89543 10 10C10 11.1046 10.8954 12 12 12Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M17 17C16.5 15.5 14.5 14 12 14C9.5 14 7.5 15.5 7 17" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 7H21V17H3V7Z" stroke="white" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                    <path
+                                        d="M12 12C13.1046 12 14 11.1046 14 10C14 8.89543 13.1046 8 12 8C10.8954 8 10 8.89543 10 10C10 11.1046 10.8954 12 12 12Z"
+                                        stroke="white" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                    <path d="M17 17C16.5 15.5 14.5 14 12 14C9.5 14 7.5 15.5 7 17" stroke="white"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </div>
                             <div class="radio-details">
@@ -171,12 +190,14 @@
                             </div>
                             <div class="checkmark"></div>
                         </div>
-                        
+
                         <div class="radio-option selected" data-value="khalti" id="khalti-option">
                             <div class="radio-icon" style="background-color: #5C2D91;">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect width="24" height="24" rx="4" fill="#5C2D91"/>
-                                    <path d="M6 7V17M9 7L9 17M12 7V17M15 7V17M18 7V17" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <rect width="24" height="24" rx="4" fill="#5C2D91" />
+                                    <path d="M6 7V17M9 7L9 17M12 7V17M15 7V17M18 7V17" stroke="white" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </div>
                             <div class="radio-details">
@@ -186,11 +207,11 @@
                             <div class="checkmark">✓</div>
                         </div>
                     </div>
-                    
+
                     <div id="cash-details" class="payment-details" style="display: none;">
                         <div class="radio-title">Cash on Delivery</div>
                         <div class="radio-description">You'll pay in cash when your order is delivered.</div>
-                        
+
                         <div class="payment-features">
                             <div class="payment-feature">
                                 <span class="feature-check">✓</span>
@@ -206,64 +227,65 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div id="khalti-details" class="payment-details">
                         <div class="radio-title">Khalti Digital Wallet</div>
                         <div class="radio-description">Pay securely with your Khalti digital wallet.</div>
-                        
+
                         <div class="summary-row" style="margin-top: 15px;">
                             <span class="summary-label">Total amount:</span>
                             <span>Rs. 3499.00</span>
                         </div>
-                        
+
                         <button id="pay-khalti" class="button purple">Pay with Khalti</button>
-                        
+
                         <p style="font-size: 14px; color: #666; margin-top: 15px; text-align: center;">
                             By clicking "Pay with Khalti" you will be redirected to the Khalti secure payment gateway.
                         </p>
-                        
+
                         <p style="font-size: 14px; color: #4299e1; margin-top: 10px; text-align: center;">
                             <a href="#" style="color: #4299e1; text-decoration: none;">Learn more about Khalti</a>
                         </p>
                     </div>
-                    
+
                     <div class="form-group" style="margin-top: 20px;">
                         <label for="paymentInstructions">Delivery Instructions (Optional)</label>
-                        <textarea id="paymentInstructions" placeholder="Add any special instructions for delivery..."></textarea>
+                        <textarea id="paymentInstructions"
+                            placeholder="Add any special instructions for delivery..."></textarea>
                     </div>
-                    
+
                     <button id="complete-order" class="button" style="display: none;">Complete Order</button>
                 </div>
             </div>
-            
+
             <div class="order-summary">
                 <h3>Order Summary</h3>
-                
+
                 <div class="summary-row">
                     <span class="summary-label">Subtotal</span>
                     <span>Rs. 3499.00</span>
                 </div>
-                
+
                 <div class="summary-row">
                     <span class="summary-label">Delivery</span>
                     <span>Rs. 150.00</span>
                 </div>
-                
+
                 <div class="summary-row">
                     <span class="summary-label">Discount</span>
                     <span class="discount">- Rs. 200.00</span>
                 </div>
-                
+
                 <div class="summary-row">
                     <span class="summary-label">Tax</span>
                     <span>Rs. 50.00</span>
                 </div>
-                
+
                 <div class="total-row">
                     <span>Total</span>
                     <span>Rs. 3499.00</span>
                 </div>
-                
+
                 <div class="estimated-delivery">
                     <div class="delivery-date">Estimated Delivery</div>
                     <div class="delivery-time">Thursday, March 27, 2025</div>
@@ -272,65 +294,12 @@
             </div>
         </div>
     </div>
-    
-    <!-- Page 3: Order Confirmation -->
-    <div id="page-3" class="container" style="display: none;">
-        <header>
-            <a href="#" class="logo">
-                <div class="logo-circle">S</div>
-                <span>StyleHub</span>
-            </a>
-            <div class="secure-tag">Secure Checkout</div>
-        </header>
-        
-        <p>Your order has been successfully placed.</p>
-        
-        <div class="checkout-container" style="justify-content: center;">
-            <div class="main-content" style="max-width: 600px;">
-                <div class="success-container">
-                    <div class="success-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M20 6L9 17L4 12" stroke="#34A853" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    
-                    <h2 class="success-title">Order Confirmed!</h2>
-                    
-                    <p class="success-message">Thank you <span id="customer-name">Bibek Timalsina</span>! Your payment was successful and your order has been placed.</p>
-                    
-                    <div class="order-reference">
-                        <div class="reference-label">Order Reference</div>
-                        <div class="reference-number" id="order-reference">ORD-8662-LRF0ZN</div>
-                    </div>
-                    
-                    <p class="email-note">We have sent a confirmation email with your order details.</p>
-                    
-                    <a href="/frontend/dashboard.html" class="button">Continue Shopping</a>
-                    <a href="#" class="button secondary" style="margin-top: 10px;">Print Receipt</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="toast" id="payment-toast">
-            <div class="toast-icon">✓</div>
-            <div>Payment successful!</div>
-        </div>
-        
-        <footer>
-            <p>© 2025 StyleHub. All rights reserved.</p>
-            <p>
-                <a href="#">Privacy Policy</a> •
-                <a href="#">Terms of Service</a> •
-                <a href="#">Contact Us</a>
-            </p>
-        </footer>
-    </div>
-    
-    <script>
-   // Navigation between pages with smooth transitions
+
+
+<script>
+    // Navigation between pages with smooth transitions
 const page1 = document.getElementById('page-1');
 const page2 = document.getElementById('page-2');
-const page3 = document.getElementById('page-3');
 
 // Form elements
 const deliveryForm = document.getElementById('delivery-form');
@@ -353,7 +322,6 @@ const zipError = document.getElementById('zipError');
 const deliveryName = document.getElementById('delivery-name');
 const deliveryPhone = document.getElementById('delivery-phone');
 const deliveryFullAddress = document.getElementById('delivery-full-address');
-const customerName = document.getElementById('customer-name');
 const deliveryTypeDisplay = document.querySelector('.delivery-type');
 
 // Payment options
@@ -365,19 +333,6 @@ const payKhaltiBtn = document.getElementById('pay-khalti');
 const completeOrderBtn = document.getElementById('complete-order');
 const paymentToast = document.getElementById('payment-toast');
 const editDetailsLink = document.getElementById('edit-details');
-
-// Generate a random order reference number
-const generateOrderReference = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = 'ORD-' + Math.floor(1000 + Math.random() * 9000) + '-';
-    for (let i = 0; i < 6; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-};
-
-// Set order reference
-document.querySelector('.reference-number').textContent = generateOrderReference();
 
 // Real-time validation
 const validateInput = (input, errorElement, condition, message) => {
@@ -394,48 +349,48 @@ const validateInput = (input, errorElement, condition, message) => {
 };
 
 // Add input event listeners for real-time validation
-fullNameInput.addEventListener('input', function() {
+fullNameInput.addEventListener('input', function () {
     validateInput(
-        this, 
-        nameError, 
-        this.value.length >= 3, 
+        this,
+        nameError,
+        this.value.length >= 3,
         'Full name must be at least 3 characters'
     );
 });
 
-phoneInput.addEventListener('input', function() {
+phoneInput.addEventListener('input', function () {
     this.value = this.value.replace(/[^0-9]/g, '');
     validateInput(
-        this, 
-        phoneError, 
-        this.value.length >= 10, 
+        this,
+        phoneError,
+        this.value.length >= 10,
         'Please enter a valid phone number (at least 10 digits)'
     );
 });
 
-addressInput.addEventListener('input', function() {
+addressInput.addEventListener('input', function () {
     validateInput(
-        this, 
-        addressError, 
-        this.value.trim() !== '', 
+        this,
+        addressError,
+        this.value.trim() !== '',
         'Please enter your complete address'
     );
 });
 
-cityInput.addEventListener('input', function() {
+cityInput.addEventListener('input', function () {
     validateInput(
-        this, 
-        cityError, 
-        this.value.trim() !== '', 
+        this,
+        cityError,
+        this.value.trim() !== '',
         'Please enter your city'
     );
 });
 
-zipCodeInput.addEventListener('input', function() {
+zipCodeInput.addEventListener('input', function () {
     validateInput(
-        this, 
-        zipError, 
-        this.value.trim() !== '', 
+        this,
+        zipError,
+        this.value.trim() !== '',
         'Please enter a valid zip/postal code'
     );
 });
@@ -445,17 +400,17 @@ const showPage = (pageToShow, pageToHide) => {
     // Fade out current page
     pageToHide.style.opacity = '0';
     pageToHide.style.transition = 'opacity 0.3s ease';
-    
+
     setTimeout(() => {
         pageToHide.style.display = 'none';
-        
+
         // Prepare next page
         pageToShow.style.opacity = '0';
         pageToShow.style.display = 'block';
-        
+
         // Force reflow
         void pageToShow.offsetWidth;
-        
+
         // Fade in next page
         pageToShow.style.transition = 'opacity 0.3s ease';
         pageToShow.style.opacity = '1';
@@ -463,70 +418,73 @@ const showPage = (pageToShow, pageToHide) => {
 };
 
 // Handle delivery form submission with enhanced validation
-deliveryForm.addEventListener('submit', function(e) {
+deliveryForm.addEventListener('submit', function (e) {
     e.preventDefault();
-    
+
     // Validate all inputs
     const isNameValid = validateInput(
-        fullNameInput, 
-        nameError, 
-        fullNameInput.value.length >= 3, 
+        fullNameInput,
+        nameError,
+        fullNameInput.value.length >= 3,
         'Full name must be at least 3 characters'
     );
-    
+
     const isPhoneValid = validateInput(
-        phoneInput, 
-        phoneError, 
-        phoneInput.value.length >= 10, 
+        phoneInput,
+        phoneError,
+        phoneInput.value.length >= 10,
         'Please enter a valid phone number (at least 10 digits)'
     );
-    
+
     const isAddressValid = validateInput(
-        addressInput, 
-        addressError, 
-        addressInput.value.trim() !== '', 
+        addressInput,
+        addressError,
+        addressInput.value.trim() !== '',
         'Please enter your complete address'
     );
-    
+
     const isCityValid = validateInput(
-        cityInput, 
-        cityError, 
-        cityInput.value.trim() !== '', 
+        cityInput,
+        cityError,
+        cityInput.value.trim() !== '',
         'Please enter your city'
     );
-    
+
     const isZipValid = validateInput(
-        zipCodeInput, 
-        zipError, 
-        zipCodeInput.value.trim() !== '', 
+        zipCodeInput,
+        zipError,
+        zipCodeInput.value.trim() !== '',
         'Please enter a valid zip/postal code'
     );
-    
+
     if (isNameValid && isPhoneValid && isAddressValid && isCityValid && isZipValid) {
         // Update delivery address on next page
         deliveryName.textContent = fullNameInput.value;
         deliveryPhone.textContent = phoneInput.value;
-        deliveryFullAddress.textContent = `${addressInput.value}, ${cityInput.value}, ${zipCodeInput.value}`;
-        customerName.textContent = fullNameInput.value;
-        
+        deliveryFullAddress.textContent =
+            `${addressInput.value}, ${cityInput.value}, ${zipCodeInput.value}`;
+
         // Update delivery type display
         const selectedDeliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
-        deliveryTypeDisplay.textContent = selectedDeliveryType === 'standard' 
-            ? 'Standard Delivery (3-5 days)' 
-            : 'Express Delivery (1-2 days)';
-        
+        deliveryTypeDisplay.textContent = selectedDeliveryType === 'standard' ?
+            'Standard Delivery (3-5 days)' :
+            'Express Delivery (1-2 days)';
+
         // Transfer delivery instructions if any
         if (instructionsInput.value.trim() !== '') {
             paymentInstructionsInput.value = instructionsInput.value;
         }
-        
+
         // Go to payment page with transition
         showPage(page2, page1);
     } else {
         // Scroll to first error
         const firstError = document.querySelector('.error-label[style="display: block"]');
         if (firstError) {
-            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstError.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
         }
     }
 });
@@ -538,32 +496,32 @@ const selectPaymentOption = (selected, unselected, selectedDetails, unselectedDe
     setTimeout(() => {
         selected.style.transform = 'scale(1)';
     }, 150);
-    
+
     selected.classList.add('selected');
     unselected.classList.remove('selected');
-    
+
     // Update checkmarks with smooth transition
     selected.querySelector('.checkmark').innerHTML = '✓';
     selected.querySelector('.checkmark').style.transition = 'background-color 0.3s ease';
-    
+
     unselected.querySelector('.checkmark').innerHTML = '';
-    
+
     // Show/hide payment details with smooth transition
     if (selectedDetails) {
         selectedDetails.style.display = 'block';
         selectedDetails.style.opacity = '0';
-        
+
         // Force reflow
         void selectedDetails.offsetWidth;
-        
+
         selectedDetails.style.transition = 'opacity 0.3s ease';
         selectedDetails.style.opacity = '1';
     }
-    
+
     if (unselectedDetails) {
         unselectedDetails.style.opacity = '0';
         unselectedDetails.style.transition = 'opacity 0.3s ease';
-        
+
         setTimeout(() => {
             unselectedDetails.style.display = 'none';
         }, 300);
@@ -571,48 +529,48 @@ const selectPaymentOption = (selected, unselected, selectedDetails, unselectedDe
 };
 
 // Handle payment option selection
-cashOption.addEventListener('click', function() {
+cashOption.addEventListener('click', function () {
     selectPaymentOption(cashOption, khaltiOption, cashDetails, khaltiDetails);
-    
+
     // Show complete order button with fade in, hide khalti button
     payKhaltiBtn.style.opacity = '0';
     payKhaltiBtn.style.transition = 'opacity 0.3s ease';
-    
+
     setTimeout(() => {
         payKhaltiBtn.style.display = 'none';
         completeOrderBtn.style.display = 'block';
         completeOrderBtn.style.opacity = '0';
-        
+
         // Force reflow
         void completeOrderBtn.offsetWidth;
-        
+
         completeOrderBtn.style.transition = 'opacity 0.3s ease';
         completeOrderBtn.style.opacity = '1';
     }, 300);
 });
 
-khaltiOption.addEventListener('click', function() {
+khaltiOption.addEventListener('click', function () {
     selectPaymentOption(khaltiOption, cashOption, khaltiDetails, cashDetails);
-    
+
     // Hide complete order button, show khalti button
     completeOrderBtn.style.opacity = '0';
     completeOrderBtn.style.transition = 'opacity 0.3s ease';
-    
+
     setTimeout(() => {
         completeOrderBtn.style.display = 'none';
         payKhaltiBtn.style.display = 'block';
         payKhaltiBtn.style.opacity = '0';
-        
+
         // Force reflow
         void payKhaltiBtn.offsetWidth;
-        
+
         payKhaltiBtn.style.transition = 'opacity 0.3s ease';
         payKhaltiBtn.style.opacity = '1';
     }, 300);
 });
 
 // Edit details with smooth transition back
-editDetailsLink.addEventListener('click', function(e) {
+editDetailsLink.addEventListener('click', function (e) {
     e.preventDefault();
     showPage(page1, page2);
 });
@@ -620,42 +578,42 @@ editDetailsLink.addEventListener('click', function(e) {
 // Handle delivery type selection on first page with improved feedback
 const deliveryOptions = document.querySelectorAll('#page-1 .radio-option');
 deliveryOptions.forEach(option => {
-    option.addEventListener('click', function() {
+    option.addEventListener('click', function () {
         // Add subtle animation
         this.style.transform = 'scale(1.03)';
         setTimeout(() => {
             this.style.transform = 'scale(1)';
         }, 150);
-        
+
         // Remove selected class from all options
         deliveryOptions.forEach(opt => {
             opt.classList.remove('selected');
             opt.querySelector('.checkmark').innerHTML = '';
         });
-        
+
         // Add selected class to clicked option
         this.classList.add('selected');
         this.querySelector('.checkmark').innerHTML = '✓';
-        
+
         // Update radio input
         this.querySelector('input[type="radio"]').checked = true;
     });
 });
 
 // Enhanced payment processing with visual feedback
-payKhaltiBtn.addEventListener('click', function(e) {
+payKhaltiBtn.addEventListener('click', function (e) {
     e.preventDefault();
-    
+
     // Disable button and show loading state
     this.disabled = true;
     this.style.opacity = '0.7';
     this.innerHTML = '<span id="loading-spinner">Processing...</span>';
-    
+
     // Create and add loading spinner animation
     const spinner = document.getElementById('loading-spinner');
     spinner.style.position = 'relative';
     spinner.style.paddingLeft = '25px';
-    
+
     const loaderElement = document.createElement('div');
     loaderElement.style.position = 'absolute';
     loaderElement.style.left = '0';
@@ -667,7 +625,7 @@ payKhaltiBtn.addEventListener('click', function(e) {
     loaderElement.style.borderTop = '2px solid white';
     loaderElement.style.borderRadius = '50%';
     loaderElement.style.animation = 'spin 1s linear infinite';
-    
+
     // Add keyframes for spinner
     const styleElement = document.createElement('style');
     styleElement.innerHTML = `
@@ -677,411 +635,374 @@ payKhaltiBtn.addEventListener('click', function(e) {
         }
     `;
     document.head.appendChild(styleElement);
-    
+
     spinner.appendChild(loaderElement);
-    
-    // Simulate payment processing with realistic timing
+
+    // Redirect to the invoice page or process payment without showing page 3
     setTimeout(function() {
-        // Show payment success toast with animation
-        paymentToast.classList.add('show');
-        
-        // Go to confirmation page after short delay
-        setTimeout(function() {
-            showPage(page3, page2);
-            
-            // Reset button state for next time
-            payKhaltiBtn.disabled = false;
-            payKhaltiBtn.style.opacity = '1';
-            payKhaltiBtn.innerHTML = 'Pay with Khalti';
-            
-            // Hide toast after user sees confirmation
-            setTimeout(function() {
-                paymentToast.classList.remove('show');
-            }, 3000);
-        }, 1000);
+        submitOrder("khalti");
     }, 2000);
 });
 
 // Smoother completion for cash option
-completeOrderBtn.addEventListener('click', function(e) {
+completeOrderBtn.addEventListener('click', function (e) {
     e.preventDefault();
-    
+
     // Disable button and show brief loading state
     this.disabled = true;
     this.style.opacity = '0.7';
     this.innerHTML = 'Processing...';
-    
-    // Brief delay for better UX
-    setTimeout(() => {
-        showPage(page3, page2);
-        
-        // Reset button state
-        this.disabled = false;
-        this.style.opacity = '1';
-        this.innerHTML = 'Complete Order';
-    }, 800);
-});
 
-// Enhanced continue shopping experience
-const continueShoppingBtn = document.querySelector('#page-3 .button');
-continueShoppingBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    
-    // Reset form with visual feedback
-    deliveryForm.reset();
-    
-    // Clear all validation styling
-    const inputs = deliveryForm.querySelectorAll('input, textarea');
-    inputs.forEach(input => {
-        input.style.borderColor = '#ddd';
-    });
-    
-    const errors = deliveryForm.querySelectorAll('.error-label');
-    errors.forEach(error => {
-        error.style.display = 'none';
-    });
-    
-    // Go back to first page
-    // showPage(page1, page3);
-    window.location.href = "dashboard.html";
-    
-    // Generate new order reference for next order
-    // document.querySelector('.reference-number').textContent = generateOrderReference();
-});
-
-// Enhanced print receipt
-const printReceiptBtn = document.querySelector('#page-3 .button.secondary');
-printReceiptBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    
-    // Visual feedback
-    this.innerHTML = 'Preparing...';
-    
-    // Brief delay to show feedback
-    setTimeout(() => {
-        window.print();
-        this.innerHTML = 'Print Receipt';
-    }, 300);
-});
-
-// Add subtle hover effects to all buttons for better interactivity
-const buttons = document.querySelectorAll('.button');
-buttons.forEach(button => {
-    button.addEventListener('mouseover', function() {
-        this.style.transition = 'transform 0.2s ease, background-color 0.2s ease';
-        this.style.transform = 'translateY(-2px)';
-    });
-    
-    button.addEventListener('mouseout', function() {
-        this.style.transform = 'translateY(0)';
-    });
+    // Submit order with "cod" payment method
+    submitOrder("cod");
 });
 
 // Initialize page styling for transitions
 page1.style.transition = 'opacity 0.3s ease';
 page2.style.transition = 'opacity 0.3s ease';
-page3.style.transition = 'opacity 0.3s ease';
 
 // Add focus styling for better accessibility
 const focusableElements = document.querySelectorAll('input, textarea, button, [tabindex="0"]');
 focusableElements.forEach(element => {
-    element.addEventListener('focus', function() {
+    element.addEventListener('focus', function () {
         this.style.boxShadow = '0 0 0 3px rgba(66, 153, 225, 0.5)';
         this.style.transition = 'box-shadow 0.2s ease';
     });
-    
-    element.addEventListener('blur', function() {
+
+    element.addEventListener('blur', function () {
         this.style.boxShadow = 'none';
     });
 });
 
-</script>
-<script>
 document.addEventListener("DOMContentLoaded", () => {
-  // Log the raw sessionStorage data for debugging
-  console.log("Raw sessionStorage data:", {
-    selectedProduct: sessionStorage.getItem("selectedProduct"),
-    orderSummary: sessionStorage.getItem("orderSummary")
-  });
+    // Log the raw sessionStorage data for debugging
+    console.log("Raw sessionStorage data:", {
+        selectedProduct: sessionStorage.getItem("selectedProduct"),
+        orderSummary: sessionStorage.getItem("orderSummary")
+    });
 
-  let product;
-  try {
-    // Try parsing selectedProduct first
-    product = JSON.parse(sessionStorage.getItem("selectedProduct"));
-    
-    // If that fails, try orderSummary
+    let product;
+    try {
+        // Try parsing selectedProduct first
+        product = JSON.parse(sessionStorage.getItem("selectedProduct"));
+
+        // If that fails, try orderSummary
+        if (!product) {
+            product = JSON.parse(sessionStorage.getItem("orderSummary"));
+        }
+    } catch (error) {
+        console.error("Error parsing sessionStorage:", error);
+        alert("❌ Error parsing product data. Redirecting back...");
+        window.location.href = "dashboard.html";
+        return;
+    }
+
     if (!product) {
-      product = JSON.parse(sessionStorage.getItem("orderSummary"));
-    }
-  } catch (error) {
-    console.error("Error parsing sessionStorage:", error);
-    alert("❌ Error parsing product data. Redirecting back...");
-    window.location.href = "dashboard.html";
-    return;
-  }
-
-  if (!product) {
-    alert("❌ No product found. Redirecting back...");
-    window.location.href = "dashboard.html";
-    return;
-  }
-
-  // Function to safely get nested property
-  function getNestedProperty(obj, path, defaultValue = 0) {
-    return path.split('.').reduce((acc, part) => 
-      acc && acc[part] !== undefined ? acc[part] : defaultValue, obj);
-  }
-
-  // Function to update order summary
-  function updateOrderSummary(product) {
-    console.log("Product data for summary:", product);
-
-    // Select all summary rows across BOTH pages explicitly
-    const summaryRowsPage1 = document.querySelector('#page-1 .order-summary');
-    const summaryRowsPage2 = document.querySelector('#page-2 .order-summary');
-
-    if (!summaryRowsPage1 || !summaryRowsPage2) {
-      console.error("Could not find order summary elements");
-      return;
+        alert("❌ No product found. Redirecting back...");
+        window.location.href = "dashboard.html";
+        return;
     }
 
-    // Function to format price with Nepali Rupees sign
-  const formatPrice = (price) => {
-    return `Rs. ${price.toFixed(2)}`;
-    // Alternative: return `Rs. ${price.toFixed(2)}`;
-  };
+    // Function to safely get nested property
+    function getNestedProperty(obj, path, defaultValue = 0) {
+        return path.split('.').reduce((acc, part) =>
+            acc && acc[part] !== undefined ? acc[part] : defaultValue, obj);
+    }
 
-    // Intelligently extract values with fallback
-    const subtotal = getNestedProperty(product, 'subtotal') || 
-                     getNestedProperty(product, 'items[0].subtotal') || 
-                     getNestedProperty(product, 'price', 0) * getNestedProperty(product, 'quantity', 1);
-    
-    const deliveryCharge = getNestedProperty(product, 'deliveryCharge') || 
-                           getNestedProperty(product, 'shipping', 150);
-    
-    const discount = getNestedProperty(product, 'discount', 200);
-    
-    const tax = getNestedProperty(product, 'tax', 50);
-    
-    const totalAmount = getNestedProperty(product, 'total') || 
-                      getNestedProperty(product, 'totalAmount') || 
-                      (subtotal + deliveryCharge - discount + tax);
+    // Function to update order summary
+    function updateOrderSummary(product) {
+        console.log("Product data for summary:", product);
 
-    // Function to update a specific order summary
-    const updateSummary = (summaryElement) => {
-    const summaryRows = summaryElement.querySelectorAll('.summary-row, .total-row');
-    
-    summaryRows[0].querySelector('span:last-child').textContent = formatPrice(subtotal);
-    summaryRows[1].querySelector('span:last-child').textContent = formatPrice(deliveryCharge);
-    summaryRows[2].querySelector('span:last-child').textContent = `- ${formatPrice(discount)}`;
-    summaryRows[3].querySelector('span:last-child').textContent = formatPrice(tax);
-    summaryRows[4].querySelector('span:last-child').textContent = formatPrice(totalAmount);
-  };
+        // Select all summary rows across BOTH pages explicitly
+        const summaryRowsPage1 = document.querySelector('#page-1 .order-summary');
+        const summaryRowsPage2 = document.querySelector('#page-2 .order-summary');
 
-    // Update both page's summaries
-    updateSummary(summaryRowsPage1);
-    updateSummary(summaryRowsPage2);
+        if (!summaryRowsPage1 || !summaryRowsPage2) {
+            console.error("Could not find order summary elements");
+            return;
+        }
 
-    // NEW: Specifically update the Khalti details total amount
-// Specifically update the Khalti details total amount
-const khaltiTotalElement = document.querySelector('#khalti-details .summary-row span:last-child');
-  if (khaltiTotalElement) {
-    khaltiTotalElement.textContent = formatPrice(totalAmount);
-  }
+        // Function to format price with Nepali Rupees sign
+        const formatPrice = (price) => {
+            return `Rs. ${price.toFixed(2)}`;
+        };
 
-    // Update Estimated Delivery
-    const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
-    const estimatedDelivery = deliveryType === 'express' 
-      ? "1-2 business days" 
-      : "3-5 business days";
+        // Intelligently extract values with fallback
+        const subtotal = getNestedProperty(product, 'subtotal') ||
+            getNestedProperty(product, 'items[0].subtotal') ||
+            getNestedProperty(product, 'price', 0) * getNestedProperty(product, 'quantity', 1);
 
-    const deliveryTimeElements = document.querySelectorAll('.delivery-time');
-    deliveryTimeElements.forEach(el => {
-      el.textContent = estimatedDelivery;
+        const deliveryCharge = getNestedProperty(product, 'deliveryCharge') ||
+            getNestedProperty(product, 'shipping', 150);
+
+        const discount = getNestedProperty(product, 'discount', 200);
+
+        const tax = getNestedProperty(product, 'tax', 50);
+
+        const totalAmount = getNestedProperty(product, 'total') ||
+            getNestedProperty(product, 'totalAmount') ||
+            (subtotal + deliveryCharge - discount + tax);
+
+        // Function to update a specific order summary
+        const updateSummary = (summaryElement) => {
+            const summaryRows = summaryElement.querySelectorAll('.summary-row, .total-row');
+
+            summaryRows[0].querySelector('span:last-child').textContent = formatPrice(subtotal);
+            summaryRows[1].querySelector('span:last-child').textContent = formatPrice(deliveryCharge);
+            summaryRows[2].querySelector('span:last-child').textContent = `- ${formatPrice(discount)}`;
+            summaryRows[3].querySelector('span:last-child').textContent = formatPrice(tax);
+            summaryRows[4].querySelector('span:last-child').textContent = formatPrice(totalAmount);
+        };
+
+        // Update both page's summaries
+        updateSummary(summaryRowsPage1);
+        updateSummary(summaryRowsPage2);
+
+        // Update the Khalti details total amount
+        const khaltiTotalElement = document.querySelector('#khalti-details .summary-row span:last-child');
+        if (khaltiTotalElement) {
+            khaltiTotalElement.textContent = formatPrice(totalAmount);
+        }
+
+        // Update Estimated Delivery
+        const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
+        const estimatedDelivery = deliveryType === 'express' ? "1-2 business days" : "3-5 business days";
+
+        const deliveryTimeElements = document.querySelectorAll('.delivery-time');
+        deliveryTimeElements.forEach(el => {
+            el.textContent = estimatedDelivery;
+        });
+    }
+
+    // Update order summary
+    updateOrderSummary(product);
+
+    // Add event listeners to delivery type radio buttons
+    const deliveryTypeRadios = document.querySelectorAll('input[name="deliveryType"]');
+    deliveryTypeRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            updateOrderSummary(product);
+
+            // Update radio option styling
+            const radioOptions = document.querySelectorAll('.radio-option[data-value="standard"], .radio-option[data-value="express"]');
+            radioOptions.forEach(option => {
+                option.classList.remove('selected');
+                option.querySelector('.checkmark').textContent = '';
+            });
+
+            const selectedOption = document.querySelector(`.radio-option[data-value="${radio.value}"]`);
+            selectedOption.classList.add('selected');
+            selectedOption.querySelector('.checkmark').textContent = '✓';
+        });
     });
-  }
 
-  // Update order summary
-  updateOrderSummary(product);
+    // Prepare payment page details
+    if (document.getElementById('delivery-name')) {
+        document.getElementById('delivery-name').textContent = document.getElementById('fullName').value;
+        document.getElementById('delivery-phone').textContent = document.getElementById('phone').value;
+        document.getElementById('delivery-full-address').textContent = 
+            `${document.getElementById('address').value}, ${document.getElementById('city').value}, ${document.getElementById('zipCode').value}`;
 
-  // Add event listeners to delivery type radio buttons
-  const deliveryTypeRadios = document.querySelectorAll('input[name="deliveryType"]');
-  deliveryTypeRadios.forEach(radio => {
-    radio.addEventListener('change', () => {
-      updateOrderSummary(product);
-
-      // Update radio option styling
-      const radioOptions = document.querySelectorAll('.radio-option[data-value="standard"], .radio-option[data-value="express"]');
-      radioOptions.forEach(option => {
-        option.classList.remove('selected');
-        option.querySelector('.checkmark').textContent = '';
-      });
-
-      const selectedOption = document.querySelector(`.radio-option[data-value="${radio.value}"]`);
-      selectedOption.classList.add('selected');
-      selectedOption.querySelector('.checkmark').textContent = '✓';
-    });
-  });
-
-  // Prepare payment page details
-  if (document.getElementById('delivery-name')) {
-    document.getElementById('delivery-name').textContent = document.getElementById('fullName').value;
-    document.getElementById('delivery-phone').textContent = document.getElementById('phone').value;
-    document.getElementById('delivery-full-address').textContent = 
-      `${document.getElementById('address').value}, ${document.getElementById('city').value}, ${document.getElementById('zipCode').value}`;
-    
-    const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
-    document.querySelector('.delivery-type').textContent = 
-      deliveryType === 'express' ? 'Express Delivery (1-2 days)' : 'Standard Delivery (3-5 days)';
-  }
+        const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
+        document.querySelector('.delivery-type').textContent = 
+            deliveryType === 'express' ? 'Express Delivery (1-2 days)' : 'Standard Delivery (3-5 days)';
+    }
 });
+
+
 
 async function submitOrder(paymentMethod) {
+    // First try to get cart data from orderSummary (for cart purchases)
+    const orderSummaryStr = sessionStorage.getItem("orderSummary");
+    // Fall back to selectedProduct (for direct purchases)
     const selectedProductStr = sessionStorage.getItem("selectedProduct");
-const orderSummaryStr = sessionStorage.getItem("orderSummary");
 
-let product = null;
-try {
-  product = selectedProductStr
-    ? JSON.parse(selectedProductStr)
-    : orderSummaryStr
-    ? JSON.parse(orderSummaryStr)
-    : null;
-} catch (e) {
-  console.error("❌ Failed to parse sessionStorage data:", e);
-}
-
-const customerId = localStorage.getItem("customerId");
-
-if (!product) {
-  alert("❌ Missing data. Redirecting to homepage.");
-  window.location.href = "dashboard.html";
-  return;
-}
-// if (!product || !customerId) {
-//   alert("❌ Missing data. Redirecting to homepage.");
-//   window.location.href = "dashboard.html";
-//   return;
-// }
-
-
-  const formattedProducts = Array.isArray(product.items)
-    ? product.items.map(item => ({
-        productId: item.productId,
-        quantity: item.quantity,
-        size: item.size || "N/A",
-        price: item.price
-      }))
-    : [{
-        productId: product.productId,
-        quantity: product.quantity,
-        size: product.size,
-        price: product.price
-      }];
-
-  const orderData = {
-    customerId,
-    products: formattedProducts,
-    deliveryInfo: {
-      fullName: document.getElementById("fullName").value,
-      phone: document.getElementById("phone").value,
-      address: document.getElementById("address").value,
-      city: document.getElementById("city").value,
-      postalCode: document.getElementById("zipCode").value,
-      instructions: document.getElementById("paymentInstructions")?.value || "",
-    },
-    deliveryType:
-      document.querySelector('input[name="deliveryType"]:checked').value === "express"
-        ? "Express Delivery"
-        : "Standard Delivery",
-    estimatedDeliveryDate: new Date(product.estimatedDelivery),
-    subtotal: product.subtotal,
-    deliveryCharge: product.deliveryCharge || product.shipping,
-    discount: product.discount,
-    tax: product.tax,
-    totalAmount: product.total || product.totalAmount,
-    paymentStatus: paymentMethod === "khalti" ? "Paid" : "Unpaid",
-    paymentMethod: paymentMethod === "khalti" ? "Khalti" : "Cash",
-  };
-
-  try {
-    const res = await fetch("http://localhost:3000/api/trackorder", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(orderData),
-    });
-
-    const result = await res.json();
-    if (res.ok) {
-      document.getElementById("customer-name").textContent = result.order.deliveryInfo.fullName;
-      document.getElementById("order-reference").textContent = result.order.orderReference;
-
-      console.log("✅ Order placed successfully", result);
-      sessionStorage.removeItem("selectedProduct");
-      sessionStorage.removeItem("orderSummary");
-      showPage(page3, page2);
-    // window.location.href = "dashboard.html";
-    } else {
-      alert("❌ " + result.message);
-    }
-  } catch (err) {
-    console.error("❌ Order error:", err);
-    alert("❌ Server error. Please try again.");
-  }
-}
-
-document.getElementById("complete-order").addEventListener("click", (e) => {
-  e.preventDefault();
-  submitOrder("cod");
-});
-
-document.getElementById("pay-khalti").addEventListener("click", (e) => {
-  e.preventDefault();
-  setTimeout(() => {
-    submitOrder("khalti");
-  }, 2000);
-});
-  </script>
-
-
-
-
-<!-- script for khalti integration -->
-<script>
-    document.getElementById("pay-khalti").addEventListener("click", async () => {
-      const orderData = JSON.parse(sessionStorage.getItem("selectedProduct"));
-      if (!orderData) return alert("Order data missing!");
-  
-      const payload = {
-        itemId: orderData.productId, // _id of the product
-        quantity: orderData.quantity,
-        unitPrice: orderData.price,
-        website_url: "http://localhost:3000"
-      };
-  
-      try {
-        const res = await fetch("http://localhost:3000/api/payment/initialize-khali", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-  
-        const data = await res.json();
-  
-        if (data.success && data.payment?.payment_url) {
-          window.location.href = data.payment.payment_url; // Redirect to Khalti payment
-        } else {
-          alert("Payment initiation failed: " + (data.message || "Something went wrong"));
+    let product = null;
+    try {
+        // Change priority: try orderSummary first, then selectedProduct
+        if (orderSummaryStr) {
+            product = JSON.parse(orderSummaryStr);
+            console.log("Using orderSummary data:", product);
+        } else if (selectedProductStr) {
+            product = JSON.parse(selectedProductStr);
+            console.log("Using selectedProduct data:", product);
         }
-      } catch (err) {
+    } catch (e) {
+        console.error("❌ Failed to parse sessionStorage data:", e);
+    }
+
+    const customerId = localStorage.getItem("customerId");
+
+    if (!product) {
+        alert("❌ Missing data. Redirecting to homepage.");
+        window.location.href = "dashboard.html";
+        return;
+    }
+
+    // Make sure we handle both single product and cart items format
+    const formattedProducts = Array.isArray(product.items) ?
+        // For cart data (comes from orderSummary)
+        product.items.map(item => ({
+            productId: item.productId || item._id,
+            quantity: item.quantity || 1,
+            size: item.size || "N/A",
+            price: item.price || 0
+        })) :
+        // For single product data (comes from selectedProduct)
+        [{
+            productId: product.productId || product._id,
+            quantity: product.quantity || 1,
+            size: product.size || "N/A",
+            price: product.price || 0
+        }];
+
+    // Rest of your submitOrder function...
+    const orderData = {
+        customerId,
+        products: formattedProducts,
+        deliveryInfo: {
+            fullName: document.getElementById("fullName").value,
+            phone: document.getElementById("phone").value,
+            address: document.getElementById("address").value,
+            city: document.getElementById("city").value,
+            postalCode: document.getElementById("zipCode").value,
+            instructions: document.getElementById("paymentInstructions")?.value || "",
+        },
+        deliveryType: document.querySelector('input[name="deliveryType"]:checked').value === "express" ?
+            "Express Delivery" :
+            "Standard Delivery",
+        // Safely access properties that might be in different locations
+        estimatedDeliveryDate: new Date(), // Use current date as fallback
+        subtotal: product.subtotal || (product.price * (product.quantity || 1)),
+        deliveryCharge: product.deliveryCharge || product.shipping || 150,
+        discount: product.discount || 0,
+        tax: product.tax || 0,
+        totalAmount: product.total || product.totalAmount || 
+            ((product.subtotal || (product.price * (product.quantity || 1))) + 
+            (product.deliveryCharge || product.shipping || 150) - 
+            (product.discount || 0) + 
+            (product.tax || 0)),
+        paymentStatus: paymentMethod === "khalti" ? "Paid" : "Unpaid",
+        paymentMethod: paymentMethod === "khalti" ? "Khalti" : "Cash",
+    };
+
+    try {
+        const res = await fetch("http://localhost:3000/api/trackorder", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(orderData),
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+            console.log("✅ Order placed successfully", result);
+            // Clear both storage items after successful order
+            sessionStorage.removeItem("selectedProduct");
+            sessionStorage.removeItem("orderSummary");
+            
+            // Redirect to invoice page with order reference
+            window.location.href = `invoice.html?orderId=${result.order._id}&ref=${result.order.orderReference}`;
+        } else {
+            alert("❌ " + result.message);
+        }
+    } catch (err) {
+        console.error("❌ Order error:", err);
+        alert("❌ Server error. Please try again.");
+    }
+}
+// Khalti integration
+document.getElementById("pay-khalti").addEventListener("click", async () => {
+    // Try to get data from orderSummary first (for cart checkouts)
+    const orderSummaryStr = sessionStorage.getItem("orderSummary");
+    const selectedProductStr = sessionStorage.getItem("selectedProduct");
+    
+    let orderData;
+    try {
+        if (orderSummaryStr) {
+            orderData = JSON.parse(orderSummaryStr);
+        } else if (selectedProductStr) {
+            orderData = JSON.parse(selectedProductStr);
+        } else {
+            return alert("Order data missing!");
+        }
+    } catch (e) {
+        console.error("Failed to parse order data:", e);
+        return alert("Invalid order data!");
+    }
+
+    // For cart orders (multiple items)
+    if (Array.isArray(orderData.items) && orderData.items.length > 0) {
+        const payload = {
+            orderId: orderData.orderId || Date.now().toString(),
+            totalAmount: orderData.total || orderData.totalAmount,
+            items: orderData.items.map(item => ({
+                itemId: item.productId || item._id,
+                quantity: item.quantity || 1,
+                unitPrice: item.price || 0
+            })),
+            website_url: "http://localhost:3000"
+        };
+        
+        // Process payment for cart items
+        processKhaltiPayment(payload);
+    } 
+    // For single product orders
+    else {
+        const payload = {
+            itemId: orderData.productId || orderData._id, 
+            quantity: orderData.quantity || 1,
+            unitPrice: orderData.price || 0,
+            website_url: "http://localhost:3000"
+        };
+        
+        // Process payment for single item
+        processKhaltiPayment(payload);
+    }
+});
+
+// Helper function to process Khalti payment
+async function processKhaltiPayment(payload) {
+    try {
+        const res = await fetch("http://localhost:3000/api/payment/initialize-khali", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+
+        if (data.success && data.paymentURL) {
+            // Redirect to Khalti Payment page
+            window.location.href = data.paymentURL;
+        } else {
+            alert("Payment initiation failed: " + (data.message || "Something went wrong"));
+        }
+    } catch (err) {
         console.error("Error initializing payment", err);
         alert("Error initiating Khalti payment");
-      }
-    });
-  </script>
- 
-  
+    }
+}
+
+// Handle redirect to dashboard after Khalti returns
+window.addEventListener("DOMContentLoaded", () => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("status");
+
+    if (status === "success") {
+        alert("✅ Payment Successful! Your order has been placed.");
+    } else if (status === "failed") {
+        alert("❌ Payment failed or cancelled. Please try again.");
+    }
+});
+</script>
+
+    
+
+
 </body>
+
 </html>

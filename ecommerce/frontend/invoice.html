@@ -1,569 +1,239 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StyleHub - Order Invoice</title>
+    <title>StyleHub - Order Confirmation</title>
     <style>
-        /* Reset & Base Styles */
+        /* Reset and base styles */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         }
-        
+
         body {
-            background-color: #f7f7f7;
+            background-color: #f5f7fa;
             color: #333;
             line-height: 1.6;
+        }
+
+        /* Container styles */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
             padding: 20px;
         }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+
+        /* Success container styles */
+        .success-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             padding: 30px;
+            text-align: center;
+            margin-top: 20px;
         }
-        
-        /* Header Styles */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            color: #333;
-            font-weight: bold;
-            font-size: 1.5rem;
-        }
-        
-        .logo-circle {
-            background-color: #4299e1;
-            color: white;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+
+        .success-icon {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 10px;
-            font-weight: bold;
+            width: 70px;
+            height: 70px;
+            background-color: #f0fff4;
+            border-radius: 50%;
+            margin: 0 auto 20px;
         }
-        
-        .invoice-label {
-            font-size: 1.2rem;
-            color: #666;
-            font-weight: 500;
-        }
-        
-        /* Invoice Details */
-        .invoice-details {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 30px;
-        }
-        
-        .customer-details, .order-details {
-            flex: 1;
-        }
-        
-        .detail-label {
-            color: #666;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
-        }
-        
-        .detail-value {
-            font-weight: 500;
+
+        .success-title {
+            font-size: 24px;
+            font-weight: 700;
             margin-bottom: 15px;
+            color: #2d3748;
         }
-        
-        /* Product Table */
-        .product-table {
-            width: 100%;
-            border-collapse: collapse;
+
+        .success-message {
+            font-size: 16px;
+            color: #4a5568;
             margin-bottom: 30px;
         }
-        
-        .product-table th {
-            background-color: #f2f2f2;
-            padding: 12px;
-            text-align: left;
+
+        .order-reference {
+            background-color: #f7fafc;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .reference-label {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .reference-number {
+            font-size: 18px;
             font-weight: 600;
+            color: #2d3748;
+            letter-spacing: 1px;
         }
-        
-        .product-table td {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
+
+        .email-note {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 30px;
         }
-        
-        /* Summary */
-        .order-summary {
-            margin-top: 20px;
-            margin-left: auto;
-            width: 300px;
-        }
-        
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .total-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 15px 0;
-            font-weight: bold;
-            font-size: 1.1rem;
-            border-top: 2px solid #ddd;
-            margin-top: 10px;
-        }
-        
-        .summary-label {
-            color: #666;
-        }
-        
-        .discount {
-            color: #e53e3e;
-        }
-        
-        /* Notes & Footer */
-        .notes {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-        
-        .notes h3 {
-            font-size: 1rem;
+
+        /* Button styles */
+        .button {
+            display: block;
+            width: 100%;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.2s ease;
             margin-bottom: 10px;
-            color: #555;
+            text-align: center;
         }
-        
-        .notes p {
-            font-size: 0.9rem;
-            color: #666;
+
+        .button.primary {
+            background-color: #0F172A;
+            color: white;
         }
-        
+
+        .button.secondary {
+            background-color: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        /* Footer styles */
         footer {
             text-align: center;
-            margin-top: 50px;
-            color: #666;
-            font-size: 0.9rem;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
+            padding: 30px 0;
+            margin-top: 40px;
+            color: #718096;
+            font-size: 14px;
         }
-        
-        footer p {
-            margin-bottom: 10px;
-        }
-        
+
         footer a {
-            color: #4299e1;
-            text-decoration: none;
-            margin: 0 5px;
-        }
-        
-        /* Print button */
-        .print-button {
-            display: block;
-            width: 200px;
-            background-color: #4299e1;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 5px;
-            font-weight: 600;
-            text-align: center;
-            cursor: pointer;
-            margin: 30px auto 0;
+            color: #4a5568;
             text-decoration: none;
         }
-        
-        .print-button:hover {
-            background-color: #3182ce;
+
+        footer a:hover {
+            text-decoration: underline;
         }
-        
-        .estimated-delivery {
-            margin-top: 15px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
-        
-        .delivery-date {
-            font-weight: 600;
+
+        footer p {
             margin-bottom: 5px;
         }
-        
-        .delivery-time {
-            color: #666;
-            font-size: 0.9rem;
-        }
-        
-        /* Print styles */
-        @media print {
-            body {
-                background-color: white;
-                padding: 0;
-            }
-            
-            .container {
-                box-shadow: none;
-                width: 100%;
-                max-width: 100%;
-                padding: 20px;
-            }
-            
-            .print-button {
-                display: none;
-            }
-            
-            a {
-                text-decoration: none;
-                color: #333;
-            }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <header>
-            <a href="dashboard.html" class="logo">
-                <div class="logo-circle">S</div>
-                <span>StyleHub</span>
-            </a>
-            <div class="invoice-label">INVOICE</div>
-        </header>
-        
-        <div class="invoice-details">
-            <div class="customer-details">
-                <div class="detail-label">BILLED TO:</div>
-                <div class="detail-value" id="customer-name">John Doe</div>
-                <div class="detail-value" id="customer-address">Babarmahal, Kathmandu, 44600</div>
-                <div class="detail-value" id="customer-phone">9847391783</div>
+        <div class="success-container">
+            <div class="success-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 6L9 17L4 12" stroke="#4CAF50" stroke-width="3" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
             </div>
-            
-            <div class="order-details">
-                <div class="detail-label">ORDER REFERENCE:</div>
-                <div class="detail-value" id="order-reference">ORD-8662-LRF0ZN</div>
-                
-                <div class="detail-label">DATE:</div>
-                <div class="detail-value" id="order-date">April 8, 2025</div>
-                
-                <div class="detail-label">PAYMENT METHOD:</div>
-                <div class="detail-value" id="payment-method">Khalti</div>
-                
-                <div class="detail-label">PAYMENT STATUS:</div>
-                <div class="detail-value" id="payment-status">Paid</div>
+
+            <h2 class="success-title">Order Confirmed!</h2>
+
+            <p class="success-message">Thank you <span id="customer-name">dipendra timalsina</span>! Your payment was successful
+                and your order has been placed.</p>
+
+            <div class="order-reference">
+                <div class="reference-label">Order Reference</div>
+                <div class="reference-number" id="order-reference">ORD-8339-BBG6QQ</div>
             </div>
+
+            <p class="email-note">We have sent a confirmation email with your order details.</p>
+
+            <a href="dashboard.html" class="button primary">Continue Shopping</a>
+            <button id="print-receipt" class="button secondary">Print Receipt</button>
         </div>
-        
-        <table class="product-table">
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Quantity</th>
-                    <th>Unit Price</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody id="product-list">
-                <!-- Product items will be populated here -->
-                <tr>
-                    <td>Designer T-Shirt</td>
-                    <td>1</td>
-                    <td>Rs. 3499.00</td>
-                    <td>Rs. 3499.00</td>
-                </tr>
-            </tbody>
-        </table>
-        
-        <div class="order-summary">
-            <div class="summary-row">
-                <span class="summary-label">Subtotal</span>
-                <span id="subtotal">Rs. 3499.00</span>
-            </div>
-            
-            <div class="summary-row">
-                <span class="summary-label">Delivery</span>
-                <span id="delivery-charge">Rs. 150.00</span>
-            </div>
-            
-            <div class="summary-row">
-                <span class="summary-label">Discount</span>
-                <span class="discount" id="discount">- Rs. 200.00</span>
-            </div>
-            
-            <div class="summary-row">
-                <span class="summary-label">Tax</span>
-                <span id="tax">Rs. 50.00</span>
-            </div>
-            
-            <div class="total-row">
-                <span>Total</span>
-                <span id="total-amount">Rs. 3499.00</span>
-            </div>
-        </div>
-        
-        <div class="estimated-delivery">
-            <div class="delivery-date">Estimated Delivery</div>
-            <div class="delivery-time" id="delivery-date">Thursday, March 27, 2025</div>
-            <div class="delivery-time" id="delivery-type">Standard Delivery (3-5 business days)</div>
-        </div>
-        
-        <div class="notes">
-            <h3>Notes</h3>
-            <p>Thank you for shopping with StyleHub! If you have any questions about your order, please contact our customer support team.</p>
-            <p id="delivery-instructions"></p>
-        </div>
-        
-        <button class="print-button" id="print-invoice">Print Invoice</button>
-        
+
         <footer>
             <p>© 2025 StyleHub. All rights reserved.</p>
-            <p>
-                <a href="#">Privacy Policy</a> •
-                <a href="#">Terms of Service</a> •
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <span>•</span>
+                <a href="#">Terms of Service</a>
+                <span>•</span>
                 <a href="#">Contact Us</a>
-            </p>
+            </div>
         </footer>
     </div>
-    
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Get order data from session storage or URL parameters
-            let orderData;
+            // Get order data from URL parameters or sessionStorage
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('orderId');
             
-            // Try to get data from session storage first
-            const storedOrder = sessionStorage.getItem("orderData");
-            if (storedOrder) {
-                try {
-                    orderData = JSON.parse(storedOrder);
-                } catch (e) {
-                    console.error("Failed to parse order data:", e);
-                }
-            }
-            
-            // If no data in session storage, check URL parameters
-            if (!orderData) {
-                const urlParams = new URLSearchParams(window.location.search);
-                const orderId = urlParams.get("orderId");
-                
-                if (orderId) {
-                    // Fetch order details from API
-                    fetchOrderDetails(orderId);
-                } else if (sessionStorage.getItem("selectedProduct") || sessionStorage.getItem("orderSummary")) {
-                    // Use data from checkout flow
-                    populateFromCheckoutData();
-                }
-            } else {
-                // Populate the invoice with the retrieved data
-                populateInvoice(orderData);
-            }
-            
-            // Add click event for print button
-            document.getElementById("print-invoice").addEventListener("click", function() {
+            // Handle print button
+            document.getElementById('print-receipt').addEventListener('click', function() {
                 window.print();
             });
             
-            // Set current date if not provided
-            if (!document.getElementById("order-date").textContent || 
-                document.getElementById("order-date").textContent === "April 8, 2025") {
-                const today = new Date();
-                document.getElementById("order-date").textContent = today.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
+            // If there's an order ID in the URL, fetch order details from API
+            if (orderId) {
+                fetchOrderDetails(orderId);
+            } else {
+                // Otherwise try to get from sessionStorage (from previous checkout)
+                const orderDataStr = sessionStorage.getItem('orderConfirmation');
+                if (orderDataStr) {
+                    try {
+                        const orderData = JSON.parse(orderDataStr);
+                        displayOrderData(orderData);
+                    } catch (e) {
+                        console.error("Error parsing order data:", e);
+                    }
+                }
             }
         });
         
-        // Fetch order details from API using order ID
+        // Function to fetch order details from API
         async function fetchOrderDetails(orderId) {
             try {
-                const response = await fetch(`http://localhost:3000/api/trackorder/${orderId}`);
+                const response = await fetch(`/api/orders/${orderId}`);
                 if (!response.ok) {
-                    throw new Error("Failed to fetch order details");
+                    throw new Error('Failed to fetch order details');
                 }
-                
                 const data = await response.json();
-                if (data.success && data.order) {
-                    populateInvoice(data.order);
-                } else {
-                    console.error("Invalid order data received");
-                    alert("Could not load invoice data. Please try again later.");
-                }
+                displayOrderData(data);
             } catch (error) {
-                console.error("Error fetching order details:", error);
-                alert("Failed to load order details. Please try again later.");
+                console.error('Error fetching order:', error);
+                alert('Could not load order details. Please try again later.');
             }
         }
         
-        // Populate from checkout data
-        function populateFromCheckoutData() {
-            let product;
-            try {
-                // Try parsing selectedProduct first
-                product = JSON.parse(sessionStorage.getItem("selectedProduct"));
-                
-                // If that fails, try orderSummary
-                if (!product) {
-                    product = JSON.parse(sessionStorage.getItem("orderSummary"));
-                }
-                
-                if (product) {
-                    const deliveryInfo = {
-                        fullName: document.getElementById("fullName")?.value || "Customer",
-                        address: [
-                            document.getElementById("address")?.value,
-                            document.getElementById("city")?.value,
-                            document.getElementById("zipCode")?.value
-                        ].filter(Boolean).join(", "),
-                        phone: document.getElementById("phone")?.value || ""
-                    };
-                    
-                    const orderDetails = {
-                        orderReference: document.getElementById("order-reference")?.textContent || generateOrderReference(),
-                        paymentMethod: document.querySelector('.radio-option.selected')?.dataset.value === "khalti" ? "Khalti" : "Cash on Delivery",
-                        paymentStatus: document.querySelector('.radio-option.selected')?.dataset.value === "khalti" ? "Paid" : "Pending",
-                        products: Array.isArray(product.items) ? product.items : [product],
-                        subtotal: product.subtotal || product.price * (product.quantity || 1),
-                        deliveryCharge: product.deliveryCharge || product.shipping || 150,
-                        discount: product.discount || 200,
-                        tax: product.tax || 50,
-                        totalAmount: product.total || product.totalAmount,
-                        deliveryType: document.querySelector('input[name="deliveryType"]:checked')?.value === "express" 
-                            ? "Express Delivery (1-2 business days)"
-                            : "Standard Delivery (3-5 business days)",
-                        estimatedDelivery: "Thursday, March 27, 2025",
-                        instructions: document.getElementById("instructions")?.value || ""
-                    };
-                    
-                    populateInvoiceFields(deliveryInfo, orderDetails);
-                }
-            } catch (error) {
-                console.error("Error parsing product data:", error);
-            }
-        }
-        
-        // Generate a random order reference number
-        function generateOrderReference() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let result = 'ORD-' + Math.floor(1000 + Math.random() * 9000) + '-';
-            for (let i = 0; i < 6; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        }
-        
-        // Format price with Nepali Rupees sign
-        function formatPrice(price) {
-            return `Rs. ${parseFloat(price).toFixed(2)}`;
-        }
-        
-        // Populate the invoice with order data
-        function populateInvoice(order) {
-            // Customer details
-            const deliveryInfo = order.deliveryInfo || {};
-            const orderDetails = {
-                orderReference: order.orderReference,
-                paymentMethod: order.paymentMethod,
-                paymentStatus: order.paymentStatus,
-                products: order.products || [],
-                subtotal: order.subtotal,
-                deliveryCharge: order.deliveryCharge,
-                discount: order.discount,
-                tax: order.tax,
-                totalAmount: order.totalAmount,
-                deliveryType: order.deliveryType,
-                estimatedDelivery: order.estimatedDeliveryDate,
-                instructions: order.deliveryInfo?.instructions || ""
-            };
+        // Function to display order data in the UI
+        function displayOrderData(order) {
+            // Update customer information
+            document.getElementById('customer-name').textContent = order.deliveryInfo?.fullName || order.customerName || '';
             
-            populateInvoiceFields(deliveryInfo, orderDetails);
-        }
-        
-        // Populate invoice fields
-        function populateInvoiceFields(deliveryInfo, orderDetails) {
-            // Customer details
-            document.getElementById("customer-name").textContent = deliveryInfo.fullName;
-            document.getElementById("customer-address").textContent = deliveryInfo.address;
-            document.getElementById("customer-phone").textContent = deliveryInfo.phone;
-            
-            // Order details
-            document.getElementById("order-reference").textContent = orderDetails.orderReference;
-            document.getElementById("payment-method").textContent = orderDetails.paymentMethod;
-            document.getElementById("payment-status").textContent = orderDetails.paymentStatus;
-            
-            // Product list
-            const productList = document.getElementById("product-list");
-            productList.innerHTML = ""; // Clear existing rows
-            
-            if (Array.isArray(orderDetails.products) && orderDetails.products.length > 0) {
-                orderDetails.products.forEach(product => {
-                    const row = document.createElement("tr");
-                    const name = product.name || product.productName || "Product";
-                    const quantity = product.quantity || 1;
-                    const price = product.price || 0;
-                    const total = price * quantity;
-                    
-                    row.innerHTML = `
-                        <td>${name}${product.size ? ` (${product.size})` : ""}</td>
-                        <td>${quantity}</td>
-                        <td>${formatPrice(price)}</td>
-                        <td>${formatPrice(total)}</td>
-                    `;
-                    
-                    productList.appendChild(row);
-                });
-            } else {
-                // Add a default row if no products found
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>Order Item</td>
-                    <td>1</td>
-                    <td>${formatPrice(orderDetails.subtotal || 0)}</td>
-                    <td>${formatPrice(orderDetails.subtotal || 0)}</td>
-                `;
-                productList.appendChild(row);
-            }
-            
-            // Order summary
-            document.getElementById("subtotal").textContent = formatPrice(orderDetails.subtotal || 0);
-            document.getElementById("delivery-charge").textContent = formatPrice(orderDetails.deliveryCharge || 0);
-            document.getElementById("discount").textContent = `- ${formatPrice(orderDetails.discount || 0)}`;
-            document.getElementById("tax").textContent = formatPrice(orderDetails.tax || 0);
-            document.getElementById("total-amount").textContent = formatPrice(orderDetails.totalAmount || 0);
-            
-            // Delivery information
-            document.getElementById("delivery-date").textContent = new Date(orderDetails.estimatedDelivery).toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            
-            document.getElementById("delivery-type").textContent = orderDetails.deliveryType;
-            
-            // Delivery instructions
-            if (orderDetails.instructions) {
-                document.getElementById("delivery-instructions").textContent = `Special Instructions: ${orderDetails.instructions}`;
-            }
+            // Update order reference - use the value from the database directly
+            document.getElementById('order-reference').textContent = order.orderReference || '';
         }
     </script>
 </body>
+
 </html>

@@ -6,6 +6,8 @@ const PurchasedItem = require("../model/purchcaseditemmodel");
 const Item = require("../model/itemmodel");
 const mongoose = require("mongoose");
 const productModel = require("../model/products");
+const Order = require("../model/order");
+
 
 // ✅ Route to initialize Khalti payment
 router.post("/initialize-khali", async (req, res) => {
@@ -22,12 +24,6 @@ const productData = await productModel.findOne({
 if (!productData) {
   return res.status(404).json({ success: false, message: "Product not found" });
 }
-
-
-// if (actualPrice !== unitPrice) {
-//   console.log("Actual:", actualPrice, "Sent:", unitPrice);
-//   return res.status(400).json({ success: false, message: "Price mismatch" });
-// }
 
 
     const totalPrice = unitPrice * quantity;
@@ -52,12 +48,17 @@ if (!productData) {
       return_url: `${process.env.BACKEND_URI}/api/payment/complete-khalti-payment`,
       website_url: websiteURL,
     });
-
-    return res.json({
+    res.json({
       success: true,
-      payment,
+      paymentURL: payment.payment_url,
+      pidx: payment.pidx,
       purchase: purchasedItemData,
     });
+    
+    
+    
+    
+    
   } catch (error) {
     console.error("Khalti Init Error:", error);
     res.status(500).json({ success: false, error });
@@ -129,11 +130,8 @@ router.get("/complete-khalti-payment", async (req, res) => {
     });
 
     // Send success response
-    res.json({
-      success: true,
-      message: "Payment Successful",
-      paymentData,
-    });
+    res.redirect(`http://localhost:3000/invoice?status=success&pidx=${pidx}`);
+
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -145,66 +143,3 @@ router.get("/complete-khalti-payment", async (req, res) => {
 });
 
 module.exports = router;
-
-
-
-// // it is our `return url` where we verify the payment done by user
-// router.get("/complete-khalti-payment", async (req, res) => {
-//   const {
-//     pidx,
-//     txnId,
-//     amount,
-//     mobile,
-//     purchase_order_id,
-//     purchase_order_name,
-//     transaction_id,
-//   } = req.query;
-
-//   try {
-//     const paymentInfo = await verifyKhaltiPayment(pidx);
-
-//     // Check if payment is completed and details match
-//     if (
-//       paymentInfo?.status !== "Completed" ||
-//       paymentInfo.transaction_id !== transaction_id ||
-//       Number(paymentInfo.total_amount) !== Number(amount)
-//     ) {
-//       return res.redirect(`/payment.html?status=failed`);
-//     }
-
-//     // Check if payment is valid
-//     const purchasedItemData = await PurchasedItem.findOne({
-//       _id: new mongoose.Types.ObjectId(purchase_order_id),
-//       totalPrice: Number(amount),
-//     });
-
-//     if (!purchasedItemData) {
-//       return res.redirect(`/payment.html?status=failed`);
-//     }
-
-//     // Mark as completed
-//     await PurchasedItem.findByIdAndUpdate(
-//       purchase_order_id,
-//       { $set: { status: "completed" } }
-//     );
-
-//     // Create payment record
-//     const paymentData = await Payment.create({
-//       pidx,
-//       transactionId: transaction_id,
-//       productId: purchase_order_id,
-//       amount,
-//       dataFromVerificationReq: paymentInfo,
-//       apiQueryFromUser: req.query,
-//       paymentGateway: "khalti",
-//       status: "success",
-//     });
-
-//     // ✅ Redirect to frontend page 3 with order reference
-//     return res.redirect(`/payment.html?status=success&orderId=${purchase_order_id}`);
-
-//   } catch (error) {
-//     console.error(error);
-//     return res.redirect(`/payment.html?status=failed`);
-//   }
-// });

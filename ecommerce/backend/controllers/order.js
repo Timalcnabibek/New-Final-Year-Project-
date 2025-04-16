@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Order = require("../model/order");
-const Product = require("../model/Products");
+const Product = require("../model/products");
 const Customer = require("../model/cusmod");
 
 // POST: Create a new order 
@@ -17,6 +17,7 @@ const createOrder = async (req, res) => {
       paymentMethod,
     } = req.body;
 
+    // Generate a consistent order reference that will be used in both database and frontend
     const generateOrderReference = () => {
       const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
       const random = Array.from({ length: 6 }, () =>
@@ -75,13 +76,13 @@ const createOrder = async (req, res) => {
     const tax = 50;
     const totalAmount = subtotal + deliveryCharge + tax - discount;
 
-    // 🧮 Loyalty points calculation: 1 point per 100 units spent
+    // Loyalty points calculation: 1 point per 100 units spent
     const pointsEarned = Math.floor(totalAmount / 100);
 
-    // Create order
+    // Create order with the same orderReference that will be displayed in the frontend
     const order = await Order.create({
       customerId,
-      orderReference,
+      orderReference, // This will be the same value shown in the UI
       products: productDetails,
       deliveryInfo,
       deliveryType,
@@ -94,7 +95,7 @@ const createOrder = async (req, res) => {
       status: "Pending",
       paymentStatus,
       paymentMethod,
-      pointsEarned // ✅ use the correct field name
+      pointsEarned
     });
 
     await Customer.findByIdAndUpdate(customerId, {
@@ -140,16 +141,19 @@ const createOrder = async (req, res) => {
       }
     }
 
+    // Store the order data in session storage for the confirmation page
+    // This ensures the frontend gets the same orderReference
     res.status(201).json({
       message: "Order placed successfully",
-      order,
+      order: {
+        ...order.toObject(),
+        orderReference // Ensure the frontend receives the same orderReference
+      },
       pointsEarned 
     });
     
     console.log(`🎁 Earned loyalty points: ${pointsEarned}`);
-    
     console.log("✅ Order successfully placed!");
-    // console.log(`🎁 Earned loyalty points: ${earnedPoints}`);
 
   } catch (error) {
     console.error("❌ Error creating order:", error.message);
@@ -163,7 +167,7 @@ const createOrder = async (req, res) => {
 
   
 
-const deleteorder = async (req, res) => {
+const getallorder = async (req, res) => {
     try {
         const orders = await Order.find({ customerId: req.params.customerId })
           .sort({ createdAt: -1 })
@@ -205,4 +209,4 @@ const updateorder = async (req, res) => {
 }
 
   
-module.exports = {createOrder, deleteorder, getorder, updateorder};
+module.exports = {createOrder, getallorder, getorder, updateorder};
