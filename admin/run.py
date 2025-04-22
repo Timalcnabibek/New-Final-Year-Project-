@@ -14,8 +14,12 @@ import bcrypt
 from bson.son import SON
 import joblib
 import numpy as np
+import pandas as pd
+
+
 
 # from products import *
+predict_bp = Blueprint('predict', __name__)
 
 # Load environment variables
 load_dotenv()
@@ -50,79 +54,6 @@ def serialize(value):
     else:
         return value
 
-predict_bp = Blueprint('predict', __name__)
-
-# Load model and scaler from the models folder
-model_path = os.path.join('models', 'linear_model.pkl')
-scaler_path = os.path.join('models', 'scaler.pkl')
-model = joblib.load(model_path)
-scaler = joblib.load(scaler_path)
-
-
-@predict_bp.route('/predict-sales', methods=['POST'])
-def predict_sales():
-    try:
-        data = request.get_json()
-
-        # ✅ Required base features
-        required_fields = [
-            'month', 'quarter', 'month_of_quarter', 'year',
-            'lag_values',
-            'rolling_mean_3', 'rolling_mean_6', 'rolling_mean_12',
-            'mom_change', '3m_momentum', '6m_momentum', '12m_momentum',
-            'last_actual'
-        ]
-
-        for field in required_fields:
-            if field not in data:
-                return jsonify({"error": f"Missing field: {field}"}), 400
-
-        # ✅ Validate lag values length
-        lag_values = data['lag_values']
-        if not isinstance(lag_values, list) or len(lag_values) != 12:
-            return jsonify({"error": "lag_values must be a list of 12 values"}), 400
-
-        # ✅ Build input in the exact order model expects
-        feature_vector = [
-            data['month'],
-            data['quarter'],
-            data['month_of_quarter'],
-            data['year'],
-            *lag_values,
-            data['rolling_mean_3'],
-            data['rolling_mean_6'],
-            data['rolling_mean_12'],
-            data['mom_change'],
-            data['3m_momentum'],
-            data['6m_momentum'],
-            data['12m_momentum']
-        ]
-
-        # ✅ Convert to NumPy array and reshape for model
-        input_array = np.array(feature_vector).reshape(1, -1)
-
-        # ✅ Scale input
-        input_scaled = scaler.transform(input_array)
-
-        # ✅ Predict sales difference and reconstruct actual sales
-        predicted_diff = model.predict(input_scaled)[0]
-        predicted_sales = data['last_actual'] + predicted_diff
-
-        print(f"Predicted Diff: {predicted_diff}")
-        print(f"Last Actual: {data['last_actual']}")
-        print(f"Forecasted Sales: {predicted_sales}")
-
-
-        return jsonify({
-            "forecasted_sales": round(predicted_sales, 2)
-        })
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-
-
 
 app = Flask(__name__, static_folder="static")
 
@@ -131,10 +62,16 @@ mongo_uri = os.getenv("MONGO_URI", "mongodb+srv://np03cs4a220312:bibek@ecommerce
 client = MongoClient(mongo_uri)
 db = client["Ecommerce_data"]
 products_collection = db["products"]
-customers_collection = db["customers"]  # Changed to lowercase to match MongoDB conventions
-orders_collection = db["orders"]  # Replace with your actual collection name if different
+customers_collection = db["customers"]  
+orders_collection = db["orders"]  
 sales_data_collection = db["sales_datas"]
 promo_codes_collection = db["promo_codes"]
+rewards_collection = db["rewards"]
+
+
+# Load model and scaler from the models folder
+model = joblib.load('models/xgb_model.pkl')
+scaler = joblib.load('models/scaler.pkl')
 
 
 # Cloudinary configuration
@@ -1528,6 +1465,386 @@ def increment_promo_code_usage(promo_code_id):
         print(f"Error incrementing promo code usage: {str(e)}")
         return False
 
+
+
+#forecast 
+
+
+# Define feature order (MUST match training)
+feature_cols = ['dayofweek', 'month', 'day', 'quarter', 'year', 'is_weekend', 
+                'is_month_start', 'is_month_end', 'day_sin', 'day_cos'] + \
+               [f'lag_{i}' for i in range(1, 15)] + \
+               ['rolling_mean_3', 'rolling_mean_7', 'rolling_mean_14', 'rolling_mean_30',
+                'day_change', '3d_momentum', '7d_momentum', '14d_momentum']
+
+
+
+@app.route('/predict-sales', methods=['POST'])
+def predict_sales():
+    try:
+        data = request.get_json()
+
+        # Validate input
+        required_fields = [
+            'dayofweek', 'month', 'day', 'quarter', 'year', 'is_weekend', 
+            'is_month_start', 'is_month_end', 'day_sin', 'day_cos',
+            'lag_values',
+            'rolling_mean_3', 'rolling_mean_7', 'rolling_mean_14', 'rolling_mean_30',
+            'day_change', '3d_momentum', '7d_momentum', '14d_momentum',
+            'last_actual'
+        ]
+
+        for field in required_fields:
+            if field not in data:
+                return jsonify({"error": f"Missing field: {field}"}), 400
+
+        if not isinstance(data['lag_values'], list) or len(data['lag_values']) != 14:
+            return jsonify({"error": "lag_values must be a list of 14 values"}), 400
+
+        # Build feature vector in exact order
+        feature_vector = [
+            data['dayofweek'], data['month'], data['day'], data['quarter'], data['year'],
+            data['is_weekend'], data['is_month_start'], data['is_month_end'],
+            data['day_sin'], data['day_cos'],
+            *data['lag_values'],
+            data['rolling_mean_3'], data['rolling_mean_7'], data['rolling_mean_14'], data['rolling_mean_30'],
+            data['day_change'], data['3d_momentum'], data['7d_momentum'], data['14d_momentum']
+        ]
+
+        # Scale and predict
+        input_array = np.array(feature_vector).reshape(1, -1)
+        input_scaled = scaler.transform(input_array)
+        predicted_diff = model.predict(input_scaled)[0]
+        print("Predicted Diff:", predicted_diff)
+        predicted_sales = data['last_actual'] + predicted_diff
+                # Apply clipping to prevent unrealistic spikes (limit ±20%)
+        lower_bound = data['last_actual'] * 0.8
+        upper_bound = data['last_actual'] * 1.2
+        predicted_sales = np.clip(predicted_sales, lower_bound, upper_bound)
+
+
+        return jsonify({
+            "forecasted_sales": float(round(predicted_sales, 2))  # <-- Convert to native float
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+def prepare_data(daily_sales):
+    """Process sales data to create features needed for the model"""
+    # Add time-based features
+    daily_sales['dayofweek'] = daily_sales['sales_date'].dt.dayofweek
+    daily_sales['month'] = daily_sales['sales_date'].dt.month
+    daily_sales['day'] = daily_sales['sales_date'].dt.day
+    daily_sales['quarter'] = daily_sales['sales_date'].dt.quarter
+    daily_sales['year'] = daily_sales['sales_date'].dt.year
+    daily_sales['is_weekend'] = daily_sales['dayofweek'].apply(lambda x: 1 if x >= 5 else 0)
+    daily_sales['is_month_start'] = daily_sales['sales_date'].dt.is_month_start.astype(int)
+    daily_sales['is_month_end'] = daily_sales['sales_date'].dt.is_month_end.astype(int)
+    
+    # Create lag features
+    for i in range(1, 15):
+        daily_sales[f'lag_{i}'] = daily_sales['sales_volume'].shift(i)
+    
+    # Add rolling window statistics
+    daily_sales['rolling_mean_3'] = daily_sales['sales_volume'].rolling(window=3).mean().shift(1)
+    daily_sales['rolling_mean_7'] = daily_sales['sales_volume'].rolling(window=7).mean().shift(1)
+    daily_sales['rolling_mean_14'] = daily_sales['sales_volume'].rolling(window=14).mean().shift(1)
+    daily_sales['rolling_mean_30'] = daily_sales['sales_volume'].rolling(window=30).mean().shift(1)
+    
+    # Add momentum features
+    daily_sales['day_change'] = daily_sales['sales_volume'].pct_change()
+    daily_sales['3d_momentum'] = daily_sales['sales_volume'].pct_change(3)
+    daily_sales['7d_momentum'] = daily_sales['sales_volume'].pct_change(7)
+    daily_sales['14d_momentum'] = daily_sales['sales_volume'].pct_change(14)
+    
+    # Add cyclical features
+    daily_sales['day_sin'] = np.sin(2 * np.pi * daily_sales['dayofweek'] / 7)
+    daily_sales['day_cos'] = np.cos(2 * np.pi * daily_sales['dayofweek'] / 7)
+    
+    return daily_sales
+
+def generate_forecast(daily_sales, days=14):
+    """Generate sales forecast using the trained model"""
+    # Load the model and scaler
+    global model, scaler
+    
+    # Define feature columns
+    feature_cols = ['dayofweek', 'month', 'day', 'quarter', 'year', 'is_weekend',
+                   'is_month_start', 'is_month_end', 'day_sin', 'day_cos'] + \
+                  [f'lag_{i}' for i in range(1, 15)] + \
+                  ['rolling_mean_3', 'rolling_mean_7', 'rolling_mean_14', 'rolling_mean_30',
+                   'day_change', '3d_momentum', '7d_momentum', '14d_momentum']
+    
+    # Drop NaN values
+    daily_sales = daily_sales.dropna().reset_index(drop=True)
+    
+    # Create future dates dataframe
+    last_date = daily_sales['sales_date'].max()
+    forecast_df = pd.DataFrame({
+        'sales_date': [last_date + pd.Timedelta(days=i+1) for i in range(days)]
+    })
+    
+    # Add calendar features
+    forecast_df['dayofweek'] = forecast_df['sales_date'].dt.dayofweek
+    forecast_df['month'] = forecast_df['sales_date'].dt.month
+    forecast_df['day'] = forecast_df['sales_date'].dt.day
+    forecast_df['quarter'] = forecast_df['sales_date'].dt.quarter
+    forecast_df['year'] = forecast_df['sales_date'].dt.year
+    forecast_df['is_weekend'] = forecast_df['dayofweek'].apply(lambda x: 1 if x >= 5 else 0)
+    forecast_df['is_month_start'] = forecast_df['sales_date'].dt.is_month_start.astype(int)
+    forecast_df['is_month_end'] = forecast_df['sales_date'].dt.is_month_end.astype(int)
+    forecast_df['day_sin'] = np.sin(2 * np.pi * forecast_df['dayofweek'] / 7)
+    forecast_df['day_cos'] = np.cos(2 * np.pi * forecast_df['dayofweek'] / 7)
+    
+    # Initialize features for forecasting
+    for i in range(1, 15):
+        forecast_df.loc[0, f'lag_{i}'] = daily_sales['sales_volume'].iloc[-i]
+    
+    # Initialize rolling means
+    last_values = daily_sales['sales_volume'].iloc[-30:].values
+    forecast_df.loc[0, 'rolling_mean_3'] = np.mean(last_values[-3:])
+    forecast_df.loc[0, 'rolling_mean_7'] = np.mean(last_values[-7:])
+    forecast_df.loc[0, 'rolling_mean_14'] = np.mean(last_values[-14:])
+    forecast_df.loc[0, 'rolling_mean_30'] = np.mean(last_values[-30:])
+    
+    # Initialize momentum features
+    forecast_df.loc[0, 'day_change'] = (daily_sales['sales_volume'].iloc[-1] / daily_sales['sales_volume'].iloc[-2]) - 1
+    forecast_df.loc[0, '3d_momentum'] = (daily_sales['sales_volume'].iloc[-1] / daily_sales['sales_volume'].iloc[-4]) - 1
+    forecast_df.loc[0, '7d_momentum'] = (daily_sales['sales_volume'].iloc[-1] / daily_sales['sales_volume'].iloc[-8]) - 1
+    forecast_df.loc[0, '14d_momentum'] = (daily_sales['sales_volume'].iloc[-1] / daily_sales['sales_volume'].iloc[-15]) - 1
+    
+    # Make forecasts
+    forecast_sales = []
+    for i in range(days):
+        # Prepare features for current prediction
+        X_forecast = forecast_df[feature_cols].iloc[i:i+1]
+        X_forecast_scaled = scaler.transform(X_forecast)
+        
+        # Make prediction
+        forecast = model.predict(X_forecast_scaled)[0]
+        forecast_sales.append(forecast)
+        
+        # Update features for next day if not the last day
+        if i < days - 1:
+            # Update lag features
+            for j in range(14, 1, -1):
+                forecast_df.loc[i+1, f'lag_{j}'] = forecast_df.loc[i, f'lag_{j-1}']
+            forecast_df.loc[i+1, 'lag_1'] = forecast
+            
+            # Update rolling means and momentum features as in your original code
+            # (similar implementation as in your training notebook)
+            
+    # Return forecast results
+    return pd.DataFrame({
+        'Date': forecast_df['sales_date'],
+        'Forecasted_Sales': forecast_sales
+    })
+
+@app.route('/api/forecast', methods=['GET'])
+def get_combined_forecast():
+    try:
+        days = int(request.args.get('days', 14))  # default to 14
+        # Read from CSV_products
+        csv_products = list(db.CSV_products.find({}, {'sales_volume': 1, 'sales_date': 1}))
+        csv_sales = [
+            {
+                "sales_date": pd.to_datetime(doc["sales_date"]),
+                "sales_volume": doc["sales_volume"]
+            }
+            for doc in csv_products if "sales_date" in doc and "sales_volume" in doc
+        ]
+
+        # Read from orders
+        orders = list(orders_collection.find({}, {"products": 1, "orderedAt": 1}))
+        order_sales = []
+        order_counts_by_date = {}  # Track order counts by date
+        
+        for order in orders:
+            order_date = order.get("orderedAt")
+            if order_date:
+                # Convert to datetime object for consistent formatting
+                order_date_dt = pd.to_datetime(order_date)
+                date_key = order_date_dt.strftime('%Y-%m-%d')
+                
+                # Count orders
+                if date_key in order_counts_by_date:
+                    order_counts_by_date[date_key] += 1
+                else:
+                    order_counts_by_date[date_key] = 1
+                
+                # Track sales volumes
+                for item in order.get("products", []):
+                    quantity = item.get("quantity", 0)
+                    order_sales.append({
+                        "sales_date": order_date_dt,
+                        "sales_volume": quantity
+                    })
+
+        # Combine CSV + Order sales
+        all_sales = pd.DataFrame(csv_sales + order_sales)
+        daily_sales = all_sales.groupby("sales_date")["sales_volume"].sum().reset_index()
+
+        # Create daily order counts dataframe
+        order_counts_df = pd.DataFrame([
+            {"sales_date": pd.to_datetime(date), "order_count": count}
+            for date, count in order_counts_by_date.items()
+        ])
+
+        # Forecasting sales volume
+        processed_data = prepare_data(daily_sales)
+        forecast_result = generate_forecast(processed_data, days=days)
+        
+        # Generate order count forecast based on historical ratio
+        # Calculate average order size (items per order)
+        avg_order_size = None
+        
+        if len(order_counts_df) > 0:
+            # Merge sales and order counts
+            merged_data = pd.merge(
+                daily_sales, 
+                order_counts_df, 
+                on="sales_date", 
+                how="left"
+            ).fillna(0)
+            
+            # Calculate average items per order over the last 30 days
+            recent_data = merged_data.tail(30)
+            total_items = recent_data["sales_volume"].sum()
+            total_orders = recent_data["order_count"].sum()
+            
+            if total_orders > 0:
+                avg_order_size = total_items / total_orders
+            else:
+                # Fallback if no order data
+                avg_order_size = 3.0  # Default assumption
+        else:
+            # No order data available, use reasonable default
+            avg_order_size = 3.0
+        
+        # Generate the forecast results with orders included
+        forecast_list = []
+        for _, row in forecast_result.iterrows():
+            sales_forecast = float(round(row["Forecasted_Sales"], 2))
+            # Estimate order count from sales forecast using average order size
+            order_forecast = round(sales_forecast / avg_order_size) if avg_order_size else 0
+            
+            forecast_list.append({
+                "date": row["Date"].strftime('%Y-%m-%d'),
+                "forecast": sales_forecast,
+                "orders": order_forecast
+            })
+
+        return jsonify({
+            "forecast": forecast_list,
+            "metrics": {
+                "avg_order_size": round(avg_order_size, 2) if avg_order_size else 0
+            }
+        })
+    
+    except Exception as e:
+        print(f"❌ Forecast Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+
+
+#api routes for reward section
+
+@app.route("/api/rewards", methods=["POST"])
+def add_reward():
+    data = request.json
+    required_fields = ["title", "description", "points_required", "discount"]
+
+    if not all(field in data for field in required_fields):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    discount = data.get("discount")
+    if not isinstance(discount, dict) or "type" not in discount or "value" not in discount:
+        return jsonify({"error": "Invalid discount format"}), 400
+
+    if discount["type"] not in ["percentage", "fixed"]:
+        return jsonify({"error": "Discount type must be 'percentage' or 'fixed'"}), 400
+
+    reward = {
+        "title": data["title"],
+        "description": data["description"],
+        "points_required": int(data["points_required"]),
+        "discount": {
+            "type": discount["type"],
+            "value": float(discount["value"])
+        },
+        "active": True,
+        "created_at": datetime.utcnow()
+    }
+
+    result = rewards_collection.insert_one(reward)
+    return jsonify({"message": "Reward added", "reward_id": str(result.inserted_id)}), 201
+
+
+
+@app.route("/api/rewards/get", methods=["GET"])
+def get_all_rewards():
+    rewards = list(rewards_collection.find())
+    
+    # Convert ObjectId and datetime to string
+    for reward in rewards:
+        reward["_id"] = str(reward["_id"])
+        reward["created_at"] = reward["created_at"].isoformat() if "created_at" in reward else None
+    
+    return jsonify(rewards), 200
+
+
+
+@app.route("/api/rewards/<reward_id>", methods=["PUT"])
+def update_reward(reward_id):
+    data = request.json
+    if not data:
+        return jsonify({"error": "No data received"}), 400
+
+    update_fields = {
+        "title": data.get("title"),
+        "description": data.get("description"),
+        "points_required": data.get("points_required"),
+        "active": data.get("active", True)
+    }
+
+    if "discount" in data:
+        discount = data["discount"]
+        if not isinstance(discount, dict) or "type" not in discount or "value" not in discount:
+            return jsonify({"error": "Invalid discount format"}), 400
+
+        if discount["type"] not in ["percentage", "fixed"]:
+            return jsonify({"error": "Discount type must be 'percentage' or 'fixed'"}), 400
+
+        update_fields["discount"] = {
+            "type": discount["type"],
+            "value": float(discount["value"])
+        }
+
+    result = rewards_collection.update_one(
+        {"_id": ObjectId(reward_id)},
+        {"$set": update_fields}
+    )
+
+    if result.matched_count == 0:
+        return jsonify({"error": "Reward not found"}), 404
+
+    return jsonify({"success": True, "message": "Reward updated successfully"}), 200
+
+
+
+@app.route("/api/admin/rewards/<reward_id>", methods=["DELETE"])
+def delete_reward(reward_id):
+    result = rewards_collection.delete_one({"_id": ObjectId(reward_id)})
+    if result.deleted_count == 0:
+        return jsonify({"error": "Reward not found"}), 404
+    return jsonify({"message": "Reward deleted"}), 200
+
+
+
+    
 @app.route('/list-routes')
 def list_routes():
     output = []

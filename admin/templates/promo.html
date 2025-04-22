@@ -3,386 +3,296 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Rewards Management</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/promo.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* Additional styles for rewards */
+        .reward-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .reward-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .reward-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            color: #333;
+        }
+        
+        .reward-points {
+            background-color: #4c82e6;
+            color: white;
+            font-weight: bold;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .reward-category {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-bottom: 10px;
+            background-color: #e9f0fd;
+            color: #4c82e6;
+        }
+        
+        .reward-description {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .reward-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+        
+        .reward-actions button {
+            margin-left: 10px;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 30px;
+            color: #888;
+            font-size: 16px;
+        }
+        
+        .category-label.discount {
+            background-color: #e9f0fd;
+            color: #4c82e6;
+        }
+        
+        .category-label.gift {
+            background-color: #fdeaeb;
+            color: #e64c4c;
+        }
+        
+        .category-label.exclusive {
+            background-color: #f0fde9;
+            color: #4ce64c;
+        }
+        
+        .category-label.experience {
+            background-color: #fdf6e9;
+            color: #e6b44c;
+        }
 
+        #notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .notification {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        
+        .notification.success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid #155724;
+        }
+        
+        .notification.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #721c24;
+        }
+        
+        .notification-content {
+            display: flex;
+            align-items: center;
+        }
+        
+        .notification-content i {
+            margin-right: 10px;
+        }
+        
+        .notification-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: inherit;
+            margin-left: 15px;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            width: 80%;
+            max-width: 600px;
+            animation: modalFadeIn 0.3s;
+        }
+        
+        .modal-header {
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+            color: #333;
+        }
+        
+        .close-modal {
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .close-modal:hover {
+            color: #666;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <header>
-          <h1>Promo Codes Management</h1>
-          <p class="subtitle">Create and manage your promotional codes system</p>
+          <h1>Rewards Management</h1>
+          <p class="subtitle">Create and manage rewards for your customer loyalty program</p>
         </header>
         <a href="{{ url_for('index') }}" class="fancy-link">
-            <i class="fas fa-arrow-left"></i> Go Back To Products
+            <i class="fas fa-arrow-left"></i> Go Back To Dashboard
         </a>
         
-        
         <div class="tabs">
-          <button class="tab-btn active" data-tab="add">Add Promo Code</button>
-          <button class="tab-btn" data-tab="view">View Promo Codes</button>
+          <button class="tab-btn active" data-tab="add">Add Reward</button>
+          <button class="tab-btn" data-tab="view">View Rewards</button>
         </div>
         
         <div id="add-tab" class="tab-content active">
-          <form id="add-promo-form">
-            <div class="form-row">
-              <div class="form-col">
-                <div class="form-group">
-                  <label for="promo-code">Promo Code</label>
-                  <input type="text" id="promo-code" placeholder="E.G. SUMMER25" required>
-                </div>
-              </div>
-              <div class="form-col">
-                <div class="form-group">
-                  <label for="status">Status</label>
-                  <div class="toggle-switch">
-                    <input type="checkbox" id="status" checked>
-                    <span class="slider"></span>
-                  </div>
-                  <span id="status-text" style="margin-left: 70px; font-size: 14px; color: var(--text-light);">
-                    Active
-                  </span>
-                </div>
-              </div>
+          <form id="add-reward-form">
+            <div class="form-group">
+              <label for="reward-title">Reward Title</label>
+              <input type="text" id="reward-title" placeholder="E.G. 10% Off" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="reward-description">Description</label>
+              <input type="text" id="reward-description" placeholder="E.G. Get 10% off your order" required>
             </div>
             
             <div class="form-row">
               <div class="form-col">
                 <div class="form-group">
-                  <label for="discount-amount">Discount Amount</label>
-                  <input type="number" id="discount-amount" min="0" placeholder="0" required>
+                  <label for="points-required">Points Required</label>
+                  <input type="number" id="points-required" min="1" placeholder="700" required>
                 </div>
               </div>
+            </div>
+            
+            <div id="discount-fields" class="form-row">
               <div class="form-col">
                 <div class="form-group">
                   <label for="discount-type">Discount Type</label>
                   <select id="discount-type" required>
                     <option value="percentage">Percentage (%)</option>
-                    <option value="fixed">Fixed Amount ($)</option>
+                    <option value="fixed">Fixed Amount (Rs)</option>
                   </select>
                 </div>
               </div>
-            </div>
-            
-            <div class="form-row">
               <div class="form-col">
                 <div class="form-group">
-                  <label for="start-date">Start Date</label>
-                  <input type="date" id="start-date" required>
-                </div>
-              </div>
-              <div class="form-col">
-                <div class="form-group">
-                  <label for="end-date">End Date</label>
-                  <input type="date" id="end-date" required>
+                  <label for="discount-value">Discount Value</label>
+                  <input type="number" id="discount-value" min="0" step="0.01" placeholder="10" required>
                 </div>
               </div>
             </div>
             
-            <div class="form-group">
-              <label for="usage-limit">Usage Limit</label>
-              <input type="number" id="usage-limit" min="1" placeholder="100" required>
-            </div>
-            
-            <button type="submit" class="btn btn-primary btn-block">Create Promo Code</button>
+            <button type="submit" class="btn btn-primary btn-block">Create Reward</button>
           </form>
         </div>
         
         <div id="view-tab" class="tab-content">
           <div class="search-container">
-            <input type="text" id="search-input" placeholder="Search promo codes...">
-            <select id="status-filter">
-              <option value="all">All</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
+            <input type="text" id="search-input" placeholder="Search rewards...">
+            <select id="category-filter">
+              <option value="all">All Categories</option>
+              <option value="Discount">Fix Amount</option>
+              <option value="Gift">Percentage</option>
             </select>
           </div>
           
-          <div class="promo-cards" id="promo-cards-container">
-            <!-- Promo cards will be inserted here dynamically -->
+          <div class="rewards-container" id="rewards-container">
+            <!-- Rewards will be inserted here dynamically -->
           </div>
         </div>
       </div>
 
-      <!-- <script>
-        document.addEventListener('DOMContentLoaded', function() {
-          // Tab switching functionality
-          const tabButtons = document.querySelectorAll('.tab-btn');
-          const tabContents = document.querySelectorAll('.tab-content');
-          
-          tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-              // Remove active class from all buttons and contents
-              tabButtons.forEach(btn => btn.classList.remove('active'));
-              tabContents.forEach(content => content.classList.remove('active'));
-              
-              // Add active class to clicked button and corresponding content
-              button.classList.add('active');
-              document.getElementById(`${button.dataset.tab}-tab`).classList.add('active');
-            });
-          });
-          
-          // Status toggle text update
-          const statusToggle = document.getElementById('status');
-          const statusText = document.getElementById('status-text');
-          
-          statusToggle.addEventListener('change', () => {
-            statusText.textContent = statusToggle.checked ? 'Active' : 'Inactive';
-          });
-          
-          // Initialize sample promo codes
-          const samplePromoCodes = [
-            {
-              code: 'SUMMER25',
-              status: 'active',
-              startDate: '2025-05-01',
-              endDate: '2025-08-31',
-              discount: 25,
-              discountType: 'percentage',
-              usageLimit: 100,
-              usageCount: 45
-            },
-            {
-              code: 'WELCOME10',
-              status: 'active',
-              startDate: '2025-01-01',
-              endDate: '2025-12-31',
-              discount: 10,
-              discountType: 'fixed',
-              usageLimit: 500,
-              usageCount: 123
-            },
-            {
-              code: 'FLASH50',
-              status: 'inactive',
-              startDate: '2025-04-10',
-              endDate: '2025-04-12',
-              discount: 50,
-              discountType: 'percentage',
-              usageLimit: 50,
-              usageCount: 50
-            }
-          ];
-          
-          // Store promo codes in local storage or use sample data
-          let promoCodes = JSON.parse(localStorage.getItem('promoCodes')) || samplePromoCodes;
-          
-          // Format date for display
-          function formatDate(dateString) {
-            const date = new Date(dateString);
-            return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
-          }
-          
-          // Update promo cards display
-          function updatePromoCards(codes = promoCodes) {
-            const container = document.getElementById('promo-cards-container');
-            container.innerHTML = '';
-            
-            if (codes.length === 0) {
-              container.innerHTML = '<p style="text-align: center; grid-column: 1 / -1; padding: 30px;">No promo codes found.</p>';
-              return;
-            }
-            
-            codes.forEach(promo => {
-              const usagePercentage = (promo.usageCount / promo.usageLimit) * 100;
-              const discountDisplay = promo.discountType === 'percentage' ? `${promo.discount}%` : `$${promo.discount.toFixed(2)}`;
-              
-              const card = document.createElement('div');
-              card.className = 'promo-card';
-              card.innerHTML = `
-                <span class="status-badge ${promo.status === 'active' ? 'status-active' : 'status-inactive'}">
-                  ${promo.status}
-                </span>
-                <h3 class="promo-code">${promo.code}</h3>
-                <p class="promo-dates">${formatDate(promo.startDate)} - ${formatDate(promo.endDate)}</p>
-                <p class="promo-detail"><strong>Discount:</strong> ${discountDisplay}</p>
-                <p class="promo-detail"><strong>Usage:</strong></p>
-                <div class="usage-bar">
-                  <div class="usage-progress" style="width: ${usagePercentage}%"></div>
-                </div>
-                <p class="usage-text">${promo.usageCount} / ${promo.usageLimit}</p>
-                
-                <div class="card-controls">
-                  <div class="card-toggle">
-                    <label class="toggle-switch">
-                      <input type="checkbox" class="status-toggle" data-code="${promo.code}" ${promo.status === 'active' ? 'checked' : ''}>
-                      <span class="slider"></span>
-                    </label>
-                  </div>
-                  <div class="card-actions">
-                    <button class="btn-icon edit" data-code="${promo.code}">✏️</button>
-                    <button class="btn-icon delete" data-code="${promo.code}">🗑️</button>
-                  </div>
-                </div>
-              `;
-              
-              container.appendChild(card);
-            });
-            
-            // Add event listeners for card actions
-            document.querySelectorAll('.status-toggle').forEach(toggle => {
-              toggle.addEventListener('change', (e) => {
-                const code = e.target.dataset.code;
-                togglePromoStatus(code, e.target.checked);
-              });
-            });
-            
-            document.querySelectorAll('.btn-icon.delete').forEach(btn => {
-              btn.addEventListener('click', (e) => {
-                const code = e.target.dataset.code;
-                deletePromoCode(code);
-              });
-            });
-            
-            document.querySelectorAll('.btn-icon.edit').forEach(btn => {
-              btn.addEventListener('click', (e) => {
-                const code = e.target.dataset.code || e.target.parentElement.dataset.code;
-                editPromoCode(code);
-              });
-            });
-          }
-          
-          // Toggle promo code status
-          function togglePromoStatus(code, isActive) {
-            const index = promoCodes.findIndex(p => p.code === code);
-            if (index !== -1) {
-              promoCodes[index].status = isActive ? 'active' : 'inactive';
-              savePromoCodes();
-              updatePromoCards();
-            }
-          }
-          
-          // Delete promo code
-          function deletePromoCode(code) {
-            if (confirm(`Are you sure you want to delete the promo code "${code}"?`)) {
-              promoCodes = promoCodes.filter(p => p.code !== code);
-              savePromoCodes();
-              updatePromoCards();
-            }
-          }
-          
-          // Edit promo code (redirect to add tab with filled data)
-          function editPromoCode(code) {
-            const promo = promoCodes.find(p => p.code === code);
-            if (!promo) return;
-            
-            // Switch to add tab
-            document.querySelector('.tab-btn[data-tab="add"]').click();
-            
-            // Fill the form
-            document.getElementById('promo-code').value = promo.code;
-            document.getElementById('promo-code').readOnly = true; // Can't edit the code itself
-            document.getElementById('status').checked = promo.status === 'active';
-            document.getElementById('status-text').textContent = promo.status === 'active' ? 'Active' : 'Inactive';
-            document.getElementById('discount-amount').value = promo.discount;
-            document.getElementById('discount-type').value = promo.discountType;
-            document.getElementById('start-date').value = promo.startDate;
-            document.getElementById('end-date').value = promo.endDate;
-            document.getElementById('usage-limit').value = promo.usageLimit;
-            
-            // Change button text
-            const submitBtn = document.querySelector('#add-promo-form .btn-primary');
-            submitBtn.textContent = 'Update Promo Code';
-            submitBtn.dataset.editMode = 'true';
-            submitBtn.dataset.originalCode = code;
-          }
-          
-          // Save promo codes to local storage
-          function savePromoCodes() {
-            localStorage.setItem('promoCodes', JSON.stringify(promoCodes));
-          }
-          
-          // Add form submission handler
-          document.getElementById('add-promo-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const submitBtn = document.querySelector('#add-promo-form .btn-primary');
-            const isEditMode = submitBtn.dataset.editMode === 'true';
-            
-            const newPromo = {
-              code: document.getElementById('promo-code').value.toUpperCase(),
-              status: document.getElementById('status').checked ? 'active' : 'inactive',
-              startDate: document.getElementById('start-date').value,
-              endDate: document.getElementById('end-date').value,
-              discount: parseFloat(document.getElementById('discount-amount').value),
-              discountType: document.getElementById('discount-type').value,
-              usageLimit: parseInt(document.getElementById('usage-limit').value),
-              usageCount: 0
-            };
-            
-            if (isEditMode) {
-              // Update existing promo
-              const originalCode = submitBtn.dataset.originalCode;
-              const index = promoCodes.findIndex(p => p.code === originalCode);
-              
-              if (index !== -1) {
-                // Preserve usage count when updating
-                newPromo.usageCount = promoCodes[index].usageCount;
-                promoCodes[index] = newPromo;
-              }
-              
-              // Reset button
-              submitBtn.textContent = 'Create Promo Code';
-              submitBtn.dataset.editMode = 'false';
-              delete submitBtn.dataset.originalCode;
-            } else {
-              // Check if code already exists
-              if (promoCodes.some(p => p.code === newPromo.code)) {
-                alert('This promo code already exists. Please use a different code.');
-                return;
-              }
-              
-              // Add new promo
-              promoCodes.push(newPromo);
-            }
-            
-            // Save and update
-            savePromoCodes();
-            this.reset();
-            document.getElementById('promo-code').readOnly = false;
-            
-            // Show success message
-            alert(`Promo code ${isEditMode ? 'updated' : 'created'} successfully!`);
-            
-            // Switch to view tab
-            document.querySelector('.tab-btn[data-tab="view"]').click();
-            updatePromoCards();
-          });
-          
-          // Search and filter functionality
-          document.getElementById('search-input').addEventListener('input', filterPromoCodes);
-          document.getElementById('status-filter').addEventListener('change', filterPromoCodes);
-          
-          function filterPromoCodes() {
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-            const statusFilter = document.getElementById('status-filter').value;
-            
-            const filteredCodes = promoCodes.filter(promo => {
-              const matchesSearch = promo.code.toLowerCase().includes(searchTerm);
-              const matchesStatus = statusFilter === 'all' || promo.status === statusFilter;
-              return matchesSearch && matchesStatus;
-            });
-            
-            updatePromoCards(filteredCodes);
-          }
-          
-          // Initialize date fields with current date
-          const today = new Date();
-          const tomorrow = new Date(today);
-          tomorrow.setDate(today.getDate() + 1);
-          
-          document.getElementById('start-date').value = today.toISOString().split('T')[0];
-          document.getElementById('end-date').value = tomorrow.toISOString().split('T')[0];
-          
-          // Initial display of promo codes
-          updatePromoCards();
-        });
-      </script> -->
-
-
 <script>
- document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
     // Tab switching functionality
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -399,206 +309,178 @@
             this.classList.add('active');
             document.getElementById(`${tabId}-tab`).classList.add('active');
             
-            // If view tab is activated, load promo codes
+            // If view tab is activated, load rewards
             if (tabId === 'view') {
-                loadPromoCodes();
+                loadRewards();
             }
         });
     });
     
-    // Status toggle functionality
-    const statusToggle = document.getElementById('status');
-    const statusText = document.getElementById('status-text');
+    // Category change handler to show/hide discount fields
+    const categorySelect = document.getElementById('reward-category');
+    const discountFields = document.getElementById('discount-fields');
     
-    statusToggle.addEventListener('change', function() {
-        if (this.checked) {
-            statusText.textContent = 'Active';
-            statusText.style.color = 'var(--success-color, #28a745)';
+    categorySelect.addEventListener('change', function() {
+        if (this.value === 'Discount') {
+            discountFields.style.display = 'flex';
+            document.getElementById('discount-type').setAttribute('required', 'required');
+            document.getElementById('discount-value').setAttribute('required', 'required');
         } else {
-            statusText.textContent = 'Inactive';
-            statusText.style.color = 'var(--danger-color, #dc3545)';
+            discountFields.style.display = 'none';
+            document.getElementById('discount-type').removeAttribute('required');
+            document.getElementById('discount-value').removeAttribute('required');
         }
     });
     
-    // Set today's date as default start date
-    const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0];
-    document.getElementById('start-date').value = formattedDate;
-    
     // Form submission handler
-    const addPromoForm = document.getElementById('add-promo-form');
-    addPromoForm.addEventListener('submit', function(e) {
+    const addRewardForm = document.getElementById('add-reward-form');
+    addRewardForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        const promoCode = document.getElementById('promo-code').value.trim();
-    const status = document.getElementById('status').checked;
-    const discountAmount = document.getElementById('discount-amount').value.trim();
-    const discountType = document.getElementById('discount-type').value;
-    const startDate = document.getElementById('start-date').value;
-    const endDate = document.getElementById('end-date').value;
-    const usageLimit = document.getElementById('usage-limit').value.trim();
-
-    // 🛑 Validate required fields
-    if (!promoCode || !discountAmount || !startDate || !usageLimit) {
-        showNotification('Please fill in all required fields.', 'error');
-        return;
-    }
+        const title = document.getElementById('reward-title').value.trim();
+        const description = document.getElementById('reward-description').value.trim();
+        const pointsRequired = parseInt(document.getElementById('points-required').value);
+        const category = document.getElementById('reward-category').value;
         
-        const promoData = {
-            code: promoCode,
-            status: status ? 'on' : 'off',
-            discount_amount: discountAmount,
-            discount_type: discountType,
-            start_date: startDate,
-            end_date: endDate,
-            usage_limit: usageLimit
+        // Create reward data object
+        let rewardData = {
+            title: title,
+            description: description,
+            points_required: pointsRequired,
+            category: category
         };
-        console.log("✅ Submitting promo data:", promoData);
-        addPromoCode(promoData);
+        
+        // Add discount info if category is Discount
+        if (category === 'Discount') {
+            rewardData.discount = {
+                type: document.getElementById('discount-type').value,
+                value: parseFloat(document.getElementById('discount-value').value)
+            };
+        }
+        
+        console.log("✅ Submitting reward data:", rewardData);
+        addReward(rewardData);
     });
     
     // Filter and search functionality
-    const statusFilter = document.getElementById('status-filter');
+    const categoryFilter = document.getElementById('category-filter');
     const searchInput = document.getElementById('search-input');
     
-    statusFilter.addEventListener('change', function() {
-        loadPromoCodes(this.value, searchInput.value);
+    categoryFilter.addEventListener('change', function() {
+        filterRewards();
     });
     
     searchInput.addEventListener('input', function() {
-        loadPromoCodes(statusFilter.value, this.value);
+        filterRewards();
     });
     
-    // Load promo codes initially
-    loadPromoCodes();
+    // Load rewards initially
+    loadRewards();
 });
 
-// Function to add a new promo code
-function addPromoCode(promoData) {
-    fetch('/api/admin/promo-codes/add', {
+// Function to add a new reward
+function addReward(rewardData) {
+    fetch('/api/rewards', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(promoData)
+        body: JSON.stringify(rewardData)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification(data.message, 'success');
-            document.getElementById('add-promo-form').reset();
-            
-            // Set today's date again after form reset
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('start-date').value = today;
+            showNotification(data.message || 'Reward added successfully!', 'success');
+            document.getElementById('add-reward-form').reset();
             
             // Switch to view tab
             document.querySelector('.tab-btn[data-tab="view"]').click();
         } else {
-            showNotification(data.message, 'error');
+            showNotification(data.message || 'Failed to add reward', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('An error occurred while adding the promo code', 'error');
+        showNotification('An error occurred while adding the reward', 'error');
     });
 }
 
-// Function to load promo codes
-function loadPromoCodes(filter = 'all', search = '') {
-    let url = `/admin/promo-codes/list?filter=${filter}`;
-    
-    fetch(url)
-    .then(response => response.json())
+// Function to load rewards
+function loadRewards() {
+    console.log("Starting to load rewards...");
+    fetch('/api/rewards/get')
+    .then(response => {
+        console.log("Rewards fetch response:", response.status);
+        return response.json();
+    })
     .then(data => {
-        if (data.success) {
-            displayPromoCodes(data.data, search);
-        } else {
-            showNotification(data.message, 'error');
-        }
+        console.log("Rewards data received:", data);
+        window.allRewards = Array.isArray(data) ? data : [];
+        console.log("Updated window.allRewards:", window.allRewards);
+        displayRewards(window.allRewards);
+        console.log("Display function completed");
     })
     .catch(error => {
-        console.error('Error:', error);
-        showNotification('An error occurred while loading promo codes', 'error');
+        console.error('Error loading rewards:', error);
     });
 }
 
-// Function to display promo codes
-function displayPromoCodes(promoCodes, searchTerm = '') {
-    const container = document.getElementById('promo-cards-container');
+// Function to filter rewards            
+
+function filterRewards() {
+    if (!window.allRewards) return;
+    
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const categoryFilter = document.getElementById('category-filter').value;
+    
+    const filteredRewards = window.allRewards.filter(reward => {
+        const matchesSearch = reward.title.toLowerCase().includes(searchTerm) || 
+                            reward.description.toLowerCase().includes(searchTerm);
+        const matchesCategory = categoryFilter === 'all' || reward.category === categoryFilter;
+        
+        return matchesSearch && matchesCategory;
+    });
+    
+    displayRewards(filteredRewards);
+}
+
+// Function to display rewards
+function displayRewards(rewards) {
+    const container = document.getElementById('rewards-container');
     container.innerHTML = '';
     
-    // Filter by search term if provided
-    if (searchTerm) {
-        searchTerm = searchTerm.toLowerCase();
-        promoCodes = promoCodes.filter(code => 
-            code.code.toLowerCase().includes(searchTerm)
-        );
-    }
-    
-    if (promoCodes.length === 0) {
-        container.innerHTML = '<div class="no-results">No promo codes found</div>';
+    if (!rewards || rewards.length === 0) {
+        container.innerHTML = '<div class="no-results">No rewards found</div>';
         return;
     }
     
-    promoCodes.forEach(promo => {
+    rewards.forEach(reward => {
         const card = document.createElement('div');
-        card.className = 'promo-card';
+        card.className = 'reward-card';
         
-        // Calculate expiry status
-        const today = new Date();
-        const startDate = new Date(promo.start_date);
-        const endDate = promo.end_date ? new Date(promo.end_date) : null;
-        
-        let statusClass = promo.status ? 'status-active' : 'status-inactive';
-        let statusText = promo.status ? 'Active' : 'Inactive';
-        
-        if (promo.status) {
-            if (today < startDate) {
-                statusClass = 'status-pending';
-                statusText = 'Pending';
-            } else if (endDate && today > endDate) {
-                statusClass = 'status-expired';
-                statusText = 'Expired';
-            } else if (promo.usage_limit > 0 && promo.usage_count >= promo.usage_limit) {
-                statusClass = 'status-depleted';
-                statusText = 'Depleted';
+        // Generate discount text if applicable
+        let discountText = '';
+        if (reward.category === 'Discount' && reward.discount) {
+            if (reward.discount.type === 'percentage') {
+                discountText = `${reward.discount.value}% off`;
+            } else {
+                discountText = `Rs. ${reward.discount.value.toFixed(2)} off`;
             }
         }
         
-        // Calculate discount display
-        const discountDisplay = promo.discount_type === 'percentage' ? 
-            `${promo.discount_amount}%` : 
-            `$${promo.discount_amount.toFixed(2)}`;
-        
         card.innerHTML = `
-            <div class="promo-header">
-                <h3 class="promo-code">${promo.code}</h3>
-                <span class="promo-status ${statusClass}">${statusText}</span>
+            <div class="reward-header">
+                <h3 class="reward-title">${reward.title}</h3>
+                <span class="reward-points">${reward.points_required} points</span>
             </div>
-            <div class="promo-details">
-                <div class="detail-item">
-                    <span class="detail-label">Discount:</span>
-                    <span class="detail-value">${discountDisplay}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Valid:</span>
-                    <span class="detail-value">${promo.start_date} ${promo.end_date ? ' to ' + promo.end_date : ''}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Usage:</span>
-                    <span class="detail-value">${promo.usage_count} / ${promo.usage_limit > 0 ? promo.usage_limit : '∞'}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Created:</span>
-                    <span class="detail-value">${promo.created_at}</span>
-                </div>
-            </div>
-            <div class="promo-actions">
-                <button class="btn btn-edit" onclick="editPromoCode('${promo._id}', ${JSON.stringify(promo).replace(/"/g, "'")})">
+            <span class="reward-category category-label ${reward.category.toLowerCase()}">${reward.category}</span>
+            <p class="reward-description">${reward.description}</p>
+            ${discountText ? `<p><strong>Discount:</strong> ${discountText}</p>` : ''}
+            <div class="reward-actions">
+                <button class="btn btn-edit" onclick="editReward('${reward._id}')">
                     <i class="fas fa-edit"></i> Edit
                 </button>
-                <button class="btn btn-delete" onclick="deletePromoCode('${promo._id}', '${promo.code}')">
+                <button class="btn btn-delete" onclick="deleteReward('${reward._id}', '${reward.title}')">
                     <i class="fas fa-trash"></i> Delete
                 </button>
             </div>
@@ -608,10 +490,14 @@ function displayPromoCodes(promoCodes, searchTerm = '') {
     });
 }
 
-// Function to show edit modal
-function editPromoCode(id, promo) {
-    // Convert single quotes back to double quotes and parse the stringified JSON
-    const promoData = JSON.parse(JSON.stringify(promo).replace(/'/g, '"'));
+// Function to edit reward
+function editReward(id) {
+    // Find the reward in the stored rewards
+    const reward = window.allRewards.find(r => r._id === id);
+    if (!reward) {
+        showNotification('Reward not found', 'error');
+        return;
+    }
     
     // Create modal HTML
     const modal = document.createElement('div');
@@ -621,66 +507,58 @@ function editPromoCode(id, promo) {
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Edit Promo Code</h2>
+                <h2>Edit Reward</h2>
                 <span class="close-modal" onclick="closeModal()">&times;</span>
             </div>
             <div class="modal-body">
-                <form id="edit-promo-form">
+                <form id="edit-reward-form">
                     <div class="form-group">
-                        <label for="edit-promo-code">Promo Code</label>
-                        <input type="text" id="edit-promo-code" value="${promoData.code}" required>
+                        <label for="edit-title">Reward Title</label>
+                        <input type="text" id="edit-title" value="${reward.title || ''}" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="edit-status">Status</label>
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="edit-status" ${promoData.status ? 'checked' : ''}>
-                            <span class="slider"></span>
-                        </div>
-                        <span id="edit-status-text" style="margin-left: 70px; font-size: 14px; color: var(--text-light);">
-                            ${promoData.status ? 'Active' : 'Inactive'}
-                        </span>
+                        <label for="edit-description">Description</label>
+                        <input type="text" id="edit-description" value="${reward.description || ''}" required>
                     </div>
                     
                     <div class="form-row">
                         <div class="form-col">
                             <div class="form-group">
-                                <label for="edit-discount-amount">Discount Amount</label>
-                                <input type="number" id="edit-discount-amount" min="0" value="${promoData.discount_amount}" required>
+                                <label for="edit-points-required">Points Required</label>
+                                <input type="number" id="edit-points-required" min="1" value="${reward.points_required || 0}" required>
                             </div>
                         </div>
                         <div class="form-col">
                             <div class="form-group">
-                                <label for="edit-discount-type">Discount Type</label>
-                                <select id="edit-discount-type" required>
-                                    <option value="percentage" ${promoData.discount_type === 'percentage' ? 'selected' : ''}>Percentage (%)</option>
-                                    <option value="fixed" ${promoData.discount_type === 'fixed' ? 'selected' : ''}>Fixed Amount ($)</option>
+                                <label for="edit-category">Category</label>
+                                <select id="edit-category" required>
+                                    <option value="Discount" ${reward.category === 'Discount' ? 'selected' : ''}>Fix Amount</option>
+                                    <option value="Gift" ${reward.category === 'Gift' ? 'selected' : ''}>Percentage</option>
                                 </select>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="form-row">
+                    <div id="edit-discount-fields" class="form-row" ${reward.category !== 'Discount' ? 'style="display:none;"' : ''}>
                         <div class="form-col">
                             <div class="form-group">
-                                <label for="edit-start-date">Start Date</label>
-                                <input type="date" id="edit-start-date" value="${promoData.start_date}" required>
+                                <label for="edit-discount-type">Discount Type</label>
+                                <select id="edit-discount-type" ${reward.category === 'Discount' ? 'required' : ''}>
+                                    <option value="percentage" ${reward.discount && reward.discount.type === 'percentage' ? 'selected' : ''}>Percentage (%)</option>
+                                    <option value="fixed" ${reward.discount && reward.discount.type === 'fixed' ? 'selected' : ''}>Fixed Amount ($)</option>
+                                </select>
                             </div>
                         </div>
                         <div class="form-col">
                             <div class="form-group">
-                                <label for="edit-end-date">End Date</label>
-                                <input type="date" id="edit-end-date" value="${promoData.end_date || ''}">
+                                <label for="edit-discount-value">Discount Value</label>
+                                <input type="number" id="edit-discount-value" min="0" step="0.01" value="${reward.discount ? reward.discount.value : 0}" ${reward.category === 'Discount' ? 'required' : ''}>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="edit-usage-limit">Usage Limit</label>
-                        <input type="number" id="edit-usage-limit" min="0" value="${promoData.usage_limit}" required>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary btn-block">Update Promo Code</button>
+                    <button type="submit" class="btn btn-primary btn-block">Update Reward</button>
                 </form>
             </div>
         </div>
@@ -688,35 +566,46 @@ function editPromoCode(id, promo) {
     
     document.body.appendChild(modal);
     
-    // Add event listener for status toggle
-    const editStatusToggle = document.getElementById('edit-status');
-    const editStatusText = document.getElementById('edit-status-text');
+    // Add event listener for category change to show/hide discount fields
+    const editCategorySelect = document.getElementById('edit-category');
+    const editDiscountFields = document.getElementById('edit-discount-fields');
+    const editDiscountType = document.getElementById('edit-discount-type');
+    const editDiscountValue = document.getElementById('edit-discount-value');
     
-    editStatusToggle.addEventListener('change', function() {
-        if (this.checked) {
-            editStatusText.textContent = 'Active';
-            editStatusText.style.color = 'var(--success-color, #28a745)';
+    editCategorySelect.addEventListener('change', function() {
+        if (this.value === 'Discount') {
+            editDiscountFields.style.display = 'flex';
+            editDiscountType.setAttribute('required', 'required');
+            editDiscountValue.setAttribute('required', 'required');
         } else {
-            editStatusText.textContent = 'Inactive';
-            editStatusText.style.color = 'var(--danger-color, #dc3545)';
+            editDiscountFields.style.display = 'none';
+            editDiscountType.removeAttribute('required');
+            editDiscountValue.removeAttribute('required');
         }
     });
     
     // Add event listener for form submission
-    const editForm = document.getElementById('edit-promo-form');
+    const editForm = document.getElementById('edit-reward-form');
     editForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        const formData = new FormData();
-        formData.append('code', document.getElementById('edit-promo-code').value);
-        formData.append('status', document.getElementById('edit-status').checked ? 'on' : 'off');
-        formData.append('discount_amount', document.getElementById('edit-discount-amount').value);
-        formData.append('discount_type', document.getElementById('edit-discount-type').value);
-        formData.append('start_date', document.getElementById('edit-start-date').value);
-        formData.append('end_date', document.getElementById('edit-end-date').value);
-        formData.append('usage_limit', document.getElementById('edit-usage-limit').value);
+        // Create updated reward data
+        let updatedReward = {
+            title: document.getElementById('edit-title').value.trim(),
+            description: document.getElementById('edit-description').value.trim(),
+            points_required: parseInt(document.getElementById('edit-points-required').value),
+            category: document.getElementById('edit-category').value
+        };
         
-        updatePromoCode(id, formData);
+        // Add discount info if category is Discount
+        if (updatedReward.category === 'Discount') {
+            updatedReward.discount = {
+                type: document.getElementById('edit-discount-type').value,
+                value: parseFloat(document.getElementById('edit-discount-value').value)
+            };
+        }
+        
+        updateReward(id, updatedReward);
     });
     
     // Show modal
@@ -727,50 +616,79 @@ function editPromoCode(id, promo) {
 function closeModal() {
     const modal = document.getElementById('edit-modal');
     if (modal) {
-        document.body.removeChild(modal);
+        try {
+            document.body.removeChild(modal);
+        } catch (error) {
+            console.error("Error removing modal:", error);
+            // Alternative method to hide if remove fails
+            modal.style.display = 'none';
+        }
     }
 }
 
-// Function to update promo code
-function updatePromoCode(id, formData) {
-    fetch(`/admin/promo-codes/update/${id}`, {
-        method: 'POST',
-        body: formData
+// Function to update reward
+function updateReward(id, rewardData) {
+    // Optimistic update - update the UI immediately
+    const index = window.allRewards.findIndex(r => r._id === id);
+    if (index !== -1) {
+        // Create a temporary updated version for display
+        const optimisticReward = {...window.allRewards[index], ...rewardData, _id: id};
+        window.allRewards[index] = optimisticReward;
+        displayRewards(window.allRewards);
+    }
+    
+    // Then proceed with the actual update
+    fetch(`/api/rewards/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(rewardData)
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Server responded with ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            showNotification(data.message, 'success');
+            showNotification(data.message || 'Reward updated successfully!', 'success');
             closeModal();
-            loadPromoCodes();
+            // Load fresh data from server to ensure consistency
+            loadRewards();
         } else {
-            showNotification(data.message, 'error');
+            // Revert optimistic update on failure
+            loadRewards();
+            showNotification(data.message || 'Failed to update reward', 'error');
         }
     })
     .catch(error => {
+        // Revert optimistic update on error
+        loadRewards();
         console.error('Error:', error);
-        showNotification('An error occurred while updating the promo code', 'error');
+        showNotification(`Error updating reward: ${error.message}`, 'error');
     });
 }
 
-// Function to confirm and delete promo code
-function deletePromoCode(id, code) {
-    if (confirm(`Are you sure you want to delete the promo code "${code}"?`)) {
-        fetch(`/admin/promo-codes/delete/${id}`, {
-            method: 'POST'
+// Function to delete reward
+function deleteReward(id, title) {
+    if (confirm(`Are you sure you want to delete the reward "${title}"?`)) {
+        fetch(`/api/rewards/${id}`, {
+            method: 'DELETE'
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showNotification(data.message, 'success');
-                loadPromoCodes();
+                showNotification(data.message || 'Reward deleted successfully!', 'success');
+                loadRewards();
             } else {
-                showNotification(data.message, 'error');
+                showNotification(data.message || 'Failed to delete reward', 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showNotification('An error occurred while deleting the promo code', 'error');
+            showNotification('An error occurred while deleting the reward', 'error');
         });
     }
 }
