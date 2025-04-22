@@ -156,7 +156,7 @@
 
             <h2 class="success-title">Order Confirmed!</h2>
 
-            <p class="success-message">Thank you <span id="customer-name">dipendra timalsina</span>! Your payment was successful
+            <p class="success-message">Thank you <span id="customer-name"></span>! Your payment was successful
                 and your order has been placed.</p>
 
             <div class="order-reference">
@@ -183,57 +183,55 @@
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Get order data from URL parameters or sessionStorage
+        document.addEventListener("DOMContentLoaded", function () {
             const urlParams = new URLSearchParams(window.location.search);
-            const orderId = urlParams.get('orderId');
-            
-            // Handle print button
-            document.getElementById('print-receipt').addEventListener('click', function() {
+            const orderId = urlParams.get("orderId");
+            const orderRef = urlParams.get("ref"); // Get reference from URL
+    
+            // Handle print
+            document.getElementById("print-receipt").addEventListener("click", function () {
                 window.print();
             });
-            
-            // If there's an order ID in the URL, fetch order details from API
+    
             if (orderId) {
-                fetchOrderDetails(orderId);
+                fetchOrderDetails(orderId, orderRef); // Pass both orderId and orderReference
             } else {
-                // Otherwise try to get from sessionStorage (from previous checkout)
-                const orderDataStr = sessionStorage.getItem('orderConfirmation');
+                // Fallback to sessionStorage if URL params missing
+                const orderDataStr = sessionStorage.getItem("orderConfirmation");
                 if (orderDataStr) {
                     try {
-                        const orderData = JSON.parse(orderDataStr);
-                        displayOrderData(orderData);
+                        const order = JSON.parse(orderDataStr);
+                        displayOrderData(order);
                     } catch (e) {
-                        console.error("Error parsing order data:", e);
+                        console.error("Error parsing orderConfirmation from session:", e);
                     }
                 }
             }
         });
-        
-        // Function to fetch order details from API
-        async function fetchOrderDetails(orderId) {
+    
+        async function fetchOrderDetails(orderId, urlRef) {
             try {
                 const response = await fetch(`/api/orders/${orderId}`);
                 if (!response.ok) {
-                    throw new Error('Failed to fetch order details');
+                    throw new Error("Failed to fetch order details");
                 }
-                const data = await response.json();
-                displayOrderData(data);
+                const order = await response.json();
+                displayOrderData(order, urlRef);
             } catch (error) {
-                console.error('Error fetching order:', error);
-                alert('Could not load order details. Please try again later.');
+                console.error("Error fetching order:", error);
+                alert("Could not load order details. Please try again later.");
             }
         }
-        
-        // Function to display order data in the UI
-        function displayOrderData(order) {
-            // Update customer information
-            document.getElementById('customer-name').textContent = order.deliveryInfo?.fullName || order.customerName || '';
-            
-            // Update order reference - use the value from the database directly
-            document.getElementById('order-reference').textContent = order.orderReference || '';
+    
+        function displayOrderData(order, fallbackRef = "") {
+            const customerName = order.deliveryInfo?.fullName || order.customerName || "Customer";
+            const orderRef = order.orderReference || fallbackRef || "N/A";
+    
+            document.getElementById("customer-name").textContent = customerName;
+            document.getElementById("order-reference").textContent = orderRef;
         }
     </script>
+    
 </body>
 
 </html>

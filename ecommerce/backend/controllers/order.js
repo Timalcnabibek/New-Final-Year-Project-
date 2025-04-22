@@ -6,6 +6,96 @@ const Customer = require("../model/cusmod");
 
 // POST: Create a new order 
 const SalesData = require("../model/sales_data"); // Import the SalesData model
+const nodemailer = require('nodemailer');
+
+// Nodemailer setup
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: "timalsinab39@gmail.com", 
+        pass: "qugu anew evjk dfbm"
+    }
+});
+
+// Function to send order confirmation email
+const sendOrderConfirmation = async (email, order) => {
+    try {
+        // Create products HTML for email
+        const productsHtml = order.products.map(product => 
+            `<tr>
+                <td>${product.name}</td>
+                <td>${product.quantity}</td>
+                <td>$${product.price.toFixed(2)}</td>
+                <td>$${(product.price * product.quantity).toFixed(2)}</td>
+            </tr>`
+        ).join('');
+
+        await transporter.sendMail({
+            from: '"ECommerce" <timalsinab39@gmail.com>',
+            to: email,
+            subject: `Order Confirmation: ${order.orderReference}`,
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2>Thank you for your order!</h2>
+                    <p>Your order <strong>${order.orderReference}</strong> has been received and is being processed.</p>
+                    
+                    <div style="background-color: #f7f7f7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                        <h3>Order Summary</h3>
+                        <p><strong>Order ID:</strong> ${order.orderReference}</p>
+                        <p><strong>Status:</strong> ${order.status}</p>
+                        <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
+                        <p><strong>Payment Status:</strong> ${order.paymentStatus}</p>
+                        <p><strong>Delivery Type:</strong> ${order.deliveryType}</p>
+                        <p><strong>Estimated Delivery:</strong> ${new Date(order.estimatedDeliveryDate).toLocaleDateString()}</p>
+                    </div>
+                    
+                    <h3>Items Ordered</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #f2f2f2;">
+                                <th style="text-align: left; padding: 8px;">Product</th>
+                                <th style="text-align: left; padding: 8px;">Quantity</th>
+                                <th style="text-align: left; padding: 8px;">Price</th>
+                                <th style="text-align: left; padding: 8px;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${productsHtml}
+                        </tbody>
+                    </table>
+                    
+                    <div style="margin-top: 20px; text-align: right;">
+                        <p><strong>Subtotal:</strong> $${order.subtotal.toFixed(2)}</p>
+                        <p><strong>Delivery Charge:</strong> $${order.deliveryCharge.toFixed(2)}</p>
+                        <p><strong>Tax:</strong> $${order.tax.toFixed(2)}</p>
+                        <p><strong>Discount:</strong> -$${order.discount.toFixed(2)}</p>
+                        <p style="font-size: 18px;"><strong>Total:</strong> $${order.totalAmount.toFixed(2)}</p>
+                    </div>
+                    
+                    <div style="background-color: #e6f7e6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                        <p><strong>Loyalty Points Earned:</strong> ${order.pointsEarned}</p>
+                    </div>
+                    
+                    <div style="margin-top: 30px;">
+                        <h3>Delivery Information</h3>
+                        <p><strong>Address:</strong> ${order.deliveryInfo.address}</p>
+                        <p><strong>City:</strong> ${order.deliveryInfo.city}</p>
+                        <p><strong>Phone:</strong> ${order.deliveryInfo.phone}</p>
+                    </div>
+                    
+                    <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                        <p>If you have any questions about your order, please contact our customer service.</p>
+                        <p>Thank you for shopping with us!</p>
+                    </div>
+                </div>
+            `
+        });
+        console.log(`Order confirmation sent to ${email}`);
+    } catch (error) {
+        console.error("Error sending order confirmation email:", error);
+    }
+};
+
 const createOrder = async (req, res) => {
   try {
     const {
@@ -15,6 +105,7 @@ const createOrder = async (req, res) => {
       deliveryType,
       estimatedDeliveryDate,
       paymentMethod,
+      customerEmail, // Get email from request body (will be passed from localStorage)
     } = req.body;
 
     // Generate a consistent order reference that will be used in both database and frontend
@@ -28,9 +119,9 @@ const createOrder = async (req, res) => {
     };
 
     const orderReference = generateOrderReference();
-    const paymentStatus = paymentMethod === "Khalti" ? "Paid" : "Unpaid";
+    const paymentStatus = paymentMethod === "khalti" ? "Paid" : "Unpaid";
 
-    if (!customerId || !products || products.length === 0 || !deliveryInfo || !paymentMethod) {
+    if (!customerId || !products || products.length === 0 || !deliveryInfo || !paymentMethod || !customerEmail) {
       return res.status(400).json({ message: "Missing required fields." });
     }
 
@@ -39,7 +130,7 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ message: "Invalid delivery type." });
     }
 
-    const validMethods = ["Cash", "Khalti"];
+    const validMethods = ["Cash", "khalti"];
     if (!validMethods.includes(paymentMethod)) {
       return res.status(400).json({ message: "Invalid payment method." });
     }
@@ -141,6 +232,18 @@ const createOrder = async (req, res) => {
       }
     }
 
+    // Send order confirmation email
+    if (customerEmail) {
+      const orderWithRef = {
+        ...order.toObject(),
+        orderReference
+      };
+      await sendOrderConfirmation(customerEmail, orderWithRef);
+      console.log(`📧 Order confirmation email sent to: ${customerEmail}`);
+    } else {
+      console.log("⚠️ Customer email not provided, no confirmation email sent");
+    }
+
     // Store the order data in session storage for the confirmation page
     // This ensures the frontend gets the same orderReference
     res.status(201).json({
@@ -164,8 +267,6 @@ const createOrder = async (req, res) => {
   }
 };
 
-
-  
 
 const getallorder = async (req, res) => {
     try {

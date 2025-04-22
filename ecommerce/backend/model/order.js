@@ -59,7 +59,7 @@ const orderSchema = new mongoose.Schema(
     // ✅ Order & Payment Status
     status: {
       type: String,
-      enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
+      enum: ["Pending", "pending", "Processing", "Shipped", "Delivered", "Cancelled"],
       default: "Pending",
     },
     pointsEarned: {
@@ -73,7 +73,7 @@ const orderSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ["Cash", "Khalti"],
+      enum: ["Cash", "Khalti","khalti"],
       required: true,
     },
     orderReference: {

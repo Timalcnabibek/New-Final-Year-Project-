@@ -18,6 +18,21 @@ const purchasedItemSchema = new mongoose.Schema({
   purchaseDate: {
     type: Date,
     default: Date.now
+  },
+  customerId: {
+    type: mongoose.Schema.Types.ObjectId,  // Reference to Customer model
+    required: true,
+    ref: "Customer"
+  },
+  tax: Number,
+  deliveryType: String,
+  deliveryInfo: {
+    fullName: String,
+    phone: String,
+    address: String,
+    city: String,
+    postalCode: String,
+    instructions: String
   }
 });
 
