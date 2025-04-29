@@ -60,14 +60,45 @@ const customerSchema = new mongoose.Schema(
     },
     redeemedRewards: [
       {
-        rewardName: String,
-        pointsUsed: Number,
+        rewardId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Reward",
+          required: true
+        },
+        rewardName: {
+          type: String,
+          required: true
+        },
+        pointsUsed: {
+          type: Number,
+          required: true
+        },
+        discount: {
+          type: {
+            type: String,
+            enum: ["percentage", "fixed"],
+            required: true
+          },
+          value: {
+            type: Number,
+            required: true
+          }
+        },
         redeemedAt: {
           type: Date,
           default: Date.now
+        },
+        status: {
+          type: String,
+          enum: ["active", "used"],
+          default: "active"
+        },
+        usedInOrder: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Order"
         }
       }
-    ], 
+    ],    
     total_spent: {
       type: Number,
       default: 0.00
@@ -88,8 +119,7 @@ const customerSchema = new mongoose.Schema(
         size: { type: String }, // ✅ NEW: Store selected size like "Medium"
         addedAt: { type: Date, default: Date.now },
       },
-    ],
-    
+    ],  
   },
   { timestamps: true }
 );

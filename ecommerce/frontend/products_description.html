@@ -429,6 +429,8 @@ function buyNow() {
 
   // Log the data being stored to verify
   console.log("Storing product data:", productData);
+  sessionStorage.removeItem('orderSummary');
+
 
   sessionStorage.setItem("selectedProduct", JSON.stringify(productData));
   window.location.href = "payment.html";
@@ -492,6 +494,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
 });// simulatePageLoad();
     </script>
+
+
 
 <script>
 

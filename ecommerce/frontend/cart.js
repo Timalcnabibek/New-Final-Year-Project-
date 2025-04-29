@@ -182,8 +182,23 @@ async function fetchCartData() {
         // Calculate total price with backend values
         const tax = 150; // From backend
         const shipping = subtotal > 5000 ? 0 : 150; // Free shipping over Rs. 5000
-        const discount = 200; // From backend
-        const total = subtotal + tax + shipping - discount;
+        let discount = 0; // Default no discount
+
+// ✅ Now it is safe to check and fetch reward
+if (customerId) {
+    const reward = await fetchActiveReward(customerId);
+    if (reward && reward.discount) {
+        const { type, value } = reward.discount;
+        if (type === "fixed") {
+            discount = parseFloat(value);
+        } else if (type === "percentage") {
+            discount = (parseFloat(value) / 100) * subtotal;
+        }
+        console.log(`🎁 Reward discount applied: Rs. ${discount}`);
+    }
+}
+
+                const total = subtotal + tax + shipping - discount;
 
         // Update summary with animation
         animateCountUp(subtotalElement, 0, subtotal, "Rs. ", 2);
@@ -535,8 +550,32 @@ async function removeCartItem(productId) {
     }
 }
 
+
+
+//fetch reward from database
+async function fetchActiveReward(customerId) {
+    try {
+        const res = await fetch(`http://localhost:3000/api/${customerId}/reward`);
+        if (!res.ok) throw new Error("Failed to fetch rewards");
+
+        const data = await res.json();
+        if (Array.isArray(data.activeRewards) && data.activeRewards.length > 0) {
+            const sorted = data.activeRewards.sort((a, b) => 
+                new Date(b.redeemedAt) - new Date(a.redeemedAt));
+            return sorted[0]; // Return the latest reward
+        }
+    } catch (err) {
+        console.error("❌ Error fetching active reward:", err);
+    }
+    return null;
+}
+
+
+
+
+
 // Calculate and update order summary
-function calculateSummary() {
+async function calculateSummary() {
     const cartItems = [];
     
     document.querySelectorAll("#cart-table-body .cart-item").forEach((row) => {
@@ -558,9 +597,26 @@ function calculateSummary() {
     const subtotal = cartItems.reduce((sum, item) => sum + item.subtotal, 0);
     
     // Backend values
-    const tax = 150; 
-    const shipping = subtotal > 5000 ? 0 : 150; 
-    const discount = 200; 
+    const tax = 150;
+    const shipping = subtotal > 5000 ? 0 : 150;
+    let discount = 0; // Default no discount
+    
+    const user = JSON.parse(localStorage.getItem("user"));
+    const customerId = user?.userId || localStorage.getItem("customerId");
+    
+    if (customerId) {
+        const reward = await fetchActiveReward(customerId); // ✅ Correct
+        if (reward && reward.discount) {
+            const { type, value } = reward.discount;
+            if (type === "fixed") {
+                discount = parseFloat(value);
+            } else if (type === "percentage") {
+                discount = (parseFloat(value) / 100) * subtotal;
+            }
+            console.log(`🎁 Reward discount applied: Rs. ${discount}`);
+        }
+    }
+    
     
     const total = parseFloat((subtotal + tax + shipping - discount).toFixed(2));
     
@@ -632,6 +688,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Calculate summary
             const summary = calculateSummary();
+            sessionStorage.removeItem('selectedProduct');
             
             // Save to sessionStorage
             sessionStorage.setItem("orderSummary", JSON.stringify(summary));

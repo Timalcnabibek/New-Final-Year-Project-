@@ -91,6 +91,7 @@ const deleteProductFromCart = async (req, res) => {
 };
 
 // Get Cart Items
+// Get Cart Items
 const getCartItems = async (req, res) => {
     try {
         const { customerId } = req.params;
@@ -100,14 +101,26 @@ const getCartItems = async (req, res) => {
         }
         
         const customer = await Customer.findById(customerId).populate("cart.productId");
+
         if (!customer) return res.status(404).json({ message: "Customer not found" });
 
-        res.status(200).json({ cart: customer.cart });
+        // Get latest redeemed reward (last in array)
+        const latestReward = customer.redeemedRewards?.length
+            ? customer.redeemedRewards[customer.redeemedRewards.length - 1]
+            : null;
+
+        // ✅ Return cart and reward in a single response
+        res.status(200).json({
+            cart: customer.cart,
+            redeemedReward: latestReward 
+        });
+
     } catch (error) {
         console.error("Error fetching cart:", error);
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
+
 
 // Update Products in Cart
 const updateproductsincart = async (req, res) => {

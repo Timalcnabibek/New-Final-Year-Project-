@@ -23,6 +23,7 @@ const trackorders = require("./routes/order.js")
 const loyaltyRoutes = require("./routes/loyalty");
 const redeemRewards = require('./controllers/redeem.js')
 const khalti = require('./controllers/initializekhalti.js')
+const reward = require('./controllers/reward.js')
 
 
 // Middleware
@@ -82,6 +83,7 @@ app.use("/api/wishlist", wishlistRoutes); // ✅ Wishlist API
 app.use('/api', trackorders);
 app.use('/api', redeemRewards);
 app.use('/api/payment', khalti);
+app.use('/api',reward);
 
 // Database connection
 const MONGO_URL = process.env.MONGO_URL;

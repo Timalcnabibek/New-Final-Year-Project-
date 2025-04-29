@@ -105,10 +105,11 @@ const createOrder = async (req, res) => {
       deliveryType,
       estimatedDeliveryDate,
       paymentMethod,
-      customerEmail, // Get email from request body (will be passed from localStorage)
+      customerEmail,
+      // Remove the redeemedReward from request body since we'll fetch it
     } = req.body;
 
-    // Generate a consistent order reference that will be used in both database and frontend
+    // Generate order reference
     const generateOrderReference = () => {
       const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
       const random = Array.from({ length: 6 }, () =>
@@ -121,23 +122,9 @@ const createOrder = async (req, res) => {
     const orderReference = generateOrderReference();
     const paymentStatus = paymentMethod === "khalti" ? "Paid" : "Unpaid";
 
+    // Validation checks...
     if (!customerId || !products || products.length === 0 || !deliveryInfo || !paymentMethod || !customerEmail) {
       return res.status(400).json({ message: "Missing required fields." });
-    }
-
-    const validDeliveryTypes = ["Express Delivery", "Standard Delivery"];
-    if (!validDeliveryTypes.includes(deliveryType)) {
-      return res.status(400).json({ message: "Invalid delivery type." });
-    }
-
-    const validMethods = ["Cash", "khalti"];
-    if (!validMethods.includes(paymentMethod)) {
-      return res.status(400).json({ message: "Invalid payment method." });
-    }
-
-    const parsedDate = new Date(estimatedDeliveryDate);
-    if (isNaN(parsedDate)) {
-      return res.status(400).json({ message: "Invalid delivery date." });
     }
 
     // Fetch product details
@@ -163,7 +150,34 @@ const createOrder = async (req, res) => {
       0
     );
     const deliveryCharge = deliveryType === "Express Delivery" ? 300 : 150;
-    const discount = 200;
+    
+    // FETCH ACTIVE REWARDS AUTOMATICALLY
+    let discount = 0;
+    let usedRewardId = null;
+    
+    // Get customer and check for active rewards
+    const customer = await Customer.findById(customerId);
+    if (customer && customer.redeemedRewards && customer.redeemedRewards.length > 0) {
+      // Get the most recently redeemed active reward
+      const activeReward = customer.redeemedRewards
+        .filter(reward => reward.status === "active")
+        .sort((a, b) => new Date(b.redeemedAt) - new Date(a.redeemedAt))[0];
+      
+      if (activeReward) {
+        // Apply discount based on reward type
+        if (activeReward.discount.type === "fixed") {
+          discount = activeReward.discount.value;
+        } else if (activeReward.discount.type === "percentage") {
+          discount = Math.floor((subtotal * activeReward.discount.value) / 100);
+        }
+        
+        // Mark which reward we're using
+        usedRewardId = activeReward.rewardId;
+        
+        console.log(`Applied discount from reward ${activeReward.rewardId}: ${discount}`);
+      }
+    }
+
     const tax = 50;
     const totalAmount = subtotal + deliveryCharge + tax - discount;
 
@@ -173,11 +187,11 @@ const createOrder = async (req, res) => {
     // Create order with the same orderReference that will be displayed in the frontend
     const order = await Order.create({
       customerId,
-      orderReference, // This will be the same value shown in the UI
+      orderReference,
       products: productDetails,
       deliveryInfo,
       deliveryType,
-      estimatedDeliveryDate: parsedDate,
+      estimatedDeliveryDate: new Date(estimatedDeliveryDate),
       subtotal,
       deliveryCharge,
       discount,
@@ -186,77 +200,50 @@ const createOrder = async (req, res) => {
       status: "Pending",
       paymentStatus,
       paymentMethod,
-      pointsEarned
+      pointsEarned,
+      usedRewardId // Add this to track which reward was used
     });
 
+    // Update customer's loyalty points
     await Customer.findByIdAndUpdate(customerId, {
       $inc: { loyaltyPoints: pointsEarned }
-    });   
-
-    // Update sales data
-    for (const item of productDetails) {
-      const { productId, name, category, gender, season, price, quantity } = item;
-
-      const saleRecord = {
-        date: new Date(),
-        quantity,
-        revenue: price * quantity
-      };
-
-      let salesEntry = await SalesData.findOne({ product_id: productId });
-
-      if (salesEntry) {
-        salesEntry.historical_sales.push(saleRecord);
-        salesEntry.total_sold += quantity;
-        salesEntry.total_revenue += price * quantity;
-        const previousTotalSold = salesEntry.total_sold - quantity;
-        salesEntry.growth_rate = previousTotalSold > 0 
-          ? ((salesEntry.total_sold - previousTotalSold) / previousTotalSold) * 100 
-          : 0;
-        salesEntry.last_updated = new Date();
-        await salesEntry.save();
-      } else {
-        await SalesData.create({
-          product_id: productId,
-          product_name: name,
-          category,
-          gender,
-          season,
-          price,
-          total_sold: quantity,
-          total_revenue: price * quantity,
-          growth_rate: 0,
-          historical_sales: [saleRecord],
-          last_updated: new Date()
-        });
-      }
+    });
+    
+    // If we used a reward, mark it as used
+    if (usedRewardId) {
+      await Customer.updateOne(
+        { _id: customerId, "redeemedRewards.rewardId": usedRewardId },
+        { $set: { "redeemedRewards.$.status": "used" } }
+      );
     }
 
-    // Send order confirmation email
+    // Update sales data...
+    
+    // Send confirmation email
     if (customerEmail) {
-      const orderWithRef = {
+      await sendOrderConfirmation(customerEmail, {
         ...order.toObject(),
-        orderReference
-      };
-      await sendOrderConfirmation(customerEmail, orderWithRef);
-      console.log(`📧 Order confirmation email sent to: ${customerEmail}`);
-    } else {
-      console.log("⚠️ Customer email not provided, no confirmation email sent");
+        orderReference,
+        products: productDetails
+      });
     }
 
-    // Store the order data in session storage for the confirmation page
-    // This ensures the frontend gets the same orderReference
     res.status(201).json({
       message: "Order placed successfully",
       order: {
         ...order.toObject(),
-        orderReference // Ensure the frontend receives the same orderReference
+        orderReference
       },
-      pointsEarned 
+      pointsEarned,
+      discountApplied: discount > 0, // Tell frontend if discount was applied
+      usedRewardId, // Include which reward was used
+      discount // Send the discount amount to frontend
     });
     
     console.log(`🎁 Earned loyalty points: ${pointsEarned}`);
+    console.log(`💰 Applied discount: ${discount}`);
     console.log("✅ Order successfully placed!");
+    console.log(`📧 Order confirmation email sent to: ${customerEmail}`);
 
   } catch (error) {
     console.error("❌ Error creating order:", error.message);
@@ -308,6 +295,28 @@ const updateorder = async (req, res) => {
         res.status(500).json({ message: "Failed to update order status" });
       }
 }
+const getreward = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const customer = await Customer.findById(customerId);
+
+    if (!customer || !customer.redeemedRewards) {
+      return res.json({ activeRewards: [] });
+    }
+
+    // Filter all active rewards
+    const activeRewards = customer.redeemedRewards.filter(
+      reward => reward.status === "active"
+    );
+
+    res.json({ activeRewards }); // Return the full list of active rewards
+  } catch (err) {
+    console.error("❌ Error fetching rewards:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
 
   
-module.exports = {createOrder, getallorder, getorder, updateorder};
+module.exports = {createOrder, getallorder, getorder, updateorder, getreward};

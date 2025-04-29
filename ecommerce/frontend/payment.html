@@ -703,6 +703,42 @@
                 return;
             }
 
+
+            //To show discount and apply  it using the api
+// Add this function to fetch active rewards for a customer
+async function fetchActiveRewards(customerId) {
+    try {
+        // Make sure customerId exists
+        if (!customerId) {
+            console.warn("No customer ID available for reward fetch");
+            return null;
+        }
+        
+        const res = await fetch(`http://localhost:3000/api/${customerId}/reward`);
+        if (!res.ok) {
+            throw new Error(`Failed to fetch rewards: ${res.status}`);
+        }
+        
+        const data = await res.json();
+        console.log("Rewards data from server:", data);
+
+        if (Array.isArray(data.activeRewards) && data.activeRewards.length > 0) {
+            // Sort by redeemedAt (latest first)
+            const sorted = data.activeRewards.sort((a, b) => 
+                new Date(b.redeemedAt) - new Date(a.redeemedAt));
+            
+            // Store the active reward in sessionStorage
+            return sorted[0]; // Return the latest active reward
+        }
+
+        return null;
+    } catch (err) {
+        console.error("❌ Failed to fetch rewards:", err);
+        return null;
+    }
+}
+
+
             // Function to safely get nested property
             function getNestedProperty(obj, path, defaultValue = 0) {
                 return path.split('.').reduce((acc, part) =>
@@ -710,71 +746,123 @@
             }
 
             // Function to update order summary
-            function updateOrderSummary(product) {
-                console.log("Product data for summary:", product);
+   // Update order summary function to properly apply discount from backend
+   async function updateOrderSummary(product) {
+    console.log("Product data for summary:", product);
 
-                // Select all summary rows across BOTH pages explicitly
-                const summaryRowsPage1 = document.querySelector('#page-1 .order-summary');
-                const summaryRowsPage2 = document.querySelector('#page-2 .order-summary');
+    // Select all summary rows across BOTH pages
+    const summaryRowsPage1 = document.querySelector('#page-1 .order-summary');
+    const summaryRowsPage2 = document.querySelector('#page-2 .order-summary');
 
-                if (!summaryRowsPage1 || !summaryRowsPage2) {
-                    console.error("Could not find order summary elements");
-                    return;
+    if (!summaryRowsPage1 || !summaryRowsPage2) {
+        console.error("❌ Could not find order summary elements");
+        return;
+    }
+
+    const formatPrice = (price) => `Rs. ${parseFloat(price).toFixed(2)}`;
+
+    // Extract core values
+    const subtotal = getNestedProperty(product, 'subtotal') ||
+        getNestedProperty(product, 'items[0].subtotal') ||
+        (getNestedProperty(product, 'price', 0) * getNestedProperty(product, 'quantity', 1));
+        const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
+        let deliveryCharge = deliveryType === "express" ? 300 : 150;
+
+        if (subtotal >= 5000) {
+            deliveryCharge = 0;
+        }
+    const tax = getNestedProperty(product, 'tax', 50);
+
+    let discount = 0;
+    let rewardName = "";
+
+    // 🛒 Fetch active reward in real-time
+    const customerId = localStorage.getItem("customerId");
+    if (customerId) {
+        try {
+            const res = await fetch(`http://localhost:3000/api/${customerId}/reward`);
+            if (res.ok) {
+                const data = await res.json();
+                console.log("Fetched rewards:", data);
+
+                if (Array.isArray(data.activeRewards) && data.activeRewards.length > 0) {
+                    const sortedRewards = data.activeRewards.sort((a, b) => 
+                        new Date(b.redeemedAt) - new Date(a.redeemedAt));
+                    
+                    const activeReward = sortedRewards[0];
+
+                    if (activeReward && activeReward.discount) {
+                        if (activeReward.discount.type === "fixed") {
+                            discount = parseFloat(activeReward.discount.value);
+                        } else if (activeReward.discount.type === "percentage") {
+                            discount = (parseFloat(activeReward.discount.value) / 100) * subtotal;
+                        }
+                        rewardName = activeReward.rewardName || "Discount";
+                        console.log(`✅ Applied real-time discount: ${discount} (${activeReward.discount.type})`);
+                    }
                 }
-
-                // Function to format price with Nepali Rupees sign
-                const formatPrice = (price) => {
-                    return `Rs. ${price.toFixed(2)}`;
-                };
-
-                // Intelligently extract values with fallback
-                const subtotal = getNestedProperty(product, 'subtotal') ||
-                    getNestedProperty(product, 'items[0].subtotal') ||
-                    getNestedProperty(product, 'price', 0) * getNestedProperty(product, 'quantity', 1);
-
-                const deliveryCharge = getNestedProperty(product, 'deliveryCharge') ||
-                    getNestedProperty(product, 'shipping', 150);
-
-                const discount = getNestedProperty(product, 'discount', 200);
-
-                const tax = getNestedProperty(product, 'tax')??0;
-
-                const totalAmount = getNestedProperty(product, 'total') ||
-                    getNestedProperty(product, 'totalAmount') ||
-                    (subtotal + deliveryCharge - discount + tax);
-
-                // Function to update a specific order summary
-                const updateSummary = (summaryElement) => {
-                    const summaryRows = summaryElement.querySelectorAll('.summary-row, .total-row');
-
-                    summaryRows[0].querySelector('span:last-child').textContent = formatPrice(subtotal);
-                    summaryRows[1].querySelector('span:last-child').textContent = formatPrice(deliveryCharge);
-                    summaryRows[2].querySelector('span:last-child').textContent = `- ${formatPrice(discount)}`;
-                    summaryRows[3].querySelector('span:last-child').textContent = formatPrice(tax);
-                    summaryRows[4].querySelector('span:last-child').textContent = formatPrice(totalAmount);
-                };
-
-                // Update both page's summaries
-                updateSummary(summaryRowsPage1);
-                updateSummary(summaryRowsPage2);
-
-                // Update the Khalti details total amount
-                const khaltiTotalElement = document.querySelector(
-                    '#khalti-details .summary-row span:last-child');
-                if (khaltiTotalElement) {
-                    khaltiTotalElement.textContent = formatPrice(totalAmount);
-                }
-
-                // Update Estimated Delivery
-                const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
-                const estimatedDelivery = deliveryType === 'express' ? "1-2 business days" :
-                    "3-5 business days";
-
-                const deliveryTimeElements = document.querySelectorAll('.delivery-time');
-                deliveryTimeElements.forEach(el => {
-                    el.textContent = estimatedDelivery;
-                });
+            } else {
+                console.warn("⚠️ Failed to fetch active rewards");
             }
+        } catch (err) {
+            console.error("❌ Error fetching rewards:", err);
+        }
+    }
+
+    const totalAmount = subtotal + deliveryCharge + tax - discount;
+
+    const updateSingleSummary = (summaryElement) => {
+        const summaryRows = summaryElement.querySelectorAll('.summary-row, .total-row');
+
+        if (summaryRows.length >= 5) {
+            summaryRows[0].querySelector('span:last-child').textContent = formatPrice(subtotal);
+            summaryRows[1].querySelector('span:last-child').textContent = formatPrice(deliveryCharge);
+            
+            const discountRow = summaryRows[2];
+            discountRow.querySelector('span:last-child').textContent = `- ${formatPrice(discount)}`;
+            
+            if (discount > 0) {
+                discountRow.style.color = '#38a169'; // Green
+                discountRow.querySelector('span:first-child').innerHTML = '🏷️ Discount';
+            } else {
+                discountRow.style.color = '';
+                discountRow.querySelector('span:first-child').innerHTML = 'Discount';
+            }
+
+            summaryRows[3].querySelector('span:last-child').textContent = formatPrice(tax);
+            summaryRows[4].querySelector('span:last-child').textContent = formatPrice(totalAmount);
+        }
+    };
+
+    // Update both page summaries
+    updateSingleSummary(summaryRowsPage1);
+    updateSingleSummary(summaryRowsPage2);
+
+    // Update Khalti quick payment preview
+    const khaltiTotalElement = document.querySelector('#khalti-details .summary-row span:last-child');
+    if (khaltiTotalElement) {
+        khaltiTotalElement.textContent = formatPrice(totalAmount);
+    }
+
+    // Update estimated delivery time text
+    const estimatedDelivery = deliveryType === "express" ? "1-2 business days" : "3-5 business days";
+    const deliveryTimeElements = document.querySelectorAll('.delivery-time');
+    deliveryTimeElements.forEach(el => {
+        el.textContent = estimatedDelivery;
+    });
+
+    // Show discount message if a reward applied
+    const rewardMsgEl = document.getElementById("reward-applied-msg");
+    if (rewardMsgEl) {
+        if (discount > 0) {
+            rewardMsgEl.innerText = `🎁 ${rewardName} applied!`;
+            rewardMsgEl.style.display = "block";
+        } else {
+            rewardMsgEl.style.display = "none";
+        }
+    }
+}
+
 
             // Update order summary
             updateOrderSummary(product);
@@ -814,120 +902,447 @@
                     deliveryType === 'express' ? 'Express Delivery (1-2 days)' : 'Standard Delivery (3-5 days)';
             }
         });
+// Update the submitOrder function to remove manual reward handling since backend handles it
+async function submitOrder(paymentMethod) {
+    const orderSummaryStr = sessionStorage.getItem("orderSummary");
+    const selectedProductStr = sessionStorage.getItem("selectedProduct");
 
-
-
-        async function submitOrder(paymentMethod) {
-            // First try to get cart data from orderSummary (for cart purchases)
-            const orderSummaryStr = sessionStorage.getItem("orderSummary");
-            // Fall back to selectedProduct (for direct purchases)
-            const selectedProductStr = sessionStorage.getItem("selectedProduct");
-
-            let product = null;
-            try {
-                // Change priority: try orderSummary first, then selectedProduct
-                if (orderSummaryStr) {
-                    product = JSON.parse(orderSummaryStr);
-                    console.log("Using orderSummary data:", product);
-                } else if (selectedProductStr) {
-                    product = JSON.parse(selectedProductStr);
-                    console.log("Using selectedProduct data:", product);
-                }
-            } catch (e) {
-                console.error("❌ Failed to parse sessionStorage data:", e);
-            }
-
-            const customerId = localStorage.getItem("customerId");
-            const customerEmail = localStorage.getItem("userEmail"); // Get the email
-            const customerName = localStorage.getItem("username");
-
-            if (!product) {
-                alert("❌ Missing data. Redirecting to homepage.");
-                window.location.href = "dashboard.html";
-                return;
-            }
-
-            // Make sure we handle both single product and cart items format
-            const formattedProducts = Array.isArray(product.items) ?
-                // For cart data (comes from orderSummary)
-                product.items.map(item => ({
-                    productId: item.productId || item._id,
-                    quantity: item.quantity || 1,
-                    size: item.size || "N/A",
-                    price: item.price || 0
-                })) :
-                // For single product data (comes from selectedProduct)
-                [{
-                    productId: product.productId || product._id,
-                    quantity: product.quantity || 1,
-                    size: product.size || "N/A",
-                    price: product.price || 0
-                }];
-
-            // Rest of your submitOrder function...
-            const orderData = {
-                customerId,
-                customerEmail,
-                customerName,
-                products: formattedProducts,
-                deliveryInfo: {
-                    fullName: document.getElementById("fullName").value,
-                    phone: document.getElementById("phone").value,
-                    address: document.getElementById("address").value,
-                    city: document.getElementById("city").value,
-                    postalCode: document.getElementById("zipCode").value,
-                    instructions: document.getElementById("paymentInstructions") ?.value || ""},
-                deliveryType: document.querySelector('input[name="deliveryType"]:checked').value === "express" ?
-                    "Express Delivery" : "Standard Delivery",
-                // Safely access properties that might be in different locations
-                estimatedDeliveryDate: new Date(), // Use current date as fallback
-                subtotal: product.subtotal || (product.price * (product.quantity || 1)),
-                deliveryCharge: product.deliveryCharge || product.shipping || 150,
-                discount: product.discount || 0,
-                tax: product.tax || 0,
-                totalAmount: product.total || product.totalAmount ||
-                    ((product.subtotal || (product.price * (product.quantity || 1))) +
-                        (product.deliveryCharge || product.shipping || 150) -
-                        (product.discount || 0) +
-                        (product.tax || 0)),
-                paymentStatus: paymentMethod === "khalti" ? "Paid" : "Unpaid",
-                paymentMethod: paymentMethod === "khalti" ? "khalti" : "Cash",  // ✅ Fix casing
-            };
-
-            try {
-                console.log("Sending order data:", JSON.stringify(orderData, null, 2));
-                const res = await fetch("http://localhost:3000/api/trackorder", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(orderData),
-                });
-
-                console.log("Response status:", res.status);
-                const result = await res.json();
-                console.log("Response data:", result);
-
-                if (res.ok) {
-                    console.log("✅ Order placed successfully", result);
-
-                    // ✅ Only clear sessionStorage if payment method is "Cash"
-                    if (paymentMethod === "cod" || paymentMethod === "Cash") {
-                        sessionStorage.removeItem("selectedProduct");
-                        sessionStorage.removeItem("orderSummary");
-                    }
-
-                    // ✅ Redirect to invoice.html with dynamic orderReference & ID
-                    window.location.href = `invoice.html?orderId=${result.order._id}&ref=${result.order.orderReference}`;
-                } else {
-                    console.error("API error:", result);
-                    alert("❌ " + (result.message || "Unknown error occurred"));
-                }
-            } catch (err) {
-                console.error("❌ Order error:", err);
-                alert("❌ Server error. Please try again.");
-            }
+    let product = null;
+    try {
+        if (orderSummaryStr) {
+            product = JSON.parse(orderSummaryStr);
+            console.log("Using orderSummary data:", product);
+        } else if (selectedProductStr) {
+            product = JSON.parse(selectedProductStr);
+            console.log("Using selectedProduct data:", product);
         }
+    } catch (e) {
+        console.error("❌ Failed to parse sessionStorage data:", e);
+    }
+
+    const customerId = localStorage.getItem("customerId");
+    const customerEmail = localStorage.getItem("userEmail");
+    const customerName = localStorage.getItem("username");
+
+    if (!product) {
+        alert("❌ Missing data. Redirecting to homepage.");
+        window.location.href = "dashboard.html";
+        return;
+    }
+
+    // Format products properly based on whether it's a cart or single product
+    const formattedProducts = product.items && Array.isArray(product.items) ?
+        product.items.map(item => ({
+            productId: item.productId || item._id,
+            quantity: item.quantity || 1,
+            size: item.size || "N/A",
+            price: item.price || 0
+        })) :
+        [{
+            productId: product.productId || product._id,
+            quantity: product.quantity || 1,
+            size: product.size || "N/A",
+            price: product.price || 0
+        }];
+
+    // Calculate actual total cost for the order including delivery
+    const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
+    const deliveryCharge = deliveryType === "express" ? 300 : 150;
+
+    const activeReward = JSON.parse(sessionStorage.getItem("activeReward"));
+
+    
+    const orderData = {
+        rewardId: activeReward ? activeReward._id : null, // ✅ safe check
+        customerId,
+        customerEmail,
+        customerName,
+        products: formattedProducts,
+        deliveryInfo: {
+            fullName: document.getElementById("fullName").value,
+            phone: document.getElementById("phone").value,
+            address: document.getElementById("address").value,
+            city: document.getElementById("city").value,
+            postalCode: document.getElementById("zipCode").value,
+            instructions: document.getElementById("paymentInstructions")?.value || ""
+        },
+        deliveryType: deliveryType === "express" ? "Express Delivery" : "Standard Delivery",
+        deliveryCharge: deliveryCharge,
+        estimatedDeliveryDate: new Date(),
+        paymentStatus: paymentMethod === "khalti" ? "Paid" : "Unpaid",
+        paymentMethod: paymentMethod === "khalti" ? "khalti" : "Cash"
+    };
+
+    try {
+        console.log("📤 Sending order data:", JSON.stringify(orderData, null, 2));
+
+        const res = await fetch("http://localhost:3000/api/trackorder", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(orderData),
+        });
+
+        const result = await res.json();
+
+        if (res.ok) {
+            console.log("✅ Order placed successfully:", result);
+            
+            // Clear cart/sessionStorage data
+            sessionStorage.removeItem("selectedProduct");
+            sessionStorage.removeItem("orderSummary");
+            sessionStorage.removeItem("redeemedReward");
+            sessionStorage.removeItem("activeReward");
+
+
+            // Redirect to invoice with orderId and reference
+            window.location.href = `invoice.html?orderId=${result.order._id}&ref=${result.order.orderReference}`;
+        } else {
+            console.error("❌ Order failed:", result);
+            alert("❌ " + (result.message || "Unknown error"));
+        }
+
+    } catch (err) {
+        console.error("❌ Network or server error:", err);
+        alert("❌ Something went wrong. Please try again.");
+    }
+}
+
+// Update the function to get nested properties safely
+function getNestedProperty(obj, path, defaultValue = 0) {
+    if (!obj) return defaultValue;
+    return path.split('.').reduce((acc, part) =>
+        acc && acc[part] !== undefined ? acc[part] : defaultValue, obj);
+}
+
+// Update order summary function to show default discounts until server response
+function updateOrderSummary(product) {
+    console.log("Product data for summary:", product);
+
+    // Select all summary rows across BOTH pages
+    const summaryRowsPage1 = document.querySelector('#page-1 .order-summary');
+    const summaryRowsPage2 = document.querySelector('#page-2 .order-summary');
+
+    if (!summaryRowsPage1 || !summaryRowsPage2) {
+        console.error("Could not find order summary elements");
+        return;
+    }
+
+    // Format with Rs
+    const formatPrice = (price) => `Rs. ${price.toFixed(2)}`;
+
+    // Fallback-safe nested property getter
+    const getNestedProperty = (obj, path, defaultValue = 0) => {
+        return path.split('.').reduce((acc, part) => acc && acc[part] !== undefined ? acc[part] : defaultValue, obj);
+    };
+
+    // Get core amounts
+    const subtotal = getNestedProperty(product, 'subtotal') ||
+        getNestedProperty(product, 'items[0].subtotal') ||
+        getNestedProperty(product, 'price', 0) * getNestedProperty(product, 'quantity', 1);
+
+    const deliveryCharge = getNestedProperty(product, 'deliveryCharge') ||
+        getNestedProperty(product, 'shipping', 
+            document.querySelector('input[name="deliveryType"]:checked')?.value === "express" ? 300 : 150);
+
+    let discount = 0;
+
+    // ✅ Fetch reward from sessionStorage and apply
+    const reward = JSON.parse(sessionStorage.getItem("activeReward") || "null");
+    if (reward && reward.discount) {
+        const { type, value } = reward.discount;
+        if (type === "fixed") {
+            discount = value;
+        } else if (type === "percentage") {
+            discount = Math.round((value / 100) * subtotal);
+        }
+        console.log("✅ Reward discount applied:", discount);
+    }
+
+    const tax = getNestedProperty(product, 'tax', 50);
+    const totalAmount = subtotal + deliveryCharge + tax - discount;
+
+    // DOM updater
+    const updateSummary = (summaryElement) => {
+        const summaryRows = summaryElement.querySelectorAll('.summary-row, .total-row');
+
+        if (summaryRows.length >= 5) {
+            summaryRows[0].querySelector('span:last-child').textContent = formatPrice(subtotal);
+            summaryRows[1].querySelector('span:last-child').textContent = formatPrice(deliveryCharge);
+            summaryRows[2].querySelector('span:last-child').textContent = `- ${formatPrice(discount)}`;
+            summaryRows[3].querySelector('span:last-child').textContent = formatPrice(tax);
+            summaryRows[4].querySelector('span:last-child').textContent = formatPrice(totalAmount);
+        }
+    };
+
+    // Update both summary sections
+    updateSummary(summaryRowsPage1);
+    updateSummary(summaryRowsPage2);
+
+    // Update Khalti quick preview
+    const khaltiTotalElement = document.querySelector('#khalti-details .summary-row span:last-child');
+    if (khaltiTotalElement) {
+        khaltiTotalElement.textContent = formatPrice(totalAmount);
+    }
+
+    // Update estimated delivery
+    const deliveryType = document.querySelector('input[name="deliveryType"]:checked')?.value;
+    const estimatedDelivery = deliveryType === 'express' ? "1-2 business days" : "3-5 business days";
+
+    const deliveryTimeElements = document.querySelectorAll('.delivery-time');
+    deliveryTimeElements.forEach(el => {
+        el.textContent = estimatedDelivery;
+    });
+
+    // Optional: Show reward message
+    if (reward?.rewardName) {
+        const rewardMsgEl = document.getElementById("reward-applied-msg");
+        if (rewardMsgEl) {
+            rewardMsgEl.innerText = `🎁 ${reward.rewardName} applied`;
+            rewardMsgEl.style.display = "block";
+        }
+    }
+}
+
+
+// Updated Khalti payment completion to handle the response from backend
+async function completeKhaltiPayment(purchaseOrderId, status) {
+    try {
+        console.log("Completing payment with:", { purchaseOrderId, status });
+        
+        // Show loading indicator
+        const loadingMessage = document.createElement("div");
+        loadingMessage.innerHTML = "Processing your payment...";
+        loadingMessage.style.position = "fixed";
+        loadingMessage.style.top = "50%";
+        loadingMessage.style.left = "50%";
+        loadingMessage.style.transform = "translate(-50%, -50%)";
+        loadingMessage.style.padding = "20px";
+        loadingMessage.style.background = "white";
+        loadingMessage.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
+        loadingMessage.style.borderRadius = "5px";
+        loadingMessage.style.zIndex = "9999";
+        document.body.appendChild(loadingMessage);
+        
+        // Make the API call to complete the payment
+        const response = await fetch(`http://localhost:3000/api/payment/complete-khalti-payment?purchase_order_id=${purchaseOrderId}&status=${status}`);
+        const result = await response.json();
+        
+        // Remove loading message
+        document.body.removeChild(loadingMessage);
+        
+        if (result.success) {
+            console.log("Full payment completion response:", result);
+            
+            // If backend applied a discount, we could show it
+            if (result.order && result.order.discount) {
+                console.log(`💰 Discount applied: ${result.order.discount}`);
+            }
+            
+            // If backend used a reward, we could show it
+            if (result.order && result.order.usedRewardId) {
+                console.log(`🎁 Used reward: ${result.order.usedRewardId}`);
+            }
+            
+            // Clean up stored data
+            sessionStorage.removeItem("selectedProduct");
+            sessionStorage.removeItem("orderSummary");
+            sessionStorage.removeItem("redeemedReward"); // Clear this since backend handles rewards
+            sessionStorage.removeItem("activeReward");
+
+            // Show success and redirect
+            alert("✅ Payment successful! Redirecting to your invoice...");
+            console.log("📧 Confirmation email sent");
+            window.location.href = `invoice.html?orderId=${result.order._id}&ref=${result.order.orderReference}`;
+        } else {
+            alert("❌ " + (result.message || "Failed to complete payment verification"));
+        }
+    } catch (error) {
+        console.error("Error completing payment:", error);
+        alert("❌ Server error. Please contact support with your payment reference.");
+    }
+}
+
+// Helper function to process Khalti payment
+async function processKhaltiPayment(payload) {
+    // Get customer information from localStorage
+    const customerId = localStorage.getItem("customerId");
+    
+    // Validate customerId exists
+    if (!customerId) {
+        alert("You must be logged in to make a payment. Please log in and try again.");
+        return;
+    }
+    
+    // Get delivery information from the form
+    const deliveryInfo = {
+        fullName: document.getElementById("fullName").value,
+        phone: document.getElementById("phone").value,
+        address: document.getElementById("address").value,
+        city: document.getElementById("city").value,
+        postalCode: document.getElementById("zipCode").value,
+        instructions: document.getElementById("paymentInstructions")?.value || ""
+    };
+    
+    // Add customer information to the payload
+    const enhancedPayload = {
+        ...payload,
+        customerId: customerId,
+        deliveryInfo: deliveryInfo,
+        deliveryType: document.querySelector('input[name="deliveryType"]:checked').value === "express" ? 
+            "Express Delivery" : "Standard Delivery"
+        // No need to pass redeemedReward - backend will handle this automatically
+    };
+    
+    console.log("Sending payment request with customerId:", customerId);
+    console.log("Full payload:", enhancedPayload);
+
+    try {
+        const res = await fetch("http://localhost:3000/api/payment/initialize-khalti", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(enhancedPayload),
+        });
+
+        const data = await res.json();
+
+        if (data.success && data.paymentURL) {
+            // Store the purchase ID to reference after payment completion
+            sessionStorage.setItem("khaltiPurchaseId", data.purchase._id);
+            
+            // Redirect to Khalti Payment page
+            window.location.href = data.paymentURL;
+        } else {
+            alert("Payment initiation failed: " + (data.message || "Something went wrong"));
+        }
+    } catch (err) {
+        console.error("Error initializing payment", err);
+        alert("Error initiating Khalti payment");
+    }
+}
+
+
+        
+
+// Update order summary function to use backend discount
+function updateOrderSummary(product) {
+    console.log("Product data for summary:", product);
+
+    // Select all summary rows across BOTH pages explicitly
+    const summaryRowsPage1 = document.querySelector('#page-1 .order-summary');
+    const summaryRowsPage2 = document.querySelector('#page-2 .order-summary');
+
+    if (!summaryRowsPage1 || !summaryRowsPage2) {
+        console.error("Could not find order summary elements");
+        return;
+    }
+
+    // Function to format price with Nepali Rupees sign
+    const formatPrice = (price) => {
+        return `Rs. ${price.toFixed(2)}`;
+    };
+
+    // Intelligently extract values with fallback
+    const subtotal = getNestedProperty(product, 'subtotal') ||
+        getNestedProperty(product, 'items[0].subtotal') ||
+        getNestedProperty(product, 'price', 0) * getNestedProperty(product, 'quantity', 1);
+
+    const deliveryCharge = getNestedProperty(product, 'deliveryCharge') ||
+        getNestedProperty(product, 'shipping', 150);
+
+    // Use discount from product data directly - no more complicated calculation
+    // This will be updated from backend response when order is submitted
+    let discount = getNestedProperty(product, 'discount', 0);
+
+    const tax = getNestedProperty(product, 'tax') ?? 0;
+
+    const totalAmount = getNestedProperty(product, 'total') ||
+        getNestedProperty(product, 'totalAmount') ||
+        (subtotal + deliveryCharge - discount + tax);
+
+    // Function to update a specific order summary
+    const updateSummary = (summaryElement) => {
+        const summaryRows = summaryElement.querySelectorAll('.summary-row, .total-row');
+
+        summaryRows[0].querySelector('span:last-child').textContent = formatPrice(subtotal);
+        summaryRows[1].querySelector('span:last-child').textContent = formatPrice(deliveryCharge);
+        summaryRows[2].querySelector('span:last-child').textContent = `- ${formatPrice(discount)}`;
+        summaryRows[3].querySelector('span:last-child').textContent = formatPrice(tax);
+        summaryRows[4].querySelector('span:last-child').textContent = formatPrice(totalAmount);
+    };
+
+    // Update both page's summaries
+    updateSummary(summaryRowsPage1);
+    updateSummary(summaryRowsPage2);
+
+    // Update the Khalti details total amount
+    const khaltiTotalElement = document.querySelector(
+        '#khalti-details .summary-row span:last-child');
+    if (khaltiTotalElement) {
+        khaltiTotalElement.textContent = formatPrice(totalAmount);
+    }
+
+    // Update Estimated Delivery
+    const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
+    const estimatedDelivery = deliveryType === 'express' ? "1-2 business days" :
+        "3-5 business days";
+
+    const deliveryTimeElements = document.querySelectorAll('.delivery-time');
+    deliveryTimeElements.forEach(el => {
+        el.textContent = estimatedDelivery;
+    });
+}
+
+// Updated Khalti payment completion function to update order summary with backend discount
+async function completeKhaltiPayment(purchaseOrderId, status) {
+    try {
+        console.log("Completing payment with:", { purchaseOrderId, status });
+        
+        // Show loading indicator
+        const loadingMessage = document.createElement("div");
+        loadingMessage.innerHTML = "Processing your payment...";
+        loadingMessage.style.position = "fixed";
+        loadingMessage.style.top = "50%";
+        loadingMessage.style.left = "50%";
+        loadingMessage.style.transform = "translate(-50%, -50%)";
+        loadingMessage.style.padding = "20px";
+        loadingMessage.style.background = "white";
+        loadingMessage.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
+        loadingMessage.style.borderRadius = "5px";
+        loadingMessage.style.zIndex = "9999";
+        document.body.appendChild(loadingMessage);
+        
+        // IMPORTANT: Use the parameter name that the backend expects
+        const response = await fetch(`http://localhost:3000/api/payment/complete-khalti-payment?purchase_order_id=${purchaseOrderId}&status=${status}`);
+        const result = await response.json();
+        
+        // Remove loading message
+        document.body.removeChild(loadingMessage);
+        
+        if (result.success) {
+            // Clean up stored data
+            sessionStorage.removeItem("selectedProduct");
+            sessionStorage.removeItem("orderSummary");
+            sessionStorage.removeItem("redeemedReward"); // Clear this since backend handles rewards
+            
+            // Show success and redirect
+            alert("✅ Payment successful! Redirecting to your invoice...");
+            console.log("📧 Confirmation email sent");
+            window.location.href = `invoice.html?orderId=${result.order._id}&ref=${result.order.orderReference}`;
+        } else {
+            alert("❌ " + (result.message || "Failed to complete payment verification"));
+        }
+    } catch (error) {
+        console.error("Error completing payment:", error);
+        alert("❌ Server error. Please contact support with your payment reference.");
+    }
+}
+
+
+
         // Khalti integration
         document.getElementById("pay-khalti").addEventListener("click", async () => {
     // Validate delivery information first
@@ -943,8 +1358,10 @@
     try {
         if (orderSummaryStr) {
             orderData = JSON.parse(orderSummaryStr);
+            console.log("Using orderSummary data for payment:", orderData);
         } else if (selectedProductStr) {
             orderData = JSON.parse(selectedProductStr);
+            console.log("Using selectedProduct data for payment:", orderData);
         } else {
             return alert("Order data missing!");
         }
@@ -954,7 +1371,7 @@
     }
 
     // For cart orders (multiple items)
-    if (Array.isArray(orderData.items) && orderData.items.length > 0) {
+    if (orderData.items && Array.isArray(orderData.items) && orderData.items.length > 0) {
         const payload = {
             orderId: orderData.orderId || Date.now().toString(),
             totalAmount: orderData.total || orderData.totalAmount,
@@ -972,14 +1389,21 @@
     }
     // For single product orders
     else {
+        // Create a proper payload for single product purchases
         const payload = {
-            itemId: orderData.productId || orderData._id,
-            quantity: orderData.quantity || 1,
-            unitPrice: orderData.price || 0,
+            orderId: Date.now().toString(),
+            totalAmount: orderData.price * (orderData.quantity || 1) + 
+                         (document.querySelector('input[name="deliveryType"]:checked').value === "express" ? 300 : 150),
+            tax: orderData.tax || 50,
+            items: [{
+                productId: orderData.productId || orderData._id,
+                quantity: orderData.quantity || 1,
+                unitPrice: orderData.price || 0
+            }],
             website_url: "http://localhost:3000"
         };
 
-        // Process payment for single item
+        console.log("Single product payload:", payload);
         processKhaltiPayment(payload);
     }
 });
@@ -1099,11 +1523,9 @@ function validateDeliveryInfo() {
     }
 }
 
-// Handle redirect from Khalti after payment
 
     // Handle redirect from Khalti after payment
-// Handle redirect from Khalti after payment
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
     // Check if we're returning from Khalti
     const url = new URL(window.location.href);
     const urlParams = url.searchParams;
@@ -1124,54 +1546,27 @@ window.addEventListener("DOMContentLoaded", () => {
         if (purchaseOrderId.includes('/')) {
             purchaseOrderId = purchaseOrderId.split('/')[0];
         }
+
+        // Fetch active rewards if user is logged in
+    const customerId = localStorage.getItem("customerId");
+    if (customerId) {
+        try {
+            const reward = await fetchActiveRewards(customerId);
+            if (reward) {
+                console.log("Active reward loaded:", reward);
+                // This will trigger a UI update with the reward applied
+                updateOrderSummary(product);
+            }
+        } catch (error) {
+            console.error("Error fetching rewards:", error);
+        }
+    }
         
         // Now call the API with the correct parameter name that the backend expects
         completeKhaltiPayment(purchaseOrderId, status);
     }
 });
 
-// Function to complete the Khalti payment
-async function completeKhaltiPayment(purchaseOrderId, status) {
-    try {
-        console.log("Completing payment with:", { purchaseOrderId, status });
-        
-        // Show loading indicator
-        const loadingMessage = document.createElement("div");
-        loadingMessage.innerHTML = "Processing your payment...";
-        loadingMessage.style.position = "fixed";
-        loadingMessage.style.top = "50%";
-        loadingMessage.style.left = "50%";
-        loadingMessage.style.transform = "translate(-50%, -50%)";
-        loadingMessage.style.padding = "20px";
-        loadingMessage.style.background = "white";
-        loadingMessage.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
-        loadingMessage.style.borderRadius = "5px";
-        loadingMessage.style.zIndex = "9999";
-        document.body.appendChild(loadingMessage);
-        
-        // IMPORTANT: Use the parameter name that the backend expects
-        const response = await fetch(`http://localhost:3000/api/payment/complete-khalti-payment?purchase_order_id=${purchaseOrderId}&status=${status}`);
-        const result = await response.json();
-        
-        // Remove loading message
-        document.body.removeChild(loadingMessage);
-        
-        if (result.success) {
-            // Clean up stored data
-            sessionStorage.removeItem("selectedProduct");
-            sessionStorage.removeItem("orderSummary");
-            
-            // Show success and redirect
-            alert("✅ Payment successful! Redirecting to your invoice...");
-            window.location.href = `invoice.html?orderId=${result.order._id}&ref=${result.order.orderReference}`;
-        } else {
-            alert("❌ " + (result.message || "Failed to complete payment verification"));
-        }
-    } catch (error) {
-        console.error("Error completing payment:", error);
-        alert("❌ Server error. Please contact support with your payment reference.");
-    }
-}
     </script>
 </body>
 
