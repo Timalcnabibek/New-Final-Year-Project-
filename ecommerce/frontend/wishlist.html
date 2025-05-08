@@ -196,6 +196,30 @@
             padding: 1rem 0.5rem;
         }
 
+        .add-to-cart {
+  background-color: #5b98ed; /* dark navy or black */
+  color: #fff;
+  font-weight: 500;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.add-to-cart:hover {
+  background-color: #5b98ed; /* slightly lighter on hover */
+  transform: translateY(-2px);
+}
+
+.add-to-cart i {
+  font-size: 16px;
+}
+
         .item-category {
             font-size: 0.8rem;
             color: #666;
@@ -246,14 +270,14 @@
 <body>
     <!-- Navigation Bar -->
     <nav class="navbar">
-        <a href="#" class="logo">StyleHub</a>
+        <a href="dashboard.html" class="logo">StyleHub</a>
         
         <div class="nav-links">
-            <a href="#">Home</a>
-            <a href="#">Shop</a>
-            <a href="#">Men</a>
-            <a href="#">Women</a>
-            <a href="#">New Arrivals</a>
+            <a href="dashboard.html">Home</a>
+            <a href="viewall.html">Shop</a>
+            <a href="mens.html">Men</a>
+            <a href="women.html">Women</a>
+            <!-- <a href="#">New Arrivals</a> -->
         </div>
         
         <div class="nav-right">
@@ -292,7 +316,7 @@
         <div class="wishlist-header">
             <div>
                 <h1 class="wishlist-title">My Wishlist</h1>
-                <p class="items-count">4 items</p>
+                <p class="items-count"></p>
             </div>
             <button class="clear-button">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -413,5 +437,127 @@
             document.head.appendChild(style);
         });
     </script>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        const wishlistContainer = document.querySelector(".wishlist-grid");
+        const customerId = localStorage.getItem("customerId"); // Or however you store the logged-in user's ID
+    
+        if (!customerId) {
+            wishlistContainer.innerHTML = "<p>Please log in to view your wishlist.</p>";
+            return;
+        }
+    
+        try {
+            const response = await fetch(`http://localhost:3000/api/wishlist/wish/${customerId}`);
+            const data = await response.json();
+    
+            if (!response.ok) {
+                throw new Error(data.message || "Failed to fetch wishlist");
+            }
+    
+            // Clear existing placeholder content
+            wishlistContainer.innerHTML = "";
+    
+            if (data.wishlist.length === 0) {
+                wishlistContainer.innerHTML = "<p>Your wishlist is empty.</p>";
+                return;
+            }
+    
+            data.wishlist.forEach(product => {
+                const itemHTML = `
+    <div class="wishlist-item">
+        <img src="${product.images?.[0]?.url || '/images/placeholder.jpg'}" alt="${product.name}" class="item-image">
+        <button class="favorite-button active" onclick="removeFromWishlist('${product._id}')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>
+            </svg>
+        </button>
+        <div class="item-details">
+            <p class="item-category">${product.category || "General"}</p>
+            <h3 class="item-name">${product.name}</h3>
+            <p class="item-price">$${product.price.toFixed(2)}</p>
+            <button class="add-to-cart" onclick="addToCart('${product._id}', '${product.name}')">
+                <i class="fas fa-shopping-cart"></i> Add to Cart
+            </button>
+        </div>
+    </div>
+`;
+
+                wishlistContainer.insertAdjacentHTML("beforeend", itemHTML);
+            });
+    
+            // Update items count
+            document.querySelector(".items-count").textContent = `${data.wishlist.length} item(s)`;
+    
+        } catch (error) {
+            wishlistContainer.innerHTML = `<p>Error loading wishlist: ${error.message}</p>`;
+        }
+
+
+        // Add to cart functionality
+        async function addToCart(productId, productName) {
+            const customerId = localStorage.getItem("customerId");
+
+            if (!customerId) {
+                alert("❌ User not logged in! Redirecting to login page.");
+                window.location.href = "login.html";
+                return;
+            }
+
+            const requestData = { customerId, productId, quantity: 1 };
+
+            try {
+                const response = await fetch("http://localhost:3000/api/cart/add", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(requestData),
+                });
+
+                const result = await response.json();
+                console.log("Cart Response:", result); // Debugging
+                
+                if (response.ok) {
+                    alert(`✅ ${productName} added to cart!`);
+                    fetchCartCount(); // Live update the cart count
+                } else {
+                    alert(`❌ Failed to add to cart: ${result.message || "Unknown error"}`);
+                }
+            } catch (error) {
+                console.error("❌ Error adding to cart:", error);
+                alert("❌ Server error. Please try again later.");
+            }
+        }
+    });
+    </script>
+
+<script>
+    async function removeFromWishlist(productId) {
+        const customerId = localStorage.getItem("customerId");
+    
+        try {
+            const res = await fetch("http://localhost:3000/api/wishlist/removewish", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ customerId, productId })
+            });
+    
+            if (res.ok) {
+                // Reload the wishlist
+                location.reload();
+            } else {
+                const error = await res.json();
+                alert(error.message || "Failed to remove from wishlist");
+            }
+        } catch (err) {
+            console.error("Error removing item:", err);
+            alert("An error occurred.");
+        }
+    }
+    </script>
+    
 </body>
 </html>

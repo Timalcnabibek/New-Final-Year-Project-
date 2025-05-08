@@ -1,18 +1,17 @@
 const express = require("express");
-const cartController = require("../controllers/wishlist");
+const {userwishlist, deletewishlist, addtowishlist} = require("../controllers/wishlist");
 
 const router = express.Router();
 
 // Add product to cart
-router.post("/addwish", cartController.addtowishlist);
+router.post("/addwish", addtowishlist);
 
 // Remove product from cart
-router.delete("/removewish", cartController.deletewishlist);
+router.delete("/removewish", deletewishlist);
 
 // Get all cart items for a customer
-router.get("/wish/:customerId", cartController.userwishlist);
+router.get("/wish/:customerId", userwishlist);
 
-// Update product quantity in cart
-// router.put("/updatewish", cartController.updateproductsincart);
+
 
 module.exports = router;

@@ -352,7 +352,8 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem("cartItems", JSON.stringify(cartItems));
     
             // Count total quantity
-            const totalCount = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+// Count number of unique products in cart
+const totalCount = cartItems.length;
             document.querySelectorAll(".cart-count").forEach(el => el.textContent = totalCount);
             console.log("🛒 Cart Count Updated:", totalCount);
         } catch (err) {

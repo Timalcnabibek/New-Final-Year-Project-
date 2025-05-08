@@ -6,9 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StyleHub - Modern Fashion E-commerce</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/dashboard.css">
+    <!-- Include SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 
 <body>
@@ -29,19 +31,19 @@
             <i class="fas fa-shopping-cart"></i>
             <span class="cart-count" id="cartCount">0</span>
         </a>
-        <a href="#"><i class="fas fa-heart"></i></a>
+        <a href="wishlist.html"><i class="fas fa-heart"></i></a>
         
         <!-- Profile Icon with Dropdown -->
         <div class="profile-dropdown">
-            <a href="#" class="profile-icon" onclick="toggleDropdown(event)">
+            <a href="#" class="profile-icon" id="profileIcon">
                 <i class="fas fa-user"></i>
             </a>
             <div class="dropdown-menu" id="profileDropdown">
                 <a href="profile.html">My Profile</a>
                 <a href="orders.html">My Orders</a>
-                <a href="loyalty.html">🎉 Loyalty Program</a>  <!-- New Option -->
+                <a href="loyalty.html">🎉 Loyalty Program</a>
                 <a href="settings.html">Settings</a>
-                <a href="#" onclick="logout()">Logout</a>
+                <a href="#" onclick="logout(event)">Logout</a>
             </div>
         </div>
     </div>
@@ -240,214 +242,7 @@
         </div>
     </footer>
 
-    <!-- JavaScript -->
-    <script>
-        // Slider functionality
-        let slideIndex = 0;
-        const slides = document.querySelectorAll(".slide");
-
-        function showSlides() {
-            for (let i = 0; i < slides.length; i++) {
-                slides[i].classList.remove("active");
-            }
-            slideIndex++;
-            if (slideIndex > slides.length) {
-                slideIndex = 1;
-            }
-            slides[slideIndex - 1].classList.add("active");
-            setTimeout(showSlides, 2000); // Change slide every 5 seconds
-        }
-
-        function changeSlide(n) {
-            slideIndex += n - 1;
-            showSlides();
-        }
-
-        // Initialize slider
-        showSlides();
-
-        // ✅ Generate star ratings dynamically
-        function generateStars(rating) {
-            let stars = "";
-            const fullStars = Math.floor(rating);
-            const halfStar = rating % 1 !== 0;
-
-            for (let i = 0; i < fullStars; i++) {
-                stars += '<i class="fas fa-star"></i>';
-            }
-
-            if (halfStar) {
-                stars += '<i class="fas fa-star-half-alt"></i>';
-            }
-
-            const emptyStars = 5 - Math.ceil(rating);
-            for (let i = 0; i < emptyStars; i++) {
-                stars += '<i class="far fa-star"></i>';
-            }
-
-            return stars;
-        }
-
-
-        async function fetchCartCount() {
-    // Get user ID from both possible sources
-    // const user = JSON.parse(localStorage.getItem("user"));
-    const customerId = localStorage.getItem("customerId");
-    const cartCountElement = document.getElementById("cartCount");
-
-    if (!customerId || !cartCountElement) return;
-
-    try {
-        const response = await fetch(`http://localhost:3000/api/cart/${customerId}`);
-        if (!response.ok) throw new Error("Failed to fetch cart");
-
-        const data = await response.json();
-        console.log("Cart data:", data);
-        
-        // Handle different possible cart data structures
-        let totalItems = 0;
-        
-        if (Array.isArray(data)) {
-            // If response is direct array of items
-            totalItems = data.reduce((sum, item) => sum + (item.quantity || 1), 0);
-        } else if (data.cart && Array.isArray(data.cart)) {
-            // If response has cart array
-            totalItems = data.cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
-        } else if (data.items && Array.isArray(data.items)) {
-            // If response has items array
-            totalItems = data.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
-        } else {
-            console.warn("Unknown cart data format:", data);
-            cartCountElement.textContent = "0";
-            return;
-        }
-
-        cartCountElement.textContent = totalItems;
-    } catch (error) {
-        console.error("Error fetching cart count:", error);
-        // Set to 0 in case of error
-        if (cartCountElement) cartCountElement.textContent = "0";
-    }
-}
-
-
-        // ✅ Store products in cart (updated logic)
-   // Updated addToCart function to use consistent user ID handling
-// Update this function in paste.txt
-async function addToCart(productId, productName) {
-    const customerId = localStorage.getItem("customerId");
-
-    if (!customerId) {
-        alert("❌ User not logged in! Redirecting to login page.");
-        window.location.href = "login.html";
-        return;
-    }
-
-    const requestData = { customerId, productId, quantity: 1 };
-
-    try {
-        const response = await fetch("http://localhost:3000/api/cart/add", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestData),
-        });
-
-        const result = await response.json();
-        console.log("Cart Response:", result);
-        
-        if (response.ok) {
-            alert(`✅ ${productName} added to cart!`);
-            
-            // Add this block to update localStorage
-            fetchCartAndUpdateLocalStorage(customerId);
-        } else {
-            alert(`❌ Failed to add to cart: ${result.message}`);
-        }
-    } catch (error) {
-        console.error("❌ Error adding to cart:", error);
-        alert("❌ Server error. Please try again later.");
-    }
-}
-
-
-async function fetchCartAndUpdateLocalStorage(customerId) {
-    try {
-        const response = await fetch(`http://localhost:3000/api/cart/${customerId}`);
-        const result = await response.json();
-        
-        // Handle different response structures
-        if (response.ok) {
-            let cartItems;
-            if (Array.isArray(result)) {
-                cartItems = result;
-            } else if (result.items) {
-                cartItems = result.items;
-            } else if (result.cart) {
-                cartItems = result.cart;
-            }
-            
-            if (cartItems) {
-                localStorage.setItem("cartItems", JSON.stringify(cartItems));
-                console.log("Cart updated in localStorage:", cartItems);
-            }
-        } else {
-            console.warn("⚠️ Could not update cart in localStorage");
-        }
-    } catch (err) {
-        console.error("❌ Failed to fetch updated cart", err);
-    }
-}
-
-
-        // ✅ Attach event listeners for "Add to Cart" buttons
-        function attachCartEventListeners() {
-            document.querySelectorAll(".add-to-cart").forEach((button) => {
-    button.onclick = function () {
-        const productCard = this.closest(".product-card");
-        if (!productCard) return;
-
-        const productId = productCard.dataset.id;
-        const productName = productCard.querySelector(".product-title").innerText;
-
-        addToCart(productId, productName);
-    };
-});
-
-
-            // ✅ Wishlist button logic
-            document.querySelectorAll(".wishlist-btn").forEach((button) => {
-                button.addEventListener("click", function () {
-                    this.innerHTML = '<i class="fas fa-heart"></i>';
-                    this.style.backgroundColor = "#fee2e2";
-                    this.style.color = "#ef4444";
-                    alert("❤️ Product added to wishlist!");
-                });
-            });
-        }
-
-        // ✅ Newsletter Subscription
-        document.addEventListener("DOMContentLoaded", function () {
-    fetchCartCount(); 
-
-    // Newsletter form logic
-    document.querySelector(".newsletter-form").addEventListener("submit", function (e) {
-        e.preventDefault();
-        const email = this.querySelector(".newsletter-input").value;
-        if (email) {
-            alert("📩 Thank you for subscribing to our newsletter!");
-            this.reset();
-        } else {
-            alert("❌ Please enter a valid email address.");
-        }
-    });
-});
-
-
-    </script>
-    <script src="dashboard.js"></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script> -->
-
-<script src="profile.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+<script src="dashboard.js"></script>
 </body>
 </html>

@@ -108,5 +108,29 @@ const getcustomer = async (req, res) => {
     }
 };
 
+// PUT: Update user profile
+const updateCustomer = async (req, res) => {
+    try {
+      const { customerId } = req.params;
+      const { username, email, phone } = req.body;
+  
+      const updatedCustomer = await model.findByIdAndUpdate(
+        customerId,
+        { username, email, phone },
+        { new: true }
+      );
+  
+      if (!updatedCustomer) {
+        return res.status(404).json({ success: false, message: "Customer not found" });
+      }
+  
+      res.json({ success: true, message: "Customer updated", customer: updatedCustomer });
+    } catch (err) {
+      console.error("❌ Error updating customer:", err);
+      res.status(500).json({ success: false, message: "Server error" });
+    }
+  };
+  
 
-module.exports = {createcus, getcustomer};
+
+module.exports = {createcus, getcustomer, updateCustomer};

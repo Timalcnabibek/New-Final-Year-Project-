@@ -1,15 +1,36 @@
 // Global function to update cart count
-function updateCartCount() {
-    const cart = JSON.parse(localStorage.getItem("cartItems")) || [];
-    // Count total quantity across all items
-    const count = cart.reduce((acc, item) => acc + (item.quantity || 1), 0);
-    // Update all cart count elements on the page
-    const cartCountElements = document.querySelectorAll(".cart-count");
-    cartCountElements.forEach(element => {
-        element.textContent = count;
-    });
-    console.log("Cart count updated to:", count);
+// ✅ Updated to count distinct products only
+async function updateCartCount() {
+    const customerId = localStorage.getItem("customerId");
+    if (!customerId) return;
+
+    try {
+        const response = await fetch(`http://localhost:3000/api/cart/${customerId}`);
+        const result = await response.json();
+
+        let cartItems = [];
+
+        if (Array.isArray(result)) {
+            cartItems = result;
+        } else if (result.items) {
+            cartItems = result.items;
+        } else if (result.cart) {
+            cartItems = result.cart;
+        }
+
+        // Store in localStorage for persistence
+        localStorage.setItem("cartItems", JSON.stringify(cartItems));
+
+        // Count total quantity
+// Count number of unique products in cart
+const totalCount = cartItems.length;
+        document.querySelectorAll(".cart-count").forEach(el => el.textContent = totalCount);
+        console.log("🛒 Cart Count Updated:", totalCount);
+    } catch (err) {
+        console.error("Error updating cart count:", err);
+    }
 }
+
 
 // Global function to show notifications
 function showNotification(message, type = 'success') {

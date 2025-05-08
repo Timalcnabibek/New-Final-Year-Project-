@@ -623,7 +623,7 @@
                 <i class="fas fa-shopping-cart"></i>
                 <span class="cart-count" id="cartCount">0</span>
             </a>
-            <a href="#"><i class="fas fa-heart"></i></a>
+            <a href="wishlist.html"><i class="fas fa-heart"></i></a>
             
             <!-- Profile Icon with Dropdown -->
             <div class="profile-dropdown">
@@ -1068,20 +1068,16 @@
             renderProducts(products);
         });
     </script>
-
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const productsGrid = document.getElementById('products-grid');
         const cartCountElement = document.getElementById('cartCount');
         const filterButtons = document.querySelectorAll('.filter-btn');
-    
-        // Function to fetch products from the API
+
         async function fetchProducts(endpoint = 'http://localhost:3000/api/products') {
             try {
                 const response = await fetch(endpoint);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch products');
-                }
+                if (!response.ok) throw new Error('Failed to fetch products');
                 const products = await response.json();
                 return products;
             } catch (error) {
@@ -1090,8 +1086,7 @@
                 return [];
             }
         }
-    
-        // Function to create product card HTML
+
         function createProductCard(product) {
             return `
                 <div class="product-card" data-id="${product._id}">
@@ -1118,52 +1113,40 @@
                 </div>
             `;
         }
-    
-        // Calculate discount percentage
+
         function calculateDiscountPercentage(originalPrice, discountPrice) {
             return Math.round(((originalPrice - discountPrice) / originalPrice) * 100);
         }
-    
-        // Function to render products
-// Function to render products
-function renderProducts(products) {
-    productsGrid.innerHTML = products.map(product => createProductCard(product)).join('');
 
-    document.querySelectorAll('.product-card').forEach(card => {
-        card.addEventListener('click', function (e) {
-            // Prevent redirect if clicking on Add to Cart or Wishlist buttons
-            if (e.target.closest('.product-actions button')) {
-                return;
-            }
+        function renderProducts(products) {
+            productsGrid.innerHTML = products.map(product => createProductCard(product)).join('');
 
-            const productId = this.getAttribute('data-id');
-            const selectedProduct = products.find(p => p._id === productId);
+            document.querySelectorAll('.product-card').forEach(card => {
+                card.addEventListener('click', function (e) {
+                    if (e.target.closest('.product-actions button')) return;
 
-            if (selectedProduct) {
-                const category = selectedProduct.category || "Uncategorized";
-                sessionStorage.setItem("selectedProduct", JSON.stringify(selectedProduct));
-                window.location.href = `products_description.html?productId=${productId}&category=${encodeURIComponent(category)}`;
-            } else {
-                console.warn("⚠️ Product not found in loaded list for ID:", productId);
-                window.location.href = `products_description.html?productId=${productId}`;
-            }
-        });
-    });
-}
+                    const productId = this.getAttribute('data-id');
+                    const selectedProduct = products.find(p => p._id === productId);
 
-    
-        // Function to handle filter button clicks
+                    if (selectedProduct) {
+                        const category = selectedProduct.category || "Uncategorized";
+                        sessionStorage.setItem("selectedProduct", JSON.stringify(selectedProduct));
+                        window.location.href = `products_description.html?productId=${productId}&category=${encodeURIComponent(category)}`;
+                    } else {
+                        console.warn("⚠️ Product not found in loaded list for ID:", productId);
+                        window.location.href = `products_description.html?productId=${productId}`;
+                    }
+                });
+            });
+        }
+
         async function handleFilterClick(event) {
-            // Remove active class from all filter buttons
             filterButtons.forEach(btn => btn.classList.remove('active'));
-            
-            // Add active class to clicked button
             event.target.classList.add('active');
-    
-            // Get the filter type and trim whitespace
+
             const filterType = event.target.textContent.trim().toLowerCase().replace(/\s+/g, '');
-    
             let products = [];
+
             switch(filterType) {
                 case 'all':
                     products = await fetchProducts('http://localhost:3000/api/products');
@@ -1174,57 +1157,48 @@ function renderProducts(products) {
                 default:
                     products = await fetchProducts('http://localhost:3000/api/products');
             }
-    
+
             renderProducts(products);
         }
-    
-        // Cart and Wishlist functionality (unchanged)
+
         window.addToCart = (productId) => {
             const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
-            const existingItem = cartItems.find(item => item.id === productId);
-            
-            if (existingItem) {
-                existingItem.quantity += 1;
-            } else {
+            if (!cartItems.some(item => item.id === productId)) {
                 cartItems.push({ id: productId, quantity: 1 });
+                localStorage.setItem('cartItems', JSON.stringify(cartItems));
+                updateCartCount();
             }
-    
-            localStorage.setItem('cartItems', JSON.stringify(cartItems));
-            updateCartCount();
         };
-    
+
         window.addToWishlist = (productId) => {
             const wishlistItems = JSON.parse(localStorage.getItem('wishlistItems') || '[]');
-            
             if (!wishlistItems.includes(productId)) {
                 wishlistItems.push(productId);
                 localStorage.setItem('wishlistItems', JSON.stringify(wishlistItems));
                 alert('Added to wishlist!');
             }
         };
-    
-        // Update cart count in the navbar
+
         function updateCartCount() {
             const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
-            const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
-            cartCountElement.textContent = totalItems;
+            const distinctCount = cartItems.length; // Count only distinct items
+            document.querySelectorAll(".cart-count").forEach(el => el.textContent = distinctCount);
         }
-    
-        // Add event listeners to filter buttons
+
         filterButtons.forEach(button => {
             button.addEventListener('click', handleFilterClick);
         });
-    
-        // Initial load of products and cart count
+
         async function init() {
             const products = await fetchProducts('http://localhost:3000/api/products');
             renderProducts(products);
             updateCartCount();
         }
-    
+
         init();
     });
-    </script>
+</script>
+
 </body>
 
 </html>

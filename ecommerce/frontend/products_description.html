@@ -25,7 +25,7 @@
         <a href="cart.html" class="cart-icon">
             <i class="fas fa-shopping-cart"></i>
             <span class="cart-count" id="cartCount">0</span>
-        </a>
+          </a>
         <a href="#"><i class="fas fa-heart"></i></a>
         
         <!-- Profile Icon with Dropdown -->
@@ -378,6 +378,46 @@ async function addToCart() {
   }
 }
 
+
+async function addToCartFromSimilar(productId, productName) {
+    const customerId = localStorage.getItem("customerId");
+
+    if (!customerId) {
+        alert("❌ Please log in to add items to cart.");
+        window.location.href = "login.html";
+        return;
+    }
+
+    const requestData = {
+        customerId,
+        productId,
+        quantity: 1
+    };
+
+    try {
+        // Optional: show loading indicator here
+        const response = await fetch("http://localhost:3000/api/cart/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestData),
+        });
+
+        const result = await response.json();
+        console.log("🛒 Cart Response (Similar):", result);
+
+        if (response.ok) {
+            showToast(`✅ ${productName} added to cart!`);
+            fetchCartCount(); // Live update the cart icon count
+        } else {
+            showToast(`❌ Failed to add: ${result.message}`);
+        }
+    } catch (error) {
+        console.error("❌ Error:", error);
+        showToast("❌ Server error. Please try again later.");
+    }
+}
+
+
 function buyNow() {
   const params = new URLSearchParams(window.location.search);
   const productId = params.get("productId");
@@ -491,11 +531,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeProductImages();
   // Use only one method to load product details
   loadProductDetails();
-  
+  fetchCartCount()  
 });// simulatePageLoad();
     </script>
-
-
 
 <script>
 
@@ -552,29 +590,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const featuredTag = index < 2 ? `<div class="product-badge">Featured</div>` : "";
 
     const card = document.createElement("div");
-    card.className = "product-card";
-    card.innerHTML = `
-      ${featuredTag}
-      <div class="product-image">
-        <img src="${product.images?.[0]?.url || 'default.jpg'}" alt="${product.name}">
-      </div>
-      <div class="product-info">
-        <div class="product-category">${product.category || 'Category'}</div>
-        <div class="product-title">${product.name}</div>
-        <div class="product-price">
-          <div class="current-price">$${discountPrice}</div>
-          <div class="original-price">$${originalPrice}</div>
-        </div>
-        <div class="product-actions">
-          <button class="add-to-cart" onclick="goToProduct('${product._id}', '${product.category}')">
-            <i class="fas fa-shopping-cart"></i> Add to Cart
-          </button>
-          <button class="wishlist-btn" onclick="toggleWishlist('${product._id}')">
-            <i class="fas fa-heart"></i>
-          </button>
-        </div>
-      </div>
-    `;
+card.className = "product-card";
+card.innerHTML = `
+  ${featuredTag}
+  <div class="product-image" onclick="goToProduct('${product._id}', '${product.category}')">
+    <img src="${product.images?.[0]?.url || 'default.jpg'}" alt="${product.name}">
+  </div>
+  <div class="product-info">
+    <div class="product-category">${product.category || 'Category'}</div>
+    <div class="product-title" onclick="goToProduct('${product._id}', '${product.category}')">${product.name}</div>
+    <div class="product-price">
+      <div class="current-price">$${discountPrice}</div>
+      <div class="original-price">$${originalPrice}</div>
+    </div>
+    <div class="product-actions">
+      <button class="add-to-cart" onclick="event.stopPropagation(); addToCartFromSimilar('${product._id}', '${product.name}')">
+        <i class="fas fa-shopping-cart"></i> Add to Cart
+      </button>
+      <button class="wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('${product._id}')">
+        <i class="fas fa-heart"></i>
+      </button>
+    </div>
+  </div>
+`;
+
     container.appendChild(card);
   });
 }
@@ -605,9 +644,11 @@ function toggleWishlist(productId) {
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
+                if (data.message === "Product removed from wishlist") {
                     wishlistBtn.classList.remove('active');
                     showToast("Removed from wishlist");
+                } else {
+                    showToast(data.message || "Failed to remove from wishlist");
                 }
             })
             .catch(error => {
@@ -616,7 +657,7 @@ function toggleWishlist(productId) {
             });
         } else {
             // Add to wishlist
-            fetch(`http://localhost:3000/api/wishlist/add`, {
+            fetch(`http://localhost:3000/api/wishlist/addwish`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -628,9 +669,11 @@ function toggleWishlist(productId) {
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
+                if (data.message === "Product added to wishlist") {
                     wishlistBtn.classList.add('active');
                     showToast("Added to wishlist");
+                } else {
+                    showToast(data.message || "Failed to add to wishlist");
                 }
             })
             .catch(error => {
@@ -643,7 +686,6 @@ function toggleWishlist(productId) {
         alert("An error occurred. Please try again.");
     }
 }
-
 function showToast(message) {
     const toast = document.createElement('div');
     toast.textContent = message;
@@ -674,69 +716,6 @@ function goToProduct(productId, category) {
         });
 }
 
-function toggleWishlist(productId) {
-    const wishlistBtn = event.currentTarget;
-    const isCurrentlyInWishlist = wishlistBtn.classList.contains('active');
-
-    try {
-        const customerId = localStorage.getItem("customerId");
-        if (!customerId) {
-            alert("Please log in to add items to wishlist");
-            return;
-        }
-
-        if (isCurrentlyInWishlist) {
-            // Remove from wishlist
-            fetch(`http://localhost:3000/api/wishlist/remove`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    customerId,
-                    productId
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    wishlistBtn.classList.remove('active');
-                    showToast("Removed from wishlist");
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast("Failed to remove from wishlist");
-            });
-        } else {
-            // Add to wishlist
-            fetch(`http://localhost:3000/api/wishlist/add`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    customerId,
-                    productId
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    wishlistBtn.classList.add('active');
-                    showToast("Added to wishlist");
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast("Failed to add to wishlist");
-            });
-        }
-    } catch (error) {
-        console.error('Wishlist error:', error);
-        alert("An error occurred. Please try again.");
-    }
-}
 
 function showToast(message) {
     const toast = document.createElement('div');
@@ -781,6 +760,37 @@ function goToProduct(productId, category) {
         });
 }
 
+// Reuse this function directly
+async function fetchCartCount() {
+    const customerId = localStorage.getItem("customerId");
+    const cartCountElement = document.getElementById("cartCount");
+
+    if (!customerId || !cartCountElement) return;
+
+    try {
+        const res = await fetch(`http://localhost:3000/api/cart/${customerId}`);
+        const data = await res.json();
+
+        let itemCount = 0;
+
+        if (Array.isArray(data)) {
+            itemCount = data.length; // count distinct products
+        } else if (data.cart && Array.isArray(data.cart)) {
+            itemCount = data.cart.length;
+        } else if (data.items && Array.isArray(data.items)) {
+            itemCount = data.items.length;
+        } else {
+            cartCountElement.textContent = "0";
+            return;
+        }
+
+        cartCountElement.textContent = itemCount;
+    } catch (err) {
+        console.error("❌ Error fetching cart count:", err);
+        cartCountElement.textContent = "0";
+    }
+}
+
   
   function goToProduct(productId, category) {
       // Optional: fetch and store the new product's full data in sessionStorage
@@ -795,6 +805,7 @@ function goToProduct(productId, category) {
           });
   }
   </script>
+
 
   <script src="profile.js"></script>
   

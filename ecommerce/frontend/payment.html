@@ -768,7 +768,7 @@ async function fetchActiveRewards(customerId) {
         const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
         let deliveryCharge = deliveryType === "express" ? 300 : 150;
 
-        if (subtotal >= 5000) {
+        if (subtotal >= 15000) {
             deliveryCharge = 0;
         }
     const tax = getNestedProperty(product, 'tax', 50);

@@ -26,8 +26,20 @@
         </div>
         <div class="nav-icons">
             <a href="cart.html" class="cart-icon"><i class="fas fa-shopping-cart"></i><span class="cart-count"></span></a>
-            <a href="#"><i class="fas fa-heart"></i></a>
-            <a href="#"><i class="fas fa-user"></i></a>
+            <a href="wishlist.html"><i class="fas fa-heart"></i></a>
+            <!-- Profile Icon with Dropdown -->
+            <div class="profile-dropdown">
+                <a href="#" class="profile-icon" onclick="toggleDropdown(event)">
+                    <i class="fas fa-user"></i>
+                </a>
+                <div class="dropdown-menu" id="profileDropdown">
+                    <a href="profile.html">My Profile</a>
+                    <a href="orders.html">My Orders</a>
+                    <a href="loyalty.html">🎉 Loyalty Program</a> <!-- New Option -->
+                    <a href="settings.html">Settings</a>
+                    <a href="#" onclick="logout()">Logout</a>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -154,5 +166,6 @@
     </footer>
 
     <script src="womens.js"></script>
+    <script src="profile.js"></script>
 </body>
 </html>
