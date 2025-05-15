@@ -24,21 +24,29 @@ predict_bp = Blueprint('predict', __name__)
 # Load environment variables
 load_dotenv()
 
+
+
+
+
+from bson import ObjectId
+from datetime import datetime
+
 def convert_object_ids(data):
-    """Convert MongoDB ObjectId objects to strings in a data structure."""
+    """Recursively converts ObjectId and datetime in dicts/lists."""
     if isinstance(data, list):
         return [convert_object_ids(item) for item in data]
     elif isinstance(data, dict):
-        for key in data.keys():
-            if isinstance(data[key], ObjectId):
-                data[key] = str(data[key])
-            elif isinstance(data[key], list):
-                data[key] = [convert_object_ids(item) for item in data[key]]
-            elif isinstance(data[key], dict):
-                data[key] = convert_object_ids(data[key])
-        return data
+        converted = {}
+        for key, value in data.items():
+            converted[key] = convert_object_ids(value)
+        return converted
+    elif isinstance(data, ObjectId):
+        return str(data)
+    elif isinstance(data, datetime):
+        return data.isoformat()
     else:
         return data
+
     
 
 
@@ -53,6 +61,17 @@ def serialize(value):
         return {k: serialize(v) for k, v in value.items()}
     else:
         return value
+
+
+
+# Custom JSON encoder to handle ObjectId
+class JSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, ObjectId):
+            return str(obj)
+        if isinstance(obj, datetime):
+            return obj.strftime('%Y-%m-%d')
+        return json.JSONEncoder.default(self, obj)
 
 
 app = Flask(__name__, static_folder="static")
@@ -136,7 +155,6 @@ if customers_collection.count_documents({}) == 0:
     customers_collection.insert_many(sample_customers)
 
 
-
 @app.route('/customer')
 def new_page():
     try:
@@ -147,13 +165,26 @@ def new_page():
         
         # Get the most recent 5 customers
         recent_customers = list(customers_collection.find().sort("createdAt", -1).limit(5))
-        recent_customers = convert_object_ids(recent_customers)  # Add this line
+        recent_customers = convert_object_ids(recent_customers)  # Convert ObjectIDs to strings
         
         for customer in recent_customers:
+            # Check if createdAt is a string and convert it properly if needed
             if 'createdAt' in customer:
-                customer['createdAt'] = customer['createdAt'].strftime('%Y-%m-%d')
+                if isinstance(customer['createdAt'], str):
+                    # If it's already a string, format it or leave as is
+                    pass
+                else:
+                    # If it's a datetime object, use strftime
+                    customer['createdAt'] = customer['createdAt'].strftime('%Y-%m-%d')
+                    
+            # Same check for updatedAt
             if 'updatedAt' in customer:
-                customer['updatedAt'] = customer['updatedAt'].strftime('%Y-%m-%d')
+                if isinstance(customer['updatedAt'], str):
+                    # If it's already a string, format it or leave as is
+                    pass
+                else:
+                    # If it's a datetime object, use strftime
+                    customer['updatedAt'] = customer['updatedAt'].strftime('%Y-%m-%d')
         
         # Generate monthly data for customer growth chart
         months = []
@@ -236,31 +267,49 @@ def login_sign_page():
 @app.route('/api/customers', methods=['GET'])
 def get_customers():
     try:
-        customers = list(customers_collection.find().sort("createdAt", -1))
-        customers = convert_object_ids(customers)  # Add this line
+        # Get all customers with proper field projections to match Node.js schema
+        pipeline = [
+            {
+                "$project": {
+                    "username": 1,
+                    "email": 1,
+                    "phone": 1,
+                    "isVerified": 1,
+                    "status": {"$ifNull": ["$status", "Active"]},  # Default if missing
+                    "loyaltyPoints": {"$ifNull": ["$loyaltyPoints", 0]},  # Default if missing
+                    "total_spent": {"$ifNull": ["$total_spent", 0]},
+                    "registration_date": {"$ifNull": ["$registration_date", "$createdAt"]},
+                    "wishlist": {"$ifNull": ["$wishlist", []]},
+                    "cart": {"$ifNull": ["$cart", []]},
+                    "createdAt": 1,
+                    "updatedAt": 1,
+                    # Exclude password and sensitive fields
+                }
+            },
+            {"$sort": {"createdAt": -1}}
+        ]
         
-        # Format dates (keep this part)
-        for customer in customers:
-            if 'createdAt' in customer:
-                customer['createdAt'] = customer['createdAt'].strftime('%Y-%m-%d')
-            if 'updatedAt' in customer:
-                customer['updatedAt'] = customer['updatedAt'].strftime('%Y-%m-%d')
-            if 'otpExpiration' in customer and customer['otpExpiration']:
-                customer['otpExpiration'] = customer['otpExpiration'].strftime('%Y-%m-%d %H:%M:%S')
+        customers = list(customers_collection.aggregate(pipeline))
         
-        # Remove this section since the convert_object_ids function will handle all ObjectIds
-        # if 'wishlist' in customer:
-        #     customer['wishlist'] = [str(product_id) for product_id in customer['wishlist']]
-        # if 'cart' in customer:
-        #     for item in customer['cart']:
-        #         if 'productId' in item:
-        #             item['productId'] = str(item['productId'])
+        # Use the convert_object_ids function to properly serialize MongoDB objects
+        serialized_customers = convert_object_ids(customers)
         
-        return jsonify({"success": True, "customers": customers})
-    
+        # Debug: Print first customer (with sensitive data removed)
+        if serialized_customers and len(serialized_customers) > 0:
+            debug_customer = serialized_customers[0].copy()
+            if 'password' in debug_customer:
+                debug_customer['password'] = '[REDACTED]'
+            print(f"Sample customer data: {debug_customer}")
+        
+        return jsonify({"success": True, "customers": serialized_customers})
     except Exception as e:
         print(f"Error in get_customers API: {str(e)}")
+        # Print stack trace for debugging
+        import traceback
+        traceback.print_exc()
         return jsonify({"success": False, "message": str(e)}), 500
+
+
     
 @app.route('/api/customers', methods=['POST'])
 def add_customer():
@@ -329,6 +378,9 @@ def delete_customer(id):
     except Exception as e:
         print(f"Error in delete_customer API: {str(e)}")
         return jsonify({"success": False, "message": str(e)}), 500
+
+
+
 
 @app.route('/api/metrics', methods=['GET'])
 def get_metrics():
@@ -1748,6 +1800,260 @@ def get_combined_forecast():
         return jsonify({"error": str(e)}), 500
 
 
+
+
+
+@app.route('/api/sales-data', methods=['GET'])
+def get_sales_data():
+    """
+    API endpoint to get combined historical sales data and forecast
+    
+    Query Parameters:
+    - days_history: Number of historical days to fetch (default: 30)
+    - days_forecast: Number of forecast days to generate (default: 14)
+    - view: Type of data to return - 'all', 'historical', 'forecast' (default: 'all')
+    
+    Returns:
+    - Historical sales data
+    - Forecasted sales data
+    - Order counts for both historical and forecast periods
+    """
+    try:
+        # Parse query parameters
+        days_history = int(request.args.get('days_history', 30))
+        days_forecast = int(request.args.get('days_forecast', 14))
+        view_type = request.args.get('view', 'all')  # 'all', 'historical', 'forecast'
+        
+        # Calculate date ranges
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days_history)
+        
+        # Get historical data from MongoDB
+        # 1. From CSV_products collection
+        csv_products = list(db.CSV_products.find(
+            {"sales_date": {"$gte": start_date}},
+            {'sales_volume': 1, 'sales_date': 1, '_id': 0}
+        ))
+        
+        csv_sales = [
+            {
+                "sales_date": pd.to_datetime(doc["sales_date"]),
+                "sales_volume": doc["sales_volume"]
+            }
+            for doc in csv_products if "sales_date" in doc and "sales_volume" in doc
+        ]
+        
+        # 2. From orders collection
+        orders = list(orders_collection.find(
+            {"orderedAt": {"$gte": start_date}},
+            {"products": 1, "orderedAt": 1, "_id": 0}
+        ))
+        
+        order_sales = []
+        order_counts_by_date = {}  # Track order counts by date
+        
+        for order in orders:
+            order_date = order.get("orderedAt")
+            if order_date:
+                # Convert to datetime object for consistent formatting
+                order_date_dt = pd.to_datetime(order_date)
+                date_key = order_date_dt.strftime('%Y-%m-%d')
+                
+                # Count orders
+                if date_key in order_counts_by_date:
+                    order_counts_by_date[date_key] += 1
+                else:
+                    order_counts_by_date[date_key] = 1
+                
+                # Track sales volumes
+                for item in order.get("products", []):
+                    quantity = item.get("quantity", 0)
+                    order_sales.append({
+                        "sales_date": order_date_dt,
+                        "sales_volume": quantity
+                    })
+        
+        # Combine historical data
+        all_sales = pd.DataFrame(csv_sales + order_sales)
+        
+        # Group by date and sum sales volume
+        if not all_sales.empty:
+            daily_sales = all_sales.groupby("sales_date")["sales_volume"].sum().reset_index()
+            
+            # Create order counts dataframe
+            order_counts_df = pd.DataFrame([
+                {"sales_date": pd.to_datetime(date), "order_count": count}
+                for date, count in order_counts_by_date.items()
+            ])
+            
+            # Merge sales and order counts
+            historical_df = pd.merge(
+                daily_sales, 
+                order_counts_df, 
+                on="sales_date", 
+                how="left"
+            ).fillna(0)
+        else:
+            # Create empty dataframe if no data found
+            historical_df = pd.DataFrame(columns=["sales_date", "sales_volume", "order_count"])
+        
+        # Format historical data for API response
+        historical_data = []
+        for _, row in historical_df.iterrows():
+            historical_data.append({
+                "date": row["sales_date"].strftime('%Y-%m-%d'),
+                "sales": float(row["sales_volume"]),
+                "orders": int(row["order_count"]) if "order_count" in row else 0
+            })
+            
+        # Generate forecast if requested
+        forecast_data = []
+        if view_type in ['all', 'forecast']:
+            # We need more historical data for forecasting than just what we display
+            # So get all available data for the model
+            all_historical_sales = all_sales.copy()
+            if not all_historical_sales.empty:
+                # Process for forecasting
+                processed_data = prepare_data(all_historical_sales.groupby("sales_date")["sales_volume"].sum().reset_index())
+                forecast_result = generate_forecast(processed_data, days=days_forecast)
+                
+                # Calculate average order size for order count prediction
+                avg_order_size = None
+                if len(order_counts_df) > 0:
+                    merged_data = pd.merge(
+                        daily_sales, 
+                        order_counts_df, 
+                        on="sales_date", 
+                        how="left"
+                    ).fillna(0)
+                    
+                    recent_data = merged_data.tail(30)
+                    total_items = recent_data["sales_volume"].sum()
+                    total_orders = recent_data["order_count"].sum()
+                    
+                    if total_orders > 0:
+                        avg_order_size = total_items / total_orders
+                    else:
+                        avg_order_size = 3.0  # Default assumption
+                else:
+                    avg_order_size = 3.0
+                
+                # Format forecast data
+                for _, row in forecast_result.iterrows():
+                    sales_forecast = float(round(row["Forecasted_Sales"], 2))
+                    order_forecast = round(sales_forecast / avg_order_size) if avg_order_size else 0
+                    
+                    forecast_data.append({
+                        "date": row["Date"].strftime('%Y-%m-%d'),
+                        "sales": sales_forecast,
+                        "orders": int(order_forecast)
+                    })
+        
+        # Prepare the response based on the requested view
+        response = {
+            "success": True,
+            "metrics": {
+                "total_historical_days": len(historical_data),
+                "total_forecast_days": len(forecast_data)
+            }
+        }
+        
+        if view_type in ['all', 'historical']:
+            response["historical"] = historical_data
+            
+        if view_type in ['all', 'forecast']:
+            response["forecast"] = forecast_data
+            
+        return jsonify(response)
+    
+    except Exception as e:
+        print(f"❌ Sales Data API Error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# Frontend API that combines both historical and forecast data for the chart
+@app.route('/api/chart-data', methods=['GET'])
+def get_chart_data():
+    """
+    API endpoint to get data formatted specifically for the sales chart
+    
+    Query Parameters:
+    - days_history: Number of historical days to fetch (default: 30)
+    - days_forecast: Number of forecast days to generate (default: 14)
+    - view: Type of data to return - 'combined', 'historical', 'forecast' (default: 'combined')
+    
+    Returns:
+    - Data formatted for the chart component
+    """
+    try:
+        # Forward the request to the sales-data API internally
+        days_history = request.args.get('days_history', 30)
+        days_forecast = request.args.get('days_forecast', 14)
+        
+        # Call the main API function directly to avoid HTTP overhead
+        sales_response = get_sales_data()
+        
+        # Parse the response
+        sales_data = json.loads(sales_response.data)
+        
+        if not sales_data.get("success", False):
+            return jsonify({"success": False, "error": "Failed to fetch sales data"}), 500
+            
+        # Process the data for the chart
+        chart_data = {
+            "success": True,
+            "labels": [],
+            "datasets": [
+                {
+                    "label": "Historical Sales",
+                    "data": [],
+                    "borderColor": "rgba(95, 145, 255, 1)",
+                    "backgroundColor": "rgba(95, 145, 255, 0.3)",
+                    "fill": True
+                },
+                {
+                    "label": "Forecasted Sales",
+                    "data": [],
+                    "borderColor": "rgba(186, 85, 211, 1)",
+                    "backgroundColor": "rgba(186, 85, 211, 0.3)",
+                    "borderDash": [5, 5],
+                    "fill": True
+                }
+            ]
+        }
+        
+        # Add historical data
+        if "historical" in sales_data:
+            for item in sales_data["historical"]:
+                # We'll use a placeholder for the forecasted values during historical period
+                chart_data["labels"].append(item["date"])
+                chart_data["datasets"][0]["data"].append(item["sales"])
+                chart_data["datasets"][1]["data"].append(None)  # No forecast for historical dates
+        
+        # Add forecast data
+        if "forecast" in sales_data:
+            historical_end_value = None
+            if chart_data["datasets"][0]["data"]:
+                historical_end_value = chart_data["datasets"][0]["data"][-1]
+            
+            for i, item in enumerate(sales_data["forecast"]):
+                chart_data["labels"].append(item["date"])
+                
+                # For the combined view, we show the forecast continuing from historical
+                if i == 0 and historical_end_value is not None:
+                    chart_data["datasets"][0]["data"].append(historical_end_value)
+                else:
+                    chart_data["datasets"][0]["data"].append(None)  # No historical data for forecast dates
+                
+                chart_data["datasets"][1]["data"].append(item["sales"])
+        
+        # Add additional metrics
+        chart_data["metrics"] = sales_data.get("metrics", {})
+            
+        return jsonify(chart_data)
+    
+    except Exception as e:
+        print(f"❌ Chart Data API Error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 #api routes for reward section
