@@ -338,7 +338,12 @@ async function removeFromWishlist(productId, productName) {
 function attachProductEventListeners() {
     // Add to cart buttons
     document.querySelectorAll(".add-to-cart").forEach(button => {
-        button.addEventListener("click", function(e) {
+        // Clone the node to remove previous listeners
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+    
+        newButton.addEventListener("click", function(e) {
+    
             e.stopPropagation(); // Prevent card click event
             
             const card = this.closest(".product-card");
@@ -352,41 +357,42 @@ function attachProductEventListeners() {
     });
 
     // Wishlist buttons
-    document.querySelectorAll(".wishlist-btn").forEach(button => {
-        button.addEventListener("click", function(e) {
-            e.stopPropagation(); // Prevent card click event
-            
-            const card = this.closest(".product-card");
-            const productId = card?.getAttribute("data-id");
-            const productName = card?.querySelector(".product-title")?.innerText || "Product";
-            
-            if (!productId) return;
+// Wishlist buttons
+document.querySelectorAll(".wishlist-btn").forEach(button => {
+    const newButton = button.cloneNode(true); // ✅ Clone to remove old listeners
+    button.parentNode.replaceChild(newButton, button);
 
-            const isAlreadyInWishlist = this.querySelector("i").classList.contains("fas");
-            
-            if (isAlreadyInWishlist) {
-                // Remove from wishlist
-                removeFromWishlist(productId, productName).then(success => {
-                    if (success) {
-                        // Update button visual state to "not in wishlist"
-                        this.innerHTML = '<i class="far fa-heart"></i>';
-                        this.style.backgroundColor = "";
-                        this.style.color = "";
-                    }
-                });
-            } else {
-                // Add to wishlist
-                addToWishlist(productId, productName).then(success => {
-                    if (success) {
-                        // Update button visual state to "in wishlist"
-                        this.innerHTML = '<i class="fas fa-heart"></i>';
-                        this.style.backgroundColor = "#fee2e2";
-                        this.style.color = "#ef4444";
-                    }
-                });
-            }
-        });
+    newButton.addEventListener("click", function(e) {
+        e.stopPropagation();
+        
+        const card = this.closest(".product-card");
+        const productId = card?.getAttribute("data-id");
+        const productName = card?.querySelector(".product-title")?.innerText || "Product";
+        
+        if (!productId) return;
+
+        const isAlreadyInWishlist = this.querySelector("i").classList.contains("fas");
+
+        if (isAlreadyInWishlist) {
+            removeFromWishlist(productId, productName).then(success => {
+                if (success) {
+                    this.innerHTML = '<i class="far fa-heart"></i>';
+                    this.style.backgroundColor = "";
+                    this.style.color = "";
+                }
+            });
+        } else {
+            addToWishlist(productId, productName).then(success => {
+                if (success) {
+                    this.innerHTML = '<i class="fas fa-heart"></i>';
+                    this.style.backgroundColor = "#fee2e2";
+                    this.style.color = "#ef4444";
+                }
+            });
+        }
     });
+});
+
 
     // Product card click (product details page navigation)
     document.querySelectorAll(".product-card").forEach(card => {
@@ -552,3 +558,4 @@ window.addToCart = addToCart;
 window.addToWishlist = addToWishlist;
 window.removeFromWishlist = removeFromWishlist;
 window.logout = logout;
+

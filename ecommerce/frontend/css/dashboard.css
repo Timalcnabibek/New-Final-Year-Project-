@@ -43,6 +43,8 @@ body {
     color: #3b82f6;
     font-weight: 700;
     letter-spacing: -0.5px;
+    text-decoration: none;
+    text-underline-offset: none;
 }
 
 .navbar .menu {
@@ -57,6 +59,10 @@ body {
     font-weight: 500;
     transition: color 0.3s ease;
     position: relative;
+}
+
+.navbar a {
+    text-decoration: none; 
 }
 
 .navbar .menu a:hover {

@@ -3,7 +3,6 @@ const router = express.Router();
 const { initializeKhaltiPayment, verifyKhaltiPayment } = require("./khalti");
 const Payment = require("../model/paymentModel");
 const PurchasedItem = require("../model/purchcaseditemmodel");
-const Item = require("../model/itemmodel");
 const mongoose = require("mongoose");
 const productModel = require("../model/products");
 const Order = require("../model/order");

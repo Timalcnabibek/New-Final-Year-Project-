@@ -56,6 +56,9 @@ body {
     box-shadow: var(--shadow-md);
 }
 
+.navbar a{
+    text-decoration: none;
+}
 .logo a {
     text-decoration: none;
     display: flex;

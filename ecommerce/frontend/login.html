@@ -4,6 +4,86 @@
     <title>Login Page</title>
     <link rel="stylesheet" href="./css/login.css">
     <link rel="stylesheet" href="./css/loading.css">
+    <style>
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+        }
+        
+        .modal-title {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            color: #333;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 22px;
+            cursor: pointer;
+            color: #777;
+        }
+        
+        .close-modal:hover {
+            color: #333;
+        }
+        
+        .reset-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* OTP input styling */
+        .otp-group input {
+            letter-spacing: 8px;
+            font-size: 18px;
+            text-align: center;
+        }
+        
+        /* Multi-step form styling */
+        .reset-step {
+            display: none;
+        }
+        
+        .active-step {
+            display: block;
+        }
+    </style>
 </head>
 <body>
     <div class="login-container">
@@ -18,7 +98,7 @@
                 <input type="password" id="password" required>
             </div>
             <div class="forgot-password">
-                <a href="#">Forgot Password?</a>
+                <a href="#" id="forgot-password-link">Forgot Password?</a>
             </div>
             <div class="action-row">
                 <div class="create-account">
@@ -32,6 +112,57 @@
         </form>
     </div>
 
+    <!-- Forgot Password Modal -->
+    <div id="forgot-password-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-modal">&times;</span>
+            <h3 class="modal-title">Reset Your Password</h3>
+            
+            <!-- Step 1: Email Form -->
+            <div id="step-email" class="reset-step active-step">
+                <p>Enter your email address below and we'll send you a verification code.</p>
+                <form id="reset-email-form">
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="reset-email" required>
+                    </div>
+                    <button type="submit" class="next-button">Send OTP</button>
+                    <div id="email-message" class="reset-message"></div>
+                </form>
+            </div>
+            
+            <!-- Step 2: OTP Verification -->
+            <div id="step-otp" class="reset-step">
+                <p>Enter the 6-digit verification code sent to your email.</p>
+                <form id="verify-otp-form">
+                    <div class="form-group otp-group">
+                        <label>Verification Code</label>
+                        <input type="text" id="otp-input" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric">
+                    </div>
+                    <button type="submit" class="next-button">Verify OTP</button>
+                    <div id="otp-message" class="reset-message"></div>
+                </form>
+            </div>
+            
+            <!-- Step 3: New Password -->
+            <div id="step-new-password" class="reset-step">
+                <p>Set your new password.</p>
+                <form id="new-password-form">
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" id="new-password" required minlength="8">
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <input type="password" id="confirm-password" required minlength="8">
+                    </div>
+                    <button type="submit" class="next-button">Reset Password</button>
+                    <div id="password-message" class="reset-message"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div class="load-wrapp">
         <div class="load-9">
             <p>Please wait...</p>
@@ -43,74 +174,309 @@
     </div>
 
     <script>
-const loader = document.querySelector('.load-wrapp');
+        const loader = document.querySelector('.load-wrapp');
+        const modal = document.getElementById('forgot-password-modal');
+        let userEmail = '';
+        let otpToken = '';
 
-function showLoader() {
-    loader.style.display = 'flex';
-}
+        function showLoader() {
+            loader.style.display = 'flex';
+        }
 
-function hideLoader() {
-    loader.style.display = 'none';
-}
+        function hideLoader() {
+            loader.style.display = 'none';
+        }
 
-// Add an event listener to the login form
-document.getElementById("signup-form").addEventListener("submit", async (e) => {
-    e.preventDefault(); // Prevent the form from refreshing the page
+        // Initially hide loader
+        hideLoader();
 
-    // Show loader before API call
-    showLoader();
+        // Function to show step and hide others
+        function showStep(stepId) {
+            document.querySelectorAll('.reset-step').forEach(step => {
+                step.classList.remove('active-step');
+            });
+            document.getElementById(stepId).classList.add('active-step');
+        }
 
-    // Collect form data
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+        // Function to reset the password flow
+        function resetPasswordFlow() {
+            showStep('step-email');
+            document.querySelectorAll('.reset-message').forEach(msg => {
+                msg.style.display = 'none';
+                msg.textContent = '';
+                msg.className = 'reset-message';
+            });
+            document.getElementById('reset-email-form').reset();
+            document.getElementById('verify-otp-form').reset();
+            document.getElementById('new-password-form').reset();
+            userEmail = '';
+            otpToken = '';
+        }
 
-    try {
-        const response = await fetch("http://localhost:3000/api/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email, password }),
+        // Modal functionality
+        document.getElementById('forgot-password-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            modal.style.display = 'flex';
+            resetPasswordFlow();
+            
+            // Pre-fill with email if it exists in the login form
+            const loginEmail = document.getElementById('email').value;
+            if (loginEmail) {
+                document.getElementById('reset-email').value = loginEmail;
+            }
         });
 
-        // Handle the response
+        document.getElementById('close-modal').addEventListener('click', function() {
+            modal.style.display = 'none';
+            resetPasswordFlow();
+        });
+
+        // Close modal when clicking outside of it
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+                resetPasswordFlow();
+            }
+        });
+
+        // Step 1: Request OTP
+        document.getElementById('reset-email-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('reset-email').value;
+            const emailMessage = document.getElementById('email-message');
+            emailMessage.style.display = 'none';
+            
+            showLoader();
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/reset-password/request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email }),
+                });
+                
+                const data = await response.json();
+                
+                emailMessage.style.display = 'block';
+                
+                if (response.ok) {
+                    userEmail = email; // Store email for later steps
+                    emailMessage.textContent = 'Verification code sent to your email.';
+                    emailMessage.className = 'reset-message success';
+                    
+                    // Move to OTP verification step
+                    setTimeout(() => {
+                        showStep('step-otp');
+                        emailMessage.style.display = 'none';
+                    }, 1500);
+                } else {
+                    emailMessage.textContent = data.message || 'Failed to send verification code. Please try again.';
+                    emailMessage.className = 'reset-message error';
+                }
+            } catch (error) {
+                console.error('Error connecting to the server:', error);
+                emailMessage.textContent = 'Server connection error. Please try again later.';
+                emailMessage.className = 'reset-message error';
+                emailMessage.style.display = 'block';
+            } finally {
+                hideLoader();
+            }
+        });
+
+        // Step 2: Verify OTP
+        // Step 2: Verify OTP
+document.getElementById('verify-otp-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const otp = document.getElementById('otp-input').value;
+    const otpMessage = document.getElementById('otp-message');
+    otpMessage.style.display = 'none';
+
+    if (!/^\d{6}$/.test(otp)) {
+        otpMessage.textContent = 'Please enter a valid 6-digit code.';
+        otpMessage.className = 'reset-message error';
+        otpMessage.style.display = 'block';
+        return;
+    }
+
+    showLoader();
+
+    try {
+        const response = await fetch('http://localhost:3000/api/reset-password/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: userEmail,
+                otp: otp
+            }),
+        });
+
         const data = await response.json();
+        otpMessage.style.display = 'block';
+
         if (response.ok) {
-            localStorage.clear();
-            // ✅ Store customerId, token, and email in localStorage
-            localStorage.setItem("token", data.token);  // Store JWT token
-            localStorage.setItem("customerId", data.customerId);  // Store customerId
-            localStorage.setItem("userEmail", data.email);  // Store email
-            localStorage.setItem("username", data.username);  // Store username
+            otpToken = otp;  // Store for final step
+            otpMessage.textContent = 'OTP verified successfully.';
+            otpMessage.className = 'reset-message success';
 
-            await swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: 'Login successful!',
-                timer: 1400,
-                showConfirmButton: false
-            });
-
-            window.location.href = "./dashboard.html";  // Redirect to dashboard
+            setTimeout(() => {
+                showStep('step-new-password');
+                otpMessage.style.display = 'none';
+            }, 1500);
         } else {
-            await swal.fire({
-                icon: 'error',
-                title: 'Login Failed',
-                text: data.message || "An error occurred during login. Please try again later.",
-            });
+            otpMessage.textContent = data.message || 'Invalid verification code. Please try again.';
+            otpMessage.className = 'reset-message error';
         }
     } catch (error) {
-        console.error("Error connecting to the server:", error);
-        alert("An error occurred. Please try again later.");
+        console.error('Error verifying OTP:', error);
+        otpMessage.textContent = 'Server connection error. Please try again.';
+        otpMessage.className = 'reset-message error';
+        otpMessage.style.display = 'block';
     } finally {
-        // Hide loader after API call completes (success or error)
         hideLoader();
     }
 });
 
+
+        // Step 3: Set new password
+        document.getElementById('new-password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const passwordMessage = document.getElementById('password-message');
+            passwordMessage.style.display = 'none';
+            
+            // Password validation
+            if (newPassword.length < 8) {
+                passwordMessage.textContent = 'Password must be at least 8 characters long.';
+                passwordMessage.className = 'reset-message error';
+                passwordMessage.style.display = 'block';
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                passwordMessage.textContent = 'Passwords do not match.';
+                passwordMessage.className = 'reset-message error';
+                passwordMessage.style.display = 'block';
+                return;
+            }
+            
+            showLoader();
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/reset-password/confirm', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        email: userEmail,
+                        otp: otpToken,
+                        newPassword: newPassword
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Show success with SweetAlert
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Password Reset Successful',
+                        text: 'Your password has been reset successfully. You can now log in with your new password.',
+                        confirmButtonText: 'Log In'
+                    });
+                    
+                    // Close modal and reset form
+                    modal.style.display = 'none';
+                    resetPasswordFlow();
+                    
+                    // Fill the email field in the login form
+                    document.getElementById('email').value = userEmail;
+                    document.getElementById('password').focus();
+                } else {
+                    passwordMessage.textContent = data.message || 'Failed to reset password. Please try again.';
+                    passwordMessage.className = 'reset-message error';
+                    passwordMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error connecting to the server:', error);
+                passwordMessage.textContent = 'Server connection error. Please try again later.';
+                passwordMessage.className = 'reset-message error';
+                passwordMessage.style.display = 'block';
+            } finally {
+                hideLoader();
+            }
+        });
+
+        // Add an event listener to the login form
+        document.getElementById("signup-form").addEventListener("submit", async (e) => {
+            e.preventDefault(); // Prevent the form from refreshing the page
+            
+            // Show loader before API call
+            showLoader();
+
+            // Collect form data
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            try {
+                const response = await fetch("http://localhost:3000/api/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                // Handle the response
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.clear();
+                    // ✅ Store customerId, token, and email in localStorage
+                    localStorage.setItem("token", data.token); // Store JWT token
+                    localStorage.setItem("customerId", data.customerId); // Store customerId
+                    localStorage.setItem("userEmail", data.email); // Store email
+                    localStorage.setItem("username", data.username); // Store username
+                    
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Login successful!',
+                        timer: 1400,
+                        showConfirmButton: false
+                    });
+                    
+                    window.location.href = "./dashboard.html"; // Redirect to dashboard
+                } else {
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Login Failed',
+                        text: data.message || "An error occurred during login. Please try again later.",
+                    });
+                }
+            } catch (error) {
+                console.error("Error connecting to the server:", error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Connection Error',
+                    text: "Unable to connect to the server. Please check your internet connection and try again.",
+                });
+            } finally {
+                // Hide loader after API call completes (success or error)
+                hideLoader();
+            }
+        });
+
+        // Format OTP input to only accept numbers
+        document.getElementById('otp-input').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
     </script>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>

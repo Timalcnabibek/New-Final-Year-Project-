@@ -6,6 +6,7 @@
     <title>Product Page</title>
     <link rel="stylesheet" href="./css/product_description.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </head>
 <body>
@@ -26,7 +27,7 @@
             <i class="fas fa-shopping-cart"></i>
             <span class="cart-count" id="cartCount">0</span>
           </a>
-        <a href="#"><i class="fas fa-heart"></i></a>
+        <a href="wishlist.html"><i class="fas fa-heart"></i></a>
         
         <!-- Profile Icon with Dropdown -->
         <div class="profile-dropdown">
@@ -804,6 +805,51 @@ async function fetchCartCount() {
               console.error("Failed to load product:", err);
           });
   }
+
+
+  function logout(event) {
+    // Prevent <a href="#"> from causing a page jump
+    if (event) event.preventDefault();
+    
+    // Check if SweetAlert is available
+    if (typeof Swal !== 'undefined') {
+        // Use SweetAlert for confirmation
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You will be logged out of your account.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, log me out",
+            cancelButtonText: "Cancel"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.removeItem("customerId");
+                localStorage.removeItem("token");
+
+                Swal.fire({
+                    title: "Logged Out!",
+                    text: "You have been successfully logged out.",
+                    icon: "success",
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+                setTimeout(() => {
+                    window.location.href = "login.html";
+                }, 2000);
+            }
+        });
+    } else {
+        // Fallback to regular confirm if SweetAlert is not available
+        if (confirm("Are you sure you want to log out?")) {
+            localStorage.removeItem("customerId");
+            localStorage.removeItem("token");
+            window.location.href = "login.html";
+        }
+    }
+}
   </script>
 
 

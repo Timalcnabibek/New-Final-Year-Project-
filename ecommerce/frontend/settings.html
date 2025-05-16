@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Settings | StyleHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f8f9fa;
+      color: #333;
+      line-height: 1.6;
+      padding: 40px;
+    }
+
+    /* Navbar Styling */
+    .navbar {
+      width: 100%;
+      background-color: rgba(255, 255, 255, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 5%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .navbar .logo {
+      font-size: 24px;
+      color: #3b82f6;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .navbar .menu {
+      display: flex;
+      gap: 10px;
+    }
+
+    .navbar .menu a {
+      color: #4b5563;
+      text-decoration: none;
+      margin: 0 15px;
+      font-weight: 500;
+      transition: color 0.3s ease;
+      position: relative;
+    }
+
+    .navbar .menu a:hover {
+      color: #3b82f6;
+    }
+
+    .navbar .menu a::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -5px;
+      left: 0;
+      background-color: #3b82f6;
+      transition: width 0.3s ease;
+    }
+
+    .navbar .menu a:hover::after {
+      width: 100%;
+    }
+
+    .navbar .search {
+      position: relative;
+      width: 300px;
+    }
+
+    .navbar .search input {
+      width: 100%;
+      padding: 10px 40px 10px 15px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      background-color: #f3f4f6;
+      transition: all 0.3s ease;
+    }
+
+    .navbar .search input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      background-color: #fff;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+    }
+
+    .navbar .search::after {
+      content: '\f002';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+    }
+
+    .navbar .settings {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .navbar a{
+      text-decoration:none;
+    }
+
+    .navbar .settings a {
+      color: #4b5563;
+      text-decoration: none;
+      font-size: 20px;
+      transition: color 0.3s ease;
+      position: relative;
+    }
+
+    .navbar .settings a:hover {
+      color: #3b82f6;
+    }
+
+    .profile-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 40px;
+      background: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      width: 180px;
+      z-index: 10;
+    }
+
+    .dropdown-menu a {
+      display: block;
+      padding: 12px 15px;
+      text-decoration: none;
+      color: #333;
+      transition: background 0.3s ease;
+    }
+
+    .dropdown-menu a:hover {
+      background: #f5f5f5;
+    }
+
+    .profile-icon {
+      cursor: pointer;
+    }
+
+    .cart-icon {
+      position: relative;
+    }
+
+    .cart-count {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background-color: #ef4444;
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .settings-container {
+      max-width: 400px;
+      margin: 120px auto 0;
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    form label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    form input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    form button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    form button:hover {
+      background-color: #0056b3;
+    }
+
+    #statusMessage {
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    .password-field-container {
+      position: relative;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #777;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-color);
+    }
+
+    .password-strength {
+      margin-top: 8px;
+      height: 5px;
+      background-color: #e0e0e0;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .password-strength-meter {
+      height: 100%;
+      width: 0%;
+      transition: all 0.3s ease;
+    }
+
+    .password-feedback {
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    .weak {
+      background-color: var(--danger-color);
+    }
+
+    .medium {
+      background-color: orange;
+    }
+
+    .strong {
+      background-color: var(--success-color);
+    }
+
+    .alert {
+      padding: 12px 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .alert-success {
+      background-color: rgba(76, 175, 80, 0.1);
+      border: 1px solid rgba(76, 175, 80, 0.3);
+      color: var(--success-color);
+    }
+
+    .alert-danger {
+      background-color: rgba(244, 67, 54, 0.1);
+      border: 1px solid rgba(244, 67, 54, 0.3);
+      color: var(--danger-color);
+    }
+
+    @media (max-width: 768px) {
+      .settings-container {
+        flex-direction: column;
+      }
+      
+      .sidebar {
+        max-width: 100%;
+        margin-bottom: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <a href="dashboard.html"><div class="logo">StyleHub</div></a>
+    <div class="menu">
+      <a href="dashboard.html">Home</a>
+      <a href="viewall.html">Shop</a>
+      <a href="mens.html">Men</a>
+      <a href="women.html">Women</a>
+    </div>
+    <div class="search">
+      <input type="text" placeholder="Search for products...">
+    </div>
+    <div class="settings">
+      <a href="cart.html" class="cart-icon">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-count" id="cartCount">0</span>
+      </a>
+      <a href="wishlist.html"><i class="fas fa-heart"></i></a>
+      
+      <!-- Profile Icon with Dropdown -->
+      <div class="profile-dropdown">
+        <a href="#" class="profile-icon" id="profileIcon">
+          <i class="fas fa-user"></i>
+        </a>
+        <div class="dropdown-menu" id="profileDropdown">
+          <a href="profile.html">My Profile</a>
+          <a href="orders.html">My Orders</a>
+          <a href="loyalty.html">🎉 Loyalty Program</a>
+          <a href="settings.html">Settings</a>
+          <a href="#" onclick="logout(event)">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-container">
+    <h2>Update Password</h2>
+    <form id="passwordForm">
+      <label for="currentPassword">Current Password</label>
+      <input type="password" id="currentPassword" required>
+
+      <label for="newPassword">New Password</label>
+      <input type="password" id="newPassword" required>
+
+      <label for="confirmPassword">Confirm New Password</label>
+      <input type="password" id="confirmPassword" required>
+
+      <button type="submit">Update Password</button>
+      <p id="statusMessage"></p>
+    </form>
+  </div>
+
+  <script>
+    // Toggle dropdown menu when clicking profile icon
+    document.getElementById('profileIcon').addEventListener('click', function(e) {
+      e.preventDefault();
+      const dropdown = document.getElementById('profileDropdown');
+      dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    });
+  
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      const dropdown = document.getElementById('profileDropdown');
+      const profileIcon = document.getElementById('profileIcon');
+      
+      if (!profileIcon.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+  
+    // Handle password update form submission
+    document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const customerId = localStorage.getItem('customerId');
+      const currentPassword = document.getElementById('currentPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const statusMessage = document.getElementById('statusMessage');
+  
+      // Validation
+      if (!customerId) {
+        statusMessage.textContent = 'You must be logged in to update your password.';
+        statusMessage.style.color = 'red';
+        return;
+      }
+  
+      if (newPassword !== confirmPassword) {
+        statusMessage.textContent = 'New passwords do not match!';
+        statusMessage.style.color = 'red';
+        return;
+      }
+  
+      if (newPassword.length < 8) {
+        statusMessage.textContent = 'Password must be at least 8 characters long!';
+        statusMessage.style.color = 'red';
+        return;
+      }
+  
+      // Show loading message
+      statusMessage.textContent = 'Updating password...';
+      statusMessage.style.color = '#007bff';
+  
+      try {
+        const response = await fetch('http://localhost:3000/api/update-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            customerId,
+            currentPassword,
+            newPassword
+          })
+        });
+  
+        const data = await response.json();
+  
+        if (response.ok) {
+          statusMessage.textContent = 'Password updated successfully!';
+          statusMessage.style.color = 'green';
+          document.getElementById('passwordForm').reset();
+        } else {
+          statusMessage.textContent = `❌ ${data.message || 'Failed to update password.'}`;
+          statusMessage.style.color = 'red';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        statusMessage.textContent = '❌ Server error. Please try again later.';
+        statusMessage.style.color = 'red';
+      }
+    });
+  
+    // Logout function
+    function logout(event) {
+      event.preventDefault();
+      localStorage.removeItem('customerId');
+      localStorage.removeItem('token');
+      alert('Logged out successfully!');
+      window.location.href = 'login.html';
+    }
+  </script>
+  
+</body>
+</html>
