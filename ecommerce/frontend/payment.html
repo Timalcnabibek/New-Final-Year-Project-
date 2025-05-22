@@ -128,10 +128,7 @@
                     <span>Rs. 3499.00</span>
                 </div>
 
-                <div class="promo">
-                    <label for="promocode">Enter your promo code</label>
-                    <input type="text" id="promocode" placeholder="Promo Code">
-                </div>
+
 
                 <div class="estimated-delivery">
                     <div class="delivery-date">Estimated Delivery</div>
@@ -745,7 +742,7 @@ async function fetchActiveRewards(customerId) {
                     acc && acc[part] !== undefined ? acc[part] : defaultValue, obj);
             }
 
-            // Function to update order summary
+
    // Update order summary function to properly apply discount from backend
    async function updateOrderSummary(product) {
     console.log("Product data for summary:", product);
@@ -768,9 +765,8 @@ async function fetchActiveRewards(customerId) {
         const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
         let deliveryCharge = deliveryType === "express" ? 300 : 150;
 
-        if (subtotal >= 15000) {
-            deliveryCharge = 0;
-        }
+        deliveryCharge = getDeliveryCharge(subtotal, deliveryType);
+
     const tax = getNestedProperty(product, 'tax', 50);
 
     let discount = 0;
@@ -947,7 +943,7 @@ async function submitOrder(paymentMethod) {
 
     // Calculate actual total cost for the order including delivery
     const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
-    const deliveryCharge = deliveryType === "express" ? 300 : 150;
+const deliveryCharge = getDeliveryCharge(subtotal, deliveryType); // Use same helper
 
     const activeReward = JSON.parse(sessionStorage.getItem("activeReward"));
 
@@ -1016,6 +1012,16 @@ function getNestedProperty(obj, path, defaultValue = 0) {
         acc && acc[part] !== undefined ? acc[part] : defaultValue, obj);
 }
 
+function getDeliveryCharge(subtotal, deliveryType) {
+    if (deliveryType === "express") {
+        return 300; // Always Rs. 300 for express
+    }
+    return subtotal >= 10000 ? 0 : 150; // Standard is free for ≥ 10,000
+}
+
+
+
+
 // Update order summary function to show default discounts until server response
 function updateOrderSummary(product) {
     console.log("Product data for summary:", product);
@@ -1042,10 +1048,6 @@ function updateOrderSummary(product) {
         getNestedProperty(product, 'items[0].subtotal') ||
         getNestedProperty(product, 'price', 0) * getNestedProperty(product, 'quantity', 1);
 
-    const deliveryCharge = getNestedProperty(product, 'deliveryCharge') ||
-        getNestedProperty(product, 'shipping', 
-            document.querySelector('input[name="deliveryType"]:checked')?.value === "express" ? 300 : 150);
-
     let discount = 0;
 
     // ✅ Fetch reward from sessionStorage and apply
@@ -1060,7 +1062,7 @@ function updateOrderSummary(product) {
         console.log("✅ Reward discount applied:", discount);
     }
 
-    const tax = getNestedProperty(product, 'tax', 50);
+    const tax = getNestedProperty(product, 'tax', 0);
     const totalAmount = subtotal + deliveryCharge + tax - discount;
 
     // DOM updater
@@ -1087,8 +1089,9 @@ function updateOrderSummary(product) {
     }
 
     // Update estimated delivery
+    const deliveryCharge = getDeliveryCharge(subtotal, deliveryType); // ✅ updated
     const deliveryType = document.querySelector('input[name="deliveryType"]:checked')?.value;
-    const estimatedDelivery = deliveryType === 'express' ? "1-2 business days" : "3-5 business days";
+
 
     const deliveryTimeElements = document.querySelectorAll('.delivery-time');
     deliveryTimeElements.forEach(el => {
@@ -1250,8 +1253,8 @@ function updateOrderSummary(product) {
         getNestedProperty(product, 'items[0].subtotal') ||
         getNestedProperty(product, 'price', 0) * getNestedProperty(product, 'quantity', 1);
 
-    const deliveryCharge = getNestedProperty(product, 'deliveryCharge') ||
-        getNestedProperty(product, 'shipping', 150);
+    const deliveryCharge = getDeliveryCharge(subtotal); 
+
 
     // Use discount from product data directly - no more complicated calculation
     // This will be updated from backend response when order is submitted
@@ -1344,7 +1347,7 @@ async function completeKhaltiPayment(purchaseOrderId, status) {
 
 
         // Khalti integration
-        document.getElementById("pay-khalti").addEventListener("click", async () => {
+document.getElementById("pay-khalti").addEventListener("click", async () => {
     // Validate delivery information first
     if (!validateDeliveryInfo()) {
         return;
@@ -1389,12 +1392,37 @@ async function completeKhaltiPayment(purchaseOrderId, status) {
     }
     // For single product orders
     else {
+        // Get the delivery charge based on selected delivery type
+        const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
+        const subtotal = orderData.price * (orderData.quantity || 1);
+    const deliveryCharge = getDeliveryCharge(subtotal, deliveryType); // ✅ updated
+
+        
+        // Get the tax amount (default to 50 if not specified)
+        const tax = orderData.tax || 50;
+        
+        // Calculate discount from active reward if any
+        let discount = 0;
+        const activeReward = JSON.parse(sessionStorage.getItem("activeReward") || "null");
+        if (activeReward && activeReward.discount) {
+            if (activeReward.discount.type === "fixed") {
+                discount = parseFloat(activeReward.discount.value) || 0;
+            } else if (activeReward.discount.type === "percentage") {
+                discount = (parseFloat(activeReward.discount.value) / 100) * subtotal || 0;
+            }
+            console.log(`Applied discount of ${discount} from reward: ${activeReward.rewardName}`);
+        }
+        
+        // Calculate the total amount INCLUDING tax and SUBTRACTING discount
+        const totalAmount = subtotal + deliveryCharge + tax - discount;
+
         // Create a proper payload for single product purchases
         const payload = {
             orderId: Date.now().toString(),
-            totalAmount: orderData.price * (orderData.quantity || 1) + 
-                         (document.querySelector('input[name="deliveryType"]:checked').value === "express" ? 300 : 150),
-            tax: orderData.tax || 50,
+            totalAmount: totalAmount, // Now includes tax properly and discount
+            tax: tax, // Pass the tax separately for backend processing
+            discount: discount, // Pass the discount for backend processing
+            rewardId: activeReward ? activeReward._id : null, // Pass the reward ID if applicable
             items: [{
                 productId: orderData.productId || orderData._id,
                 quantity: orderData.quantity || 1,
@@ -1407,6 +1435,8 @@ async function completeKhaltiPayment(purchaseOrderId, status) {
         processKhaltiPayment(payload);
     }
 });
+
+
 
 // Add a validation helper function
 function validateDeliveryInfo() {
@@ -1568,6 +1598,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 });
 
     </script>
+
 </body>
 
 </html>

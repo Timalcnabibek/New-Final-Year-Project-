@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <title>StyleHub - My Wishlist</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
         /* Reset and base styles */
         * {
@@ -20,91 +24,170 @@
         }
 
         /* Navigation Bar */
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 2rem;
-            background-color: #ffffff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+.navbar {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 5%;
+    position: fixed;
+    top: 0;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
 
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #4285f4;
-            text-decoration: none;
-        }
+.navbar .logo {
+    font-size: 24px;
+    color: #3b82f6;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+    text-underline-offset: none;
+}
 
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-        }
+.navbar .menu {
+    display: flex;
+    gap: 10px;
+}
 
-        .nav-links a {
-            text-decoration: none;
-            color: #333;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
+.navbar .menu a {
+    color: #4b5563;
+    text-decoration: none;
+    margin: 0 15px;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    position: relative;
+}
 
-        .nav-links a:hover {
-            color: #4285f4;
-        }
+.navbar a {
+    text-decoration: none; 
+}
 
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
+.navbar .menu a:hover {
+    color: #3b82f6;
+}
 
-        .search-container {
-            display: flex;
-            align-items: center;
-            background-color: #f2f2f2;
-            border-radius: 20px;
-            padding: 0.5rem 1rem;
-            width: 300px;
-        }
+.navbar .menu a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -5px;
+    left: 0;
+    background-color: #3b82f6;
+    transition: width 0.3s ease;
+}
 
-        .search-container input {
-            border: none;
-            background: transparent;
-            width: 100%;
-            padding: 0.2rem;
-            outline: none;
-        }
+.navbar .menu a:hover::after {
+    width: 100%;
+}
 
-        .search-container button {
-            background: transparent;
-            border: none;
-            cursor: pointer;
-        }
+.navbar .search {
+    position: relative;
+    width: 300px;
+}
 
-        .icon-button {
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            position: relative;
-        }
+.navbar .search input {
+    width: 100%;
+    padding: 10px 40px 10px 15px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background-color: #f3f4f6;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+}
 
-        .badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background-color: #ff4d4d;
-            color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 0.7rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+.navbar .search input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.navbar .search::after {
+    content: '\f002';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
+
+.navbar .settings {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.navbar .settings a {
+    color: #4b5563;
+    text-decoration: none;
+    font-size: 20px;
+    transition: color 0.3s ease;
+    position: relative;
+}
+
+.navbar .settings a:hover {
+    color: #3b82f6;
+}
+
+.profile-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 40px;
+    background: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    width: 180px;
+    z-index: 10;
+}
+
+.dropdown-menu a {
+    display: block;
+    padding: 12px 15px;
+    text-decoration: none;
+    color: #333;
+    transition: background 0.3s ease;
+}
+
+.dropdown-menu a:hover {
+    background: #f5f5f5;
+}
+
+.profile-icon {
+    cursor: pointer;
+}
+
+.cart-icon {
+    position: relative;
+}
+
+.cart-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #ef4444;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
         /* Wishlist Section */
         .wishlist-container {
@@ -269,47 +352,42 @@
 </head>
 <body>
     <!-- Navigation Bar -->
-    <nav class="navbar">
-        <a href="dashboard.html" class="logo">StyleHub</a>
+<!-- Navbar -->
+<div class="navbar">
+    <a href="dashboard.html"><div class="logo">StyleHub</div></a>
+    <div class="menu">
+        <a href="dashboard.html">Home</a>
+        <a href="viewall.html">Shop</a>
+        <a href="mens.html">Men</a>
+        <a href="women.html">Women</a>
+    </div>
+    <div class="search">
+        <input type="text" id="searchInput" placeholder="Search for products...">
+      </div>
+      
+    <div class="settings">
+        <a href="cart.html" class="cart-icon">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="cart-count" id="cartCount">0</span>
+        </a>
+        <a href="wishlist.html"><i class="fas fa-heart"></i></a>
         
-        <div class="nav-links">
-            <a href="dashboard.html">Home</a>
-            <a href="viewall.html">Shop</a>
-            <a href="mens.html">Men</a>
-            <a href="women.html">Women</a>
-            <!-- <a href="#">New Arrivals</a> -->
-        </div>
-        
-        <div class="nav-right">
-            <div class="search-container">
-                <input type="text" placeholder="Search for products...">
-                <button>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-                    </svg>
-                </button>
+        <!-- Profile Icon with Dropdown -->
+        <div class="profile-dropdown">
+            <a href="#" class="profile-icon" id="profileIcon" onclick="toggleDropdown(event)">
+            <i class="fas fa-user"></i>
+            </a>    
+
+            <div class="dropdown-menu" id="profileDropdown">
+                <a href="profile.html">My Profile</a>
+                <a href="orders.html">My Orders</a>
+                <a href="loyalty.html">🎉 Loyalty Program</a>
+                <a href="settings.html">Settings</a>
+                <a href="#" onclick="logout(event)">Logout</a>
             </div>
-            
-            <button class="icon-button">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM3.102 4l1.313 7h8.17l1.313-7H3.102zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
-                </svg>
-                <span class="badge">3</span>
-            </button>
-            
-            <button class="icon-button">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"/>
-                </svg>
-            </button>
-            
-            <button class="icon-button">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
-                </svg>
-            </button>
         </div>
-    </nav>
+    </div>
+</div>
 
     <!-- Wishlist Section -->
     <div class="wishlist-container">
@@ -438,99 +516,127 @@
         });
     </script>
 
-
 <script>
     document.addEventListener("DOMContentLoaded", async () => {
+        await fetchCartCount(); // Fetch and show cart count on load
+
         const wishlistContainer = document.querySelector(".wishlist-grid");
-        const customerId = localStorage.getItem("customerId"); // Or however you store the logged-in user's ID
-    
+        const customerId = localStorage.getItem("customerId");
+
         if (!customerId) {
             wishlistContainer.innerHTML = "<p>Please log in to view your wishlist.</p>";
             return;
         }
-    
+
         try {
             const response = await fetch(`http://localhost:3000/api/wishlist/wish/${customerId}`);
             const data = await response.json();
-    
-            if (!response.ok) {
-                throw new Error(data.message || "Failed to fetch wishlist");
-            }
-    
-            // Clear existing placeholder content
+
+            if (!response.ok) throw new Error(data.message || "Failed to fetch wishlist");
+
             wishlistContainer.innerHTML = "";
-    
+
             if (data.wishlist.length === 0) {
                 wishlistContainer.innerHTML = "<p>Your wishlist is empty.</p>";
                 return;
             }
-    
-            data.wishlist.forEach(product => {
-                const itemHTML = `
-    <div class="wishlist-item">
-        <img src="${product.images?.[0]?.url || '/images/placeholder.jpg'}" alt="${product.name}" class="item-image">
-        <button class="favorite-button active" onclick="removeFromWishlist('${product._id}')">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>
-            </svg>
-        </button>
-        <div class="item-details">
-            <p class="item-category">${product.category || "General"}</p>
-            <h3 class="item-name">${product.name}</h3>
-            <p class="item-price">$${product.price.toFixed(2)}</p>
-            <button class="add-to-cart" onclick="addToCart('${product._id}', '${product.name}')">
-                <i class="fas fa-shopping-cart"></i> Add to Cart
-            </button>
-        </div>
-    </div>
-`;
 
+            data.wishlist.forEach(product => {
+                const imageUrl = product.images?.[0]?.url || '/images/placeholder.jpg';
+                const itemHTML = `
+                    <div class="wishlist-item">
+                        <img src="${imageUrl}" alt="${product.name}" class="item-image">
+                        <button class="favorite-button active" onclick="removeFromWishlist('${product._id}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>
+                            </svg>
+                        </button>
+                        <div class="item-details">
+                            <p class="item-category">${product.category || "General"}</p>
+                            <h3 class="item-name">${product.name}</h3>
+                            <p class="item-price">$${product.price.toFixed(2)}</p>
+                            <button class="add-to-cart" onclick="addToCart('${product._id}', '${product.name}')">
+                                <i class="fas fa-shopping-cart"></i> Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                `;
                 wishlistContainer.insertAdjacentHTML("beforeend", itemHTML);
             });
-    
-            // Update items count
+
             document.querySelector(".items-count").textContent = `${data.wishlist.length} item(s)`;
-    
+
         } catch (error) {
             wishlistContainer.innerHTML = `<p>Error loading wishlist: ${error.message}</p>`;
         }
-
-
-        // Add to cart functionality
-        async function addToCart(productId, productName) {
-            const customerId = localStorage.getItem("customerId");
-
-            if (!customerId) {
-                alert("❌ User not logged in! Redirecting to login page.");
-                window.location.href = "login.html";
-                return;
-            }
-
-            const requestData = { customerId, productId, quantity: 1 };
-
-            try {
-                const response = await fetch("http://localhost:3000/api/cart/add", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(requestData),
-                });
-
-                const result = await response.json();
-                console.log("Cart Response:", result); // Debugging
-                
-                if (response.ok) {
-                    alert(`✅ ${productName} added to cart!`);
-                    fetchCartCount(); // Live update the cart count
-                } else {
-                    alert(`❌ Failed to add to cart: ${result.message || "Unknown error"}`);
-                }
-            } catch (error) {
-                console.error("❌ Error adding to cart:", error);
-                alert("❌ Server error. Please try again later.");
-            }
-        }
     });
-    </script>
+
+    async function fetchCartCount() {
+        const customerId = localStorage.getItem("customerId");
+        const cartCountElement = document.getElementById("cartCount");
+
+        if (!customerId || !cartCountElement) return;
+
+        try {
+            const res = await fetch(`http://localhost:3000/api/cart/${customerId}`);
+            const data = await res.json();
+
+            let itemCount = 0;
+            if (Array.isArray(data)) {
+                itemCount = data.length;
+            } else if (Array.isArray(data.cart)) {
+                itemCount = data.cart.length;
+            } else if (Array.isArray(data.items)) {
+                itemCount = data.items.length;
+            }
+
+            cartCountElement.textContent = itemCount;
+        } catch (err) {
+            console.error("❌ Error fetching cart count:", err);
+            document.getElementById("cartCount").textContent = "0";
+        }
+    }
+
+    async function addToCart(productId, productName) {
+        const customerId = localStorage.getItem("customerId");
+        if (!customerId) {
+            alert("❌ User not logged in! Redirecting to login page.");
+            window.location.href = "login.html";
+            return;
+        }
+
+        const requestData = { customerId, productId, quantity: 1 };
+
+        try {
+            const response = await fetch("http://localhost:3000/api/cart/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestData),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: `${productName} added to cart!`,
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
+                });
+                fetchCartCount(); // Update cart count after adding
+            } else {
+                alert(`❌ Failed to add to cart: ${result.message || "Unknown error"}`);
+            }
+        } catch (error) {
+            console.error("❌ Error adding to cart:", error);
+            alert("❌ Server error. Please try again later.");
+        }
+    }
+</script>
+
 
 <script>
     async function removeFromWishlist(productId) {
@@ -558,6 +664,8 @@
         }
     }
     </script>
+
+    <script src="profile.js"></script>
     
 </body>
 </html>

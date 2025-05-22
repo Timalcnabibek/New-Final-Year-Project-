@@ -14,7 +14,7 @@ const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: "timalsinab39@gmail.com",
-    pass: "qugu anew evjk dfbm"
+    pass: "tsxq kcnz nowd guhr"
   }
 });
 
@@ -123,36 +123,47 @@ router.post("/initialize-khalti", async (req, res) => {
       website_url,
       items,
       totalAmount,
-      tax,
       customerId,
       deliveryInfo,
-      deliveryType
+      deliveryType,
+      discount = 0,          
+      rewardId = null       
     } = req.body;
-    console.log("🔍 Full Incoming Request Body:", JSON.stringify(req.body, null, 2));
 
-    // ✅ Enhanced Validation - ensure customerId is a valid MongoDB ObjectId
+    console.log("🔍 Incoming Request Body:", JSON.stringify(req.body, null, 2));
+
+    // Validate customerId
     if (!customerId) {
-      console.error("❌ Missing customerId in request body");
       return res.status(400).json({ success: false, message: "Customer ID is required" });
     }
+
     let customerObjectId;
     try {
       customerObjectId = new mongoose.Types.ObjectId(customerId);
     } catch (err) {
-      console.error("❌ Invalid customerId format:", customerId);
       return res.status(400).json({ success: false, message: "Invalid Customer ID format" });
     }
 
-    if (!deliveryInfo || !deliveryInfo.fullName || !deliveryInfo.phone || !deliveryInfo.address || !deliveryInfo.city || !deliveryInfo.postalCode) {
-      console.error("❌ Incomplete delivery info:", deliveryInfo);
+    // Validate delivery info
+    if (
+      !deliveryInfo ||
+      !deliveryInfo.fullName ||
+      !deliveryInfo.phone ||
+      !deliveryInfo.address ||
+      !deliveryInfo.city ||
+      !deliveryInfo.postalCode
+    ) {
       return res.status(400).json({ success: false, message: "Incomplete delivery information" });
     }
 
     const websiteURL = website_url || "http://localhost:3000";
     let totalPrice = 0;
     let purchasedItems = [];
+    let taxAmount = 0;
+    let deliveryCharge = 0;
+    let subtotal = 0;
 
-    // ✅ Handle cart items
+    // Handle cart items
     if (items && Array.isArray(items)) {
       for (let item of items) {
         const product = await productModel.findById(item.productId);
@@ -171,31 +182,47 @@ router.post("/initialize-khalti", async (req, res) => {
       }
 
       if (totalAmount) totalPrice = totalAmount;
+      taxAmount = req.body.tax || 0;
+      subtotal = totalPrice; // no extra computation for subtotal
+      deliveryCharge = 0; // assumed included in totalAmount from frontend
     } else {
-      // ✅ Handle single item
+      // ✅ Single product order
       const product = await productModel.findById(itemId);
       if (!product) {
         return res.status(404).json({ success: false, message: "Product not found" });
       }
 
+      const parsedQty = Number(quantity);
+      const parsedPrice = Number(unitPrice);
+
+      subtotal = parsedPrice * parsedQty;
+      taxAmount = 50;
+      deliveryCharge = subtotal > 5000 ? 0 : (deliveryType === "Express Delivery" ? 300 : 150);
+
+      totalPrice = subtotal + taxAmount - discount + deliveryCharge;
+
       purchasedItems.push({
         productId: itemId,
         name: product.name,
-        quantity: Number(quantity),
-        unitPrice: Number(unitPrice),
+        quantity: parsedQty,
+        unitPrice: parsedPrice,
       });
-
-      totalPrice = unitPrice * quantity;
     }
+    console.log(`🧾 Breakdown: subtotal=${subtotal}, tax=${taxAmount}, delivery=${deliveryCharge}, discount=${discount}, total=${totalPrice}`);
+
 
     // ✅ Create PurchasedItem in DB
     const purchasedItemData = await PurchasedItem.create({
       items: purchasedItems,
-      totalPrice: totalPrice * 100,
+      subtotal: subtotal,
+      totalPrice: totalPrice * 100, // Khalti expects paisa
       paymentMethod: "khalti",
       status: "pending",
       customerId: customerObjectId,
-      tax: tax || 0,
+      tax: taxAmount,
+      discount: discount,
+      deliveryCharge: deliveryCharge,
+      usedRewardId: rewardId,
       deliveryType: deliveryType || "Standard Delivery",
       deliveryInfo: {
         fullName: deliveryInfo.fullName,
@@ -207,8 +234,7 @@ router.post("/initialize-khalti", async (req, res) => {
       }
     });
 
-    console.log("Created purchase with ID:", purchasedItemData._id);
-    console.log("With customerId:", purchasedItemData.customerId);
+    console.log("✅ Created PurchasedItem:", purchasedItemData._id);
 
     // ✅ Generate Khalti Payment URL
     const payment = await initializeKhaltiPayment({
@@ -220,7 +246,6 @@ router.post("/initialize-khalti", async (req, res) => {
     });
 
     if (!payment || !payment.payment_url) {
-      console.error("❌ Failed to generate Khalti payment URL");
       return res.status(500).json({ success: false, message: "Failed to generate Khalti payment URL" });
     }
 
@@ -241,169 +266,135 @@ router.post("/initialize-khalti", async (req, res) => {
   }
 });
 
-// Complete Khalti payment and send order confirmation email
-// Complete Khalti payment and send order confirmation email
+// Complete Khalti payment, update inventory stock, and send order confirmation email
 router.get('/complete-khalti-payment', async (req, res) => {
   try {
-    console.log("Received payment completion request:", req.query);
+    let { purchase_order_id: purchaseOrderId, status, pidx } = req.query;
 
-    let purchaseOrderId = req.query.purchase_order_id;
-    const status = req.query.status;
-    const pidx = req.query.pidx;
-
-    if (!purchaseOrderId) {
-      return res.status(400).json({ success: false, message: "Missing required parameters: purchase_order_id" });
-    }
-
-    if (!status) {
-      return res.status(400).json({ success: false, message: "Missing required parameters: status" });
+    if (!purchaseOrderId || !status) {
+      return res.status(400).json({ success: false, message: "Missing parameters" });
     }
 
     if (purchaseOrderId.includes('/')) {
       purchaseOrderId = purchaseOrderId.split('/')[0];
     }
 
-    console.log(`Looking for purchase with cleaned ID: ${purchaseOrderId}`);
-
     const purchaseOrder = await PurchasedItem.findById(purchaseOrderId);
-
     if (!purchaseOrder) {
-      console.error("Purchase order not found:", purchaseOrderId);
-      return res.status(404).json({ success: false, message: "Purchase order not found" });
+      return res.status(404).json({ success: false, message: "Purchase not found" });
     }
 
-    console.log("Found purchase order:", JSON.stringify(purchaseOrder, null, 2));
+    if (status !== "Completed" && status !== "success") {
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment.html?status=failed`);
+    }
 
-    if (status === "Completed" || status === "success") {
-      purchaseOrder.status = "completed";
-      await purchaseOrder.save();
+    // Mark purchase as completed
+    purchaseOrder.status = "completed";
+    await purchaseOrder.save();
 
-      let customerEmail = null;
-      let discount = 0;
-      let usedRewardId = null;
+    // Update product stock for each purchased item
+    for (const item of purchaseOrder.items) {
+      const product = await productModel.findById(item.productId);
+      if (product) {
+        // Subtract the purchased quantity from current stock
+        const newStock = product.stock - item.quantity;
+        
+        // Update the product stock
+        await productModel.findByIdAndUpdate(
+          item.productId,
+          { stock: newStock >= 0 ? newStock : 0 }
+        );
+        
+        console.log(`Updated stock for product ${item.name}: ${product.stock} -> ${newStock >= 0 ? newStock : 0}`);
+      }
+    }
 
-      const customerModel = require("../model/cusmod");
+    let customerEmail = null;
+    let discount = purchaseOrder.discount || 0;
+    let usedRewardId = purchaseOrder.usedRewardId || null;
 
-      if (purchaseOrder.customerId) {
-        try {
-          const customer = await customerModel.findById(purchaseOrder.customerId);
-          if (customer) {
-            customerEmail = customer.email;
-            console.log("Found customer email:", customerEmail);
+    const customerModel = require("../model/cusmod");
 
-            // 🛒 Fetch active rewards
-            const activeReward = customer.redeemedRewards
-              ?.filter(reward => reward.status === "active")
-              .sort((a, b) => new Date(b.redeemedAt) - new Date(a.redeemedAt))[0];
+    // Get customer information and handle rewards if applicable
+    if (purchaseOrder.customerId) {
+      const customer = await customerModel.findById(purchaseOrder.customerId);
+      if (customer) {
+        customerEmail = customer.email;
 
-            if (activeReward) {
-              console.log(`Applying reward: ${activeReward._id}`);
+        const activeReward = customer.redeemedRewards
+          ?.filter(reward => reward.status === "active")
+          .sort((a, b) => new Date(b.redeemedAt) - new Date(a.redeemedAt))[0];
 
-              // Calculate subtotal
-              const subtotal = purchaseOrder.items.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
+        if (activeReward) {
+          const subtotal = purchaseOrder.items.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
+          discount = activeReward.discount.type === "fixed"
+            ? activeReward.discount.value
+            : Math.floor((subtotal * activeReward.discount.value) / 100);
+          usedRewardId = activeReward._id;
 
-              // Apply discount
-              if (activeReward.discount.type === "fixed") {
-                discount = activeReward.discount.value;
-              } else if (activeReward.discount.type === "percentage") {
-                discount = Math.floor((subtotal * activeReward.discount.value) / 100);
-              }
-
-              usedRewardId = activeReward._id;
-
-              // Mark reward as used
-              console.log("Attempting to mark reward used:");
-console.log("Customer ID:", purchaseOrder.customerId);
-console.log("Used Reward ID:", usedRewardId);
-
-await customerModel.updateOne(
-  { _id: purchaseOrder.customerId, "redeemedRewards._id": usedRewardId },
-  { $set: { "redeemedRewards.$.status": "used" } }
-);
-
-
-console.log("MongoDB update result:", updateResult);
-
-              
-            }
-          }
-        } catch (customerErr) {
-          console.error("Error fetching customer:", customerErr);
+          await customerModel.updateOne(
+            { _id: purchaseOrder.customerId, "redeemedRewards._id": usedRewardId },
+            { $set: { "redeemedRewards.$.status": "used" } }
+          );
         }
       }
-
-      // Calculate subtotal again (in case needed here)
-      const subtotal = purchaseOrder.items.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
-
-      // Calculate deliveryCharge based on deliveryType
-      const deliveryCharge = purchaseOrder.deliveryType === "Express Delivery" ? 300 : 150;
-
-      const tax = purchaseOrder.tax || 0;
-      const totalAmount = subtotal + deliveryCharge + tax - discount;
-
-      const generateOrderReference = () => {
-        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        const random = Array.from({ length: 6 }, () =>
-          chars.charAt(Math.floor(Math.random() * chars.length))
-        ).join("");
-        const number = Math.floor(1000 + Math.random() * 9000);
-        return `ORD-${number}-${random}`;
-      };
-
-      // 📝 Create a new Order with updated fields
-      const newOrder = await Order.create({
-        customerId: purchaseOrder.customerId,
-        orderReference: generateOrderReference(),
-        products: purchaseOrder.items.map(item => ({
-          productId: item.productId,
-          name: item.name,
-          quantity: item.quantity,
-          price: item.unitPrice
-        })),
-        subtotal: subtotal,
-        deliveryCharge: deliveryCharge,
-        discount: discount,
-        tax: tax,
-        totalAmount: totalAmount,
-        status: "pending",
-        paymentMethod: "khalti",
-        paymentStatus: "Paid",
-        deliveryInfo: {
-          fullName: (purchaseOrder.deliveryInfo && purchaseOrder.deliveryInfo.fullName) || "Customer",
-          phone: (purchaseOrder.deliveryInfo && purchaseOrder.deliveryInfo.phone) || "Not provided",
-          address: (purchaseOrder.deliveryInfo && purchaseOrder.deliveryInfo.address) || "Not provided",
-          city: (purchaseOrder.deliveryInfo && purchaseOrder.deliveryInfo.city) || "Not provided",
-          postalCode: (purchaseOrder.deliveryInfo && purchaseOrder.deliveryInfo.postalCode) || "Not provided",
-          instructions: (purchaseOrder.deliveryInfo && purchaseOrder.deliveryInfo.instructions) || ""
-        },
-        khaltiReference: pidx || "Unknown",
-        pointsEarned: Math.floor(totalAmount / 100),
-        usedRewardId: usedRewardId
-      });
-
-      console.log("✅ New order created with reward discount:", newOrder._id);
-
-      if (customerEmail) {
-        await sendOrderConfirmationEmail(newOrder, customerEmail);
-        console.log("✅ Order confirmation email sent to:", customerEmail);
-      } else {
-        console.log("⚠️ No customer email found for order confirmation");
-      }
-
-      const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/invoice.html?orderId=${newOrder._id}&ref=${newOrder.orderReference}`;
-      return res.redirect(redirectUrl);
-
-    } else {
-      const failureUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment.html?status=failed`;
-      return res.redirect(failureUrl);
     }
+
+    // Calculate order totals
+    const subtotal = purchaseOrder.items.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
+    const deliveryType = (purchaseOrder.deliveryType || "Standard Delivery").toLowerCase();
+    const rawDeliveryCharge = deliveryType === "express delivery" ? 300 : 150;
+    const deliveryCharge = subtotal >= 10000 ? 0 : rawDeliveryCharge;
+    
+    // FIXED: Ensure we use the correct tax value from purchaseOrder
+    // This is the key fix - we need to make sure we're using the same tax amount
+    // that was used in the initial calculation
+    const tax = purchaseOrder.tax || 0;
+    
+    // Calculate final total amount
+    const totalAmount = subtotal + deliveryCharge + tax - discount;
+
+    const generateOrderReference = () => {
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      const random = Array.from({ length: 6 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
+      return `ORD-${Math.floor(1000 + Math.random() * 9000)}-${random}`;
+    };
+
+    // Create the order
+    const newOrder = await Order.create({
+      customerId: purchaseOrder.customerId,
+      orderReference: generateOrderReference(),
+      products: purchaseOrder.items.map(item => ({
+        productId: item.productId,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.unitPrice
+      })),
+      subtotal,
+      deliveryCharge,
+      discount,
+      tax,  // Using the correct tax value
+      totalAmount,
+      status: "pending",
+      paymentMethod: "khalti",
+      paymentStatus: "Paid",
+      deliveryInfo: purchaseOrder.deliveryInfo,
+      khaltiReference: pidx || "Unknown",
+      pointsEarned: Math.floor(totalAmount / 100),
+      usedRewardId
+    });
+
+    // Send confirmation email
+    if (customerEmail) {
+      await sendOrderConfirmationEmail(newOrder, customerEmail);
+    }
+
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/invoice.html?orderId=${newOrder._id}&ref=${newOrder.orderReference}`);
   } catch (error) {
-    console.error("Error in completing Khalti payment:", error);
-    const errorUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment.html?error=server`;
-    return res.redirect(errorUrl);
+    console.error("❌ Error in completing Khalti payment:", error);
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment.html?error=server`);
   }
 });
-
 
 // Get order by ID (for viewing order details/receipt)
 router.get('/order/:orderId', async (req, res) => {

@@ -181,7 +181,7 @@ async function fetchCartData() {
 
         // Calculate total price with backend values
         const tax = 150; // From backend
-        const shipping = subtotal > 5000 ? 0 : 150; // Free shipping over Rs. 5000
+        const shipping = subtotal > 10000 ? 0 : 150; // Free shipping over Rs. 10000
         let discount = 0; // Default no discount
 
 // ✅ Now it is safe to check and fetch reward
@@ -203,10 +203,7 @@ if (customerId) {
         // Update summary with animation
         animateCountUp(subtotalElement, 0, subtotal, "Rs. ", 2);
         animateCountUp(taxElement, 0, tax, "Rs. ", 2);
-        if (shipping === 0) {
-            shippingElement.textContent = "Free";
-            shippingElement.classList.add("free-shipping");
-        } else {
+        if (shipping > 0){
             animateCountUp(shippingElement, 0, shipping, "Rs. ", 2);
             shippingElement.classList.remove("free-shipping");
         }
@@ -598,7 +595,7 @@ async function calculateSummary() {
     
     // Backend values
     const tax = 150;
-    const shipping = subtotal > 5000 ? 0 : 150;
+    const shipping = subtotal > 10000 ? 0 : 150;
     let discount = 0; // Default no discount
     
     const user = JSON.parse(localStorage.getItem("user"));

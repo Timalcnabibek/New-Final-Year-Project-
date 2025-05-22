@@ -325,7 +325,7 @@ document.addEventListener('DOMContentLoaded', function() {
             purchaseData.unshift({
                 id: newOrderId,
                 date: formattedDate,
-                amount: '$' + purchaseAmount.toFixed(2),
+                amount: 'Rs. ' + purchaseAmount.toFixed(2),
                 points: '+' + pointsEarned + ' points'
             });
             
@@ -593,6 +593,7 @@ function setupTransactionTabs() {
 }
 
 // Dynamic rewards display and redemption
+// Dynamic rewards display and redemption - Focus on Fixed & Percentage Discounts
 document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("rewardCardsContainer");
     const customerId = localStorage.getItem("customerId");
@@ -608,11 +609,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
             container.innerHTML = "";
 
-            // Get current points from the UI (using directly what's already loaded)
+            // Get current points from the UI
             const pointsText = document.querySelector(".points-count").textContent || "0 points";
             const userPoints = parseInt(pointsText.replace(/[^0-9]/g, "")) || 0;
 
-            rewards.forEach(reward => {
+            // Filter rewards to only include discount types
+            const discountRewards = rewards.filter(reward => 
+                reward.discount && 
+                (reward.discount.type === "fixed" || reward.discount.type === "percentage")
+            );
+
+            if (discountRewards.length === 0) {
+                container.innerHTML = "<p>No discount rewards available at this time.</p>";
+                return;
+            }
+
+            discountRewards.forEach(reward => {
                 // Check if user has enough points
                 const isDisabled = userPoints < reward.points_required;
                 const buttonText = isDisabled ? "Not Enough Points" : "Redeem Reward";
@@ -623,41 +635,26 @@ document.addEventListener("DOMContentLoaded", () => {
                     ? `${reward.discount.value}% off your purchase` 
                     : `Rs. ${reward.discount.value} off your purchase`;
 
-                // Create reward card
+                // Create reward card with discount type badge
                 const card = document.createElement("div");
                 card.className = "reward-card";
-
-                // Set category as a data attribute for filtering
-                if (reward.title.toLowerCase().includes("discount") || 
-                    reward.description.toLowerCase().includes("discount")) {
-                    card.dataset.category = "discount";
-                } else if (reward.title.toLowerCase().includes("gift") || 
-                           reward.description.toLowerCase().includes("gift")) {
-                    card.dataset.category = "gift";
-                } else if (reward.title.toLowerCase().includes("exclusive") || 
-                           reward.description.toLowerCase().includes("exclusive") ||
-                           reward.title.toLowerCase().includes("vip") || 
-                           reward.description.toLowerCase().includes("vip")) {
-                    card.dataset.category = "exclusive";
-                } else if (reward.title.toLowerCase().includes("experience") || 
-                           reward.description.toLowerCase().includes("experience")) {
-                    card.dataset.category = "experience";
-                } else {
-                    card.dataset.category = "other";
-                }
+                card.dataset.category = reward.discount.type === "percentage" ? "percentage" : "fixed";
 
                 card.innerHTML = `
                     <div class="reward-image">
                         <div class="points-badge" style="position: absolute; top: 10px; right: 10px; background-color: #3b82f6; color: white; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 14px;">
                             ${reward.points_required} points
                         </div>
+                        <div class="discount-type-badge" style="position: absolute; top: 10px; left: 10px; background-color: ${reward.discount.type === 'percentage' ? '#10b981' : '#f59e0b'}; color: white; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 14px;">
+                            ${reward.discount.type === 'percentage' ? 'Percentage' : 'Fixed'} Discount
+                        </div>
                     </div>
                     <div class="reward-details">
                         <h3 class="reward-title">${reward.title}</h3>
                         <p class="reward-description">${reward.description}</p>
-                        <p class="discount-info">${discountDescription}</p>
+                        <p class="discount-info" style="font-weight: bold; color: #3b82f6;">${discountDescription}</p>
                         <button class="${buttonClass}" data-points="${reward.points_required}" data-id="${reward._id}" data-title="${reward.title}">
-                            <i class="fas fa-gift"></i> ${buttonText}
+                            <i class="fas fa-tag"></i> ${buttonText}
                         </button>
                     </div>
                 `;
@@ -665,8 +662,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 container.appendChild(card);
             });
 
-            // Setup category filtering
-            setupCategoryFilters();
+            // Setup category filtering for discount types
+            setupDiscountCategoryFilters();
             
             // Setup search functionality
             setupSearchFunctionality();
@@ -724,7 +721,9 @@ document.addEventListener("DOMContentLoaded", () => {
                             if (rewardsTabActive) {
                                 renderRedeemedRewards(window.redeemedRewardsData);
                             }
-                            const discount = result.data?.discount || {}; // From backend response
+                            
+                            // Save redeemed reward to session storage for checkout
+                            const discount = result.data?.discount || {}; 
                             sessionStorage.setItem("redeemedReward", JSON.stringify({
                                 rewardId,
                                 title: rewardTitle,
@@ -732,6 +731,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 type: discount.type,
                                 value: discount.value
                             }));
+                            
                             // Show success message
                             showToast(`Successfully redeemed "${rewardTitle}" for ${pointsRequired} points!`);
                         } else {
@@ -740,7 +740,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             
                             // Reset button
                             this.disabled = false;
-                            this.innerHTML = `<i class="fas fa-gift"></i> Redeem Reward`;
+                            this.innerHTML = `<i class="fas fa-tag"></i> Redeem Reward`;
                         }
                     } else {
                         showToast("Not enough points to redeem this reward.");
@@ -751,7 +751,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     
                     // Reset button
                     this.disabled = false;
-                    this.innerHTML = `<i class="fas fa-gift"></i> Redeem Reward`;
+                    this.innerHTML = `<i class="fas fa-tag"></i> Redeem Reward`;
                 }
             });
         });
@@ -846,29 +846,43 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Setup category filters
-    function setupCategoryFilters() {
-        const categories = document.querySelectorAll('.category');
-        
-        categories.forEach(category => {
-            category.addEventListener('click', function() {
-                // Update active category
-                categories.forEach(c => c.classList.remove('active'));
-                this.classList.add('active');
-                
-                const selectedCategory = this.textContent.trim().toLowerCase();
-                const rewardCards = document.querySelectorAll('.reward-card');
-                
-                rewardCards.forEach(card => {
-                    if (selectedCategory === 'all categories') {
-                        card.style.display = 'block';
-                    } else {
-                        const cardCategory = card.dataset.category;
-                        card.style.display = (cardCategory === selectedCategory) ? 'block' : 'none';
-                    }
+    // Setup category filters for discount types
+    function setupDiscountCategoryFilters() {
+        // Update or create category elements in the HTML
+        const categoriesContainer = document.querySelector('.categories');
+        if (categoriesContainer) {
+            // Clear existing categories
+            categoriesContainer.innerHTML = `
+                <div class="category active">All Discounts</div>
+                <div class="category">Fixed Discount</div>
+                <div class="category">Percentage Discount</div>
+            `;
+            
+            const categories = document.querySelectorAll('.category');
+            
+            categories.forEach(category => {
+                category.addEventListener('click', function() {
+                    // Update active category
+                    categories.forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const selectedCategory = this.textContent.trim().toLowerCase();
+                    const rewardCards = document.querySelectorAll('.reward-card');
+                    
+                    rewardCards.forEach(card => {
+                        if (selectedCategory === 'all discounts') {
+                            card.style.display = 'block';
+                        } else if (selectedCategory === 'fixed discount' && card.dataset.category === 'fixed') {
+                            card.style.display = 'block';
+                        } else if (selectedCategory === 'percentage discount' && card.dataset.category === 'percentage') {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
                 });
             });
-        });
+        }
     }
 
     // Setup search functionality
@@ -883,8 +897,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 rewardCards.forEach(card => {
                     const title = card.querySelector('.reward-title').textContent.toLowerCase();
                     const description = card.querySelector('.reward-description').textContent.toLowerCase();
+                    const discount = card.querySelector('.discount-info').textContent.toLowerCase();
                     
-                    if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                    if (title.includes(searchTerm) || 
+                        description.includes(searchTerm) || 
+                        discount.includes(searchTerm)) {
                         card.style.display = 'block';
                     } else {
                         card.style.display = 'none';
@@ -894,6 +911,99 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 });
+
+// Add this function to render redeemed discounts in transaction history
+function renderRedeemedRewards(rewards = []) {
+    const listContainer = document.querySelector(".transaction-list");
+    listContainer.innerHTML = "";
+  
+    if (!rewards || !rewards.length) {
+        listContainer.innerHTML = "<p>No redeemed rewards found.</p>";
+        return;
+    }
+    
+    // Filter to only include discount rewards (fixed or percentage)
+    const discountRewards = rewards.filter(reward => 
+        reward.discount && (reward.discount.type === "fixed" || reward.discount.type === "percentage")
+    );
+    
+    if (discountRewards.length === 0) {
+        listContainer.innerHTML = "<p>No discount rewards have been redeemed yet.</p>";
+        return;
+    }
+  
+    discountRewards.forEach(reward => {
+        const item = document.createElement("div");
+        item.className = "transaction-item";
+  
+        const date = new Date(reward.redeemedAt).toLocaleDateString("en-US", {
+            year: "numeric", month: "short", day: "numeric"
+        });
+        
+        const discountText = reward.discount.type === "percentage" 
+            ? `${reward.discount.value}% off` 
+            : `Rs. ${reward.discount.value} off`;
+  
+        item.innerHTML = `
+        <div class="transaction-icon" style="background-color: ${reward.discount.type === 'percentage' ? '#10b981' : '#f59e0b'};">
+            <i class="fas fa-tag"></i>
+        </div>
+        <div class="transaction-details">
+            <div class="transaction-title">${reward.rewardName}</div>
+            <div class="transaction-date">${date}</div>
+        </div>
+        <div class="transaction-amount">
+            <div>${discountText}</div>
+            <div class="transaction-points" style="color: #e53e3e;">-${reward.pointsUsed} points</div>
+        </div>
+        `;
+        listContainer.appendChild(item);
+    });
+}
+
+// Function to apply discount to checkout
+function applyDiscountToCheckout() {
+    const redeemedRewardJson = sessionStorage.getItem("redeemedReward");
+    
+    if (!redeemedRewardJson) return null;
+    
+    try {
+        const redeemedReward = JSON.parse(redeemedRewardJson);
+        const subtotal = parseFloat(document.getElementById("subtotal-value").textContent.replace(/[^0-9.]/g, ""));
+        
+        let discountAmount = 0;
+        
+        if (redeemedReward.type === "percentage") {
+            discountAmount = subtotal * (redeemedReward.value / 100);
+        } else if (redeemedReward.type === "fixed") {
+            discountAmount = Math.min(subtotal, redeemedReward.value);
+        }
+        
+        // Update UI to show discount
+        const discountElement = document.getElementById("discount-row");
+        const discountValueElement = document.getElementById("discount-value");
+        const totalElement = document.getElementById("total-value");
+        
+        if (discountElement && discountValueElement && totalElement) {
+            discountElement.style.display = "flex";
+            discountValueElement.textContent = "- Rs. " + discountAmount.toFixed(2);
+            
+            // Recalculate total
+            const total = subtotal - discountAmount;
+            totalElement.textContent = "Rs. " + total.toFixed(2);
+        }
+        
+        return {
+            applied: true,
+            type: redeemedReward.type,
+            value: redeemedReward.value,
+            discountAmount: discountAmount
+        };
+    } catch (error) {
+        console.error("Error applying discount:", error);
+        return null;
+    }
+}
 
 // Toast notification function (shared across all scripts)
 function showToast(message) {

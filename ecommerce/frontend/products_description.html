@@ -445,7 +445,16 @@ function buyNow() {
 
   // Delivery calculation
   const deliveryCharge = 150;
-  const discount = 200;
+let discount = 0;
+const activeReward = JSON.parse(sessionStorage.getItem("activeReward") || "null");
+if (activeReward && activeReward.discount) {
+  const { type, value } = activeReward.discount;
+  if (type === "fixed") {
+    discount = parseFloat(value);
+  } else if (type === "percentage") {
+    discount = (value / 100) * price * quantity;
+  }
+}
   const tax = 50;
   const subtotal = price * quantity;
   const total = subtotal + deliveryCharge + tax - discount;
