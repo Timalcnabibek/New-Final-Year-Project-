@@ -384,6 +384,47 @@
     .chart-container:hover .date-stamp {
       opacity: 1;
     }
+
+    /* Loading state */
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      border-radius: var(--radius-lg);
+    }
+    
+    .spinner {
+      width: 2rem;
+      height: 2rem;
+      border: 3px solid rgba(99, 102, 241, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--primary-color);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Error message styling */
+    .error-message {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--danger-color);
+      font-size: 0.875rem;
+      text-align: center;
+    }
     
     @media (max-width: 768px) {
       .main-content {
@@ -474,36 +515,6 @@
       transition: all 0.3s ease;
     }
     
-    /* Loading state */
-    .loading-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(255, 255, 255, 0.7);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      border-radius: var(--radius-lg);
-    }
-    
-    .spinner {
-      width: 2rem;
-      height: 2rem;
-      border: 3px solid rgba(99, 102, 241, 0.3);
-      border-radius: 50%;
-      border-top-color: var(--primary-color);
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-    
     /* Responsive font sizes */
     @media (max-width: 640px) {
       .header-left h1 {
@@ -525,12 +536,12 @@
   <div class="sidebar">
     <div class="logo-container">Logo</div>
     <ul>
-      <li><a href="{{url_for('dashboard_page')}}">Dashboard</a></li>
-      <li><a href="{{url_for('average_page')}}">Average Data</a></li>
-      <li><a href="{{url_for('prediction_page')}}" class="active">Prediction Data</a></li>
-      <li><a href="{{ url_for('new_page') }}">Customer Data</a></li>
-      <li><a href="{{url_for('order_page')}}">Orders</a></li>
-      <li><a href="{{ url_for('index') }}">Products</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="/average">Average Data</a></li>
+      <li><a href="/prediction" class="active">Prediction Data</a></li>
+      <li><a href="/customers">Customer Data</a></li>
+      <li><a href="/orders">Orders</a></li>
+      <li><a href="/products">Products</a></li>
       <li><a href="#" id="logoutButton">Log Out</a></li>
     </ul>
   </div>
@@ -549,12 +560,12 @@
     </div>
     
     <div class="metrics-row">
-      <div class="metric-card">
+      <div class="metric-card" id="salesMetric">
         <div class="metric-title">
-          <span>Projected Sales</span>
+          <span>Projected Sales Units</span>
           <div class="metric-icon" style="background-color: rgba(99, 102, 241, 0.1); color: var(--primary-color);">$</div>
         </div>
-        <div class="metric-value">$58,000</div>
+        <div class="metric-value" id="projectedSalesValue">Loading...</div>
         <div class="metric-change positive-change">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
             <path fill-rule="evenodd" d="M12 7a1 1 0 01-2 0V5H9a1 1 0 110-2h1V2a1 1 0 112 0v1h1a1 1 0 110 2h-1v2z" clip-rule="evenodd" />
@@ -563,7 +574,7 @@
           +12.5% vs previous period
         </div>
       </div>
-      <div class="metric-card">
+      <div class="metric-card" id="ordersMetric">
         <div class="metric-title">
           <span>Estimated Orders</span>
           <div class="metric-icon" style="background-color: rgba(16, 185, 129, 0.1); color: var(--success-color);">
@@ -572,7 +583,7 @@
             </svg>
           </div>
         </div>
-        <div class="metric-value">750</div>
+        <div class="metric-value" id="estimatedOrdersValue">Loading...</div>
         <div class="metric-change positive-change">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
             <path fill-rule="evenodd" d="M12 7a1 1 0 01-2 0V5H9a1 1 0 110-2h1V2a1 1 0 112 0v1h1a1 1 0 110 2h-1v2z" clip-rule="evenodd" />
@@ -581,7 +592,7 @@
           +8.2% vs previous period
         </div>
       </div>
-      <div class="metric-card">
+      <div class="metric-card" id="avgOrderMetric">
         <div class="metric-title">
           <span>Avg. Order Value</span>
           <div class="metric-icon" style="background-color: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
@@ -590,7 +601,7 @@
             </svg>
           </div>
         </div>
-        <div class="metric-value">$77</div>
+        <div class="metric-value" id="avgOrderValue">$77</div>
         <div class="metric-change positive-change">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
             <path fill-rule="evenodd" d="M12 7a1 1 0 01-2 0V5H9a1 1 0 110-2h1V2a1 1 0 112 0v1h1a1 1 0 110 2h-1v2z" clip-rule="evenodd" />
@@ -599,7 +610,7 @@
           +3.6% vs previous period
         </div>
       </div>
-      <div class="metric-card">
+      <div class="metric-card" id="customerGrowthMetric">
         <div class="metric-title">
           <span>Customer Growth</span>
           <div class="metric-icon" style="background-color: rgba(239, 68, 68, 0.1); color: var(--danger-color);">
@@ -608,7 +619,7 @@
             </svg>
           </div>
         </div>
-        <div class="metric-value">+14.5%</div>
+        <div class="metric-value" id="customerGrowthValue">+14.5%</div>
         <div class="metric-change negative-change">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
@@ -620,18 +631,18 @@
     
     <div class="charts-row">
       <div class="chart-card">
-        <div class="chart-title">Sales Forecast</div>
-        <div class="chart-subtitle">Predicted vs. actual daily sales for the next period</div>
+        <div class="chart-title">Sales Units Forecast</div>
+        <div class="chart-subtitle">Predicted daily sales units for the next period</div>
         <div class="chart-container">
-          <div class="date-stamp" id="salesDateStamp">Mar 25: $1,860</div>
+          <div class="date-stamp" id="salesDateStamp">Loading...</div>
           <canvas id="salesChart"></canvas>
         </div>
       </div>
       <div class="chart-card">
         <div class="chart-title">Order Volume Projection</div>
-        <div class="chart-subtitle">Expected daily order count for the upcoming period</div>
+        <div class="chart-subtitle">Predicted daily order count for the upcoming period</div>
         <div class="chart-container">
-          <div class="date-stamp" id="orderDateStamp">Mar 25: 25</div>
+          <div class="date-stamp" id="orderDateStamp">Loading...</div>
           <canvas id="orderChart"></canvas>
         </div>
       </div>
@@ -648,8 +659,9 @@
     </div>
 
 <script>
-  // Updated script for prediction page - showing sales counts instead of monetary values
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 Starting prediction page initialization...');
+  
   // Add loading overlay functionality
   function createLoadingOverlay(parent) {
     const overlay = document.createElement('div');
@@ -672,70 +684,7 @@ document.addEventListener('DOMContentLoaded', function() {
     overlays.push(createLoadingOverlay(container));
   });
 
-  // Fetch forecast data from API
-  fetch('/api/forecast?days=28')
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
-    .then(data => {
-      // Process the forecast data
-      const forecastData = data.forecast;
-      
-      // Extract dates and forecast values
-      const dates = forecastData.map(item => {
-        const date = new Date(item.date);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      });
-      
-      const forecastedSales = forecastData.map(item => item.forecast);
-      // If the API returns order data, use it; otherwise keep using derived values temporarily
-      const orderData = forecastData.map(item => item.orders || Math.round(item.forecast / 77));
-      
-      // Update summary metrics
-      const totalProjectedSales = forecastData.reduce((sum, item) => sum + item.forecast, 0);
-      const totalEstimatedOrders = forecastData.reduce((sum, item) => 
-        sum + (item.orders || Math.round(item.forecast / 77)), 0);
-      
-      // Update the UI metrics - now showing unit counts, not monetary values
-      document.querySelector('.metric-card:nth-child(1) .metric-value').textContent = 
-        Math.round(totalProjectedSales).toLocaleString() + ' units';
-      document.querySelector('.metric-card:nth-child(1) .metric-title span').textContent = 
-        'Projected Sales Units';
-      
-      document.querySelector('.metric-card:nth-child(2) .metric-value').textContent = 
-        Math.round(totalEstimatedOrders).toLocaleString();
-      
-      // Update charts
-      updateSalesChart(dates, forecastedSales);
-      updateOrderChart(dates, orderData);
-      
-      // Remove loading overlays
-      overlays.forEach(overlay => {
-        overlay.style.opacity = 0;
-        setTimeout(() => overlay.remove(), 300);
-      });
-    })
-    .catch(error => {
-      console.error('Error fetching forecast data:', error);
-      
-      // Remove loading overlays and show error message
-      overlays.forEach(overlay => {
-        overlay.style.opacity = 0;
-        setTimeout(() => overlay.remove(), 300);
-      });
-      
-      chartContainers.forEach(container => {
-        const errorMsg = document.createElement('div');
-        errorMsg.className = 'error-message';
-        errorMsg.textContent = 'Unable to load forecast data. Please try again later.';
-        container.appendChild(errorMsg);
-      });
-    });
-
-  // Adjust Chart.js defaults for better UI
+  // Set up Chart.js defaults
   Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
   Chart.defaults.font.size = 12;
   Chart.defaults.color = '#6b7280';
@@ -743,62 +692,146 @@ document.addEventListener('DOMContentLoaded', function() {
   Chart.defaults.plugins.tooltip.cornerRadius = 6;
   Chart.defaults.plugins.tooltip.titleFont.weight = 'bold';
   Chart.defaults.plugins.tooltip.displayColors = false;
-  
-  // Sales Chart Function - Now showing unit counts
-  function updateSalesChart(dates, forecastedSales) {
-    const salesCtx = document.getElementById('salesChart').getContext('2d');
+
+  // Function to fetch and process forecast data
+  function fetchForecastData(days = 28) {
+    console.log(`📊 Fetching forecast data for ${days} days...`);
     
-    // Assume first 6 days are "actual" for visualization purposes
-    const actualSales = forecastedSales.slice(0, 6).map((val, i) => {
-      // Add slight variation to make it look like actual data
-      return val * (0.95 + Math.random() * 0.1);
-    });
+    return fetch(`/api/forecast?days=${days}`)
+      .then(response => {
+        console.log('📡 API Response status:', response.status);
+        if (!response.ok) {
+          throw new Error(`Network response was not ok: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('📊 Received forecast data:', data);
+        
+        if (!data.forecast || !Array.isArray(data.forecast)) {
+          throw new Error('Invalid forecast data structure');
+        }
+        
+        // Process the forecast data
+        const forecastData = data.forecast;
+        
+        // Extract dates and forecast values
+        const dates = forecastData.map(item => {
+          const date = new Date(item.date);
+          return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        });
+        
+        const forecastedSales = forecastData.map(item => Math.round(item.forecast || 0));
+        const orderData = forecastData.map(item => 
+          Math.round(item.orders || (item.forecast / 3)) // Assuming 3 items per order if not provided
+        );
+        
+        console.log('📊 Processed data:', { dates: dates.length, sales: forecastedSales.length, orders: orderData.length });
+        
+        // Calculate summary metrics
+        const totalProjectedSales = forecastedSales.reduce((sum, val) => sum + val, 0);
+        const totalEstimatedOrders = orderData.reduce((sum, val) => sum + val, 0);
+        const avgOrderValue = totalEstimatedOrders > 0 ? (totalProjectedSales / totalEstimatedOrders) : 0;
+        
+        console.log('📊 Summary metrics:', { totalProjectedSales, totalEstimatedOrders, avgOrderValue });
+        
+        // Update the UI metrics
+        document.getElementById('projectedSalesValue').textContent = totalProjectedSales.toLocaleString() + ' units';
+        document.getElementById('estimatedOrdersValue').textContent = totalEstimatedOrders.toLocaleString();
+        
+        if (avgOrderValue > 0) {
+          document.getElementById('avgOrderValue').textContent = Math.round(avgOrderValue).toLocaleString() + ' units/order';
+        }
+        
+        // Update charts
+        updateSalesChart(dates, forecastedSales);
+        updateOrderChart(dates, orderData);
+        
+        // Remove loading overlays
+        overlays.forEach(overlay => {
+          if (overlay && overlay.parentNode) {
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+              if (overlay.parentNode) {
+                overlay.parentNode.removeChild(overlay);
+              }
+            }, 300);
+          }
+        });
+        
+        console.log('✅ Successfully updated prediction dashboard');
+        
+      })
+      .catch(error => {
+        console.error('❌ Error fetching forecast data:', error);
+        
+        // Show error in metrics
+        document.getElementById('projectedSalesValue').textContent = 'Error loading data';
+        document.getElementById('estimatedOrdersValue').textContent = 'Error loading data';
+        
+        // Remove loading overlays and show error message
+        overlays.forEach(overlay => {
+          if (overlay && overlay.parentNode) {
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+              if (overlay.parentNode) {
+                overlay.parentNode.removeChild(overlay);
+              }
+            }, 300);
+          }
+        });
+        
+        chartContainers.forEach(container => {
+          const existingError = container.querySelector('.error-message');
+          if (!existingError) {
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'error-message';
+            errorMsg.textContent = 'Unable to load forecast data. Please try again later.';
+            container.appendChild(errorMsg);
+          }
+        });
+      });
+  }
+  
+  // Sales Chart Function
+  function updateSalesChart(dates, forecastedSales) {
+    console.log('📈 Updating sales chart with data:', { dates: dates.length, sales: forecastedSales.length });
+    
+    const salesCtx = document.getElementById('salesChart');
+    if (!salesCtx) {
+      console.error('❌ Sales chart canvas not found');
+      return;
+    }
+    
+    const ctx = salesCtx.getContext('2d');
     
     // Create gradient for the area
-    const salesGradient = salesCtx.createLinearGradient(0, 0, 0, 300);
+    const salesGradient = ctx.createLinearGradient(0, 0, 0, 300);
     salesGradient.addColorStop(0, 'rgba(129, 140, 248, 0.8)');
     salesGradient.addColorStop(1, 'rgba(129, 140, 248, 0.1)');
-
-    const pastGradient = salesCtx.createLinearGradient(0, 0, 0, 300);
-    pastGradient.addColorStop(0, 'rgba(59, 130, 246, 0.8)');
-    pastGradient.addColorStop(1, 'rgba(59, 130, 246, 0.1)');
     
-    // Update chart titles
-    document.querySelector('.chart-card:nth-child(1) .chart-title').textContent = 'Sales Units Forecast';
-    document.querySelector('.chart-card:nth-child(1) .chart-subtitle').textContent = 
-      'Predicted vs. actual daily sales units for the next period';
+    // Destroy existing chart if it exists
+    if (window.salesChart && typeof window.salesChart.destroy === 'function') {
+      window.salesChart.destroy();
+    }
     
-    // Create the sales chart with improved visuals
-    const salesChart = new Chart(salesCtx, {
+    // Create the sales chart
+    window.salesChart = new Chart(ctx, {
       type: 'line',
       data: {
         labels: dates,
         datasets: [{
-          label: 'Actual Sales Units',
-          data: actualSales.concat(Array(dates.length - actualSales.length).fill(null)),
-          backgroundColor: pastGradient,
-          borderColor: 'rgba(59, 130, 246, 1)',
-          borderWidth: 2,
-          tension: 0.4,
-          fill: true,
-          pointBackgroundColor: 'rgba(59, 130, 246, 1)',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 4,
-          pointHoverRadius: 6
-        }, {
           label: 'Predicted Sales Units',
           data: forecastedSales,
           backgroundColor: salesGradient,
           borderColor: 'rgba(99, 102, 241, 1)',
           borderWidth: 2,
-          borderDash: [5, 5],
           tension: 0.4,
           fill: true,
           pointBackgroundColor: 'rgba(99, 102, 241, 1)',
           pointBorderColor: '#fff',
           pointBorderWidth: 2,
-          pointRadius: 0,
+          pointRadius: 3,
           pointHoverRadius: 5
         }]
       },
@@ -853,7 +886,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Add hover effects to display date stamps
-    document.getElementById('salesChart').addEventListener('mousemove', function(event) {
+    salesCtx.addEventListener('mousemove', function(event) {
       const rect = this.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const width = rect.width;
@@ -862,60 +895,53 @@ document.addEventListener('DOMContentLoaded', function() {
       const index = Math.min(Math.floor((x / width) * dates.length), dates.length - 1);
       const dateStamp = document.getElementById('salesDateStamp');
       
-      dateStamp.textContent = dates[index] + ': ' + Math.round(forecastedSales[index]).toLocaleString() + ' units';
+      if (dateStamp && dates[index] && forecastedSales[index] !== undefined) {
+        dateStamp.textContent = dates[index] + ': ' + Math.round(forecastedSales[index]).toLocaleString() + ' units';
+      }
     });
+    
+    console.log('✅ Sales chart updated successfully');
   }
   
   // Order Chart Function
   function updateOrderChart(dates, predictedOrders) {
-    const orderCtx = document.getElementById('orderChart').getContext('2d');
+    console.log('📈 Updating order chart with data:', { dates: dates.length, orders: predictedOrders.length });
     
-    // Assume first 6 days are "actual" for visualization purposes
-    const actualOrders = predictedOrders.slice(0, 6).map((val, i) => {
-      // Add slight variation to make it look like actual data
-      return Math.round(val * (0.95 + Math.random() * 0.1));
-    });
+    const orderCtx = document.getElementById('orderChart');
+    if (!orderCtx) {
+      console.error('❌ Order chart canvas not found');
+      return;
+    }
+    
+    const ctx = orderCtx.getContext('2d');
     
     // Create gradient for the area
-    const orderGradient = orderCtx.createLinearGradient(0, 0, 0, 300);
+    const orderGradient = ctx.createLinearGradient(0, 0, 0, 300);
     orderGradient.addColorStop(0, 'rgba(16, 185, 129, 0.7)');
     orderGradient.addColorStop(1, 'rgba(16, 185, 129, 0.05)');
-
-    const orderPastGradient = orderCtx.createLinearGradient(0, 0, 0, 300);
-    orderPastGradient.addColorStop(0, 'rgba(5, 150, 105, 0.7)');
-    orderPastGradient.addColorStop(1, 'rgba(5, 150, 105, 0.05)');
+    
+    // Destroy existing chart if it exists
+    if (window.orderChart && typeof window.orderChart.destroy === 'function') {
+      window.orderChart.destroy();
+    }
     
     // Create the order chart
-    const orderChart = new Chart(orderCtx, {
+    window.orderChart = new Chart(ctx, {
       type: 'line',
       data: {
         labels: dates,
         datasets: [{
-          label: 'Actual Orders',
-          data: actualOrders.concat(Array(dates.length - actualOrders.length).fill(null)),
-          backgroundColor: orderPastGradient,
-          borderColor: 'rgba(5, 150, 105, 1)',
-          borderWidth: 2,
-          tension: 0.4,
-          fill: true,
-          pointBackgroundColor: 'rgba(5, 150, 105, 1)',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 4,
-          pointHoverRadius: 6
-        }, {
           label: 'Predicted Orders',
           data: predictedOrders,
           backgroundColor: orderGradient,
           borderColor: 'rgba(16, 185, 129, 1)',
           borderWidth: 2,
-          borderDash: [5, 5],
           tension: 0.4,
           fill: true,
           pointBackgroundColor: 'rgba(16, 185, 129, 1)',
           pointBorderColor: '#fff',
           pointBorderWidth: 2,
-          pointRadius: 0,
+          pointRadius: 3,
           pointHoverRadius: 5
         }]
       },
@@ -958,7 +984,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Add hover effects to display date stamps
-    document.getElementById('orderChart').addEventListener('mousemove', function(event) {
+    orderCtx.addEventListener('mousemove', function(event) {
       const rect = this.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const width = rect.width;
@@ -967,141 +993,160 @@ document.addEventListener('DOMContentLoaded', function() {
       const index = Math.min(Math.floor((x / width) * dates.length), dates.length - 1);
       const dateStamp = document.getElementById('orderDateStamp');
       
-      dateStamp.textContent = dates[index] + ': ' + predictedOrders[index];
+      if (dateStamp && dates[index] && predictedOrders[index] !== undefined) {
+        dateStamp.textContent = dates[index] + ': ' + predictedOrders[index];
+      }
     });
+    
+    console.log('✅ Order chart updated successfully');
   }
 
-  // Keep the Category Demand Chart as is
-  const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-  const categoryChart = new Chart(categoryCtx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Electronics', 'Clothing', 'Home & Garden', 'Sports', 'Toys'],
-      datasets: [{
-        data: [35, 25, 20, 12, 8],
-        backgroundColor: [
-          'rgba(99, 102, 241, 0.8)',
-          'rgba(16, 185, 129, 0.8)',
-          'rgba(245, 158, 11, 0.8)',
-          'rgba(239, 68, 68, 0.8)',
-          'rgba(124, 58, 237, 0.8)'
-        ],
-        borderColor: 'rgba(255, 255, 255, 0.8)',
-        borderWidth: 2,
-        hoverOffset: 10
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '65%',
-      plugins: {
-        legend: {
-          position: 'right',
-          labels: {
-            boxWidth: 12,
-            usePointStyle: true,
-            pointStyle: 'circle',
-            padding: 15
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              return context.label + ': ' + context.raw + '%';
+  // Initialize Category Chart (static data)
+  function initializeCategoryChart() {
+    const categoryCtx = document.getElementById('categoryChart');
+    if (!categoryCtx) {
+      console.error('❌ Category chart canvas not found');
+      return;
+    }
+    
+    const ctx = categoryCtx.getContext('2d');
+    
+    window.categoryChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Electronics', 'Clothing', 'Home & Garden', 'Sports', 'Toys'],
+        datasets: [{
+          data: [35, 25, 20, 12, 8],
+          backgroundColor: [
+            'rgba(99, 102, 241, 0.8)',
+            'rgba(16, 185, 129, 0.8)',
+            'rgba(245, 158, 11, 0.8)',
+            'rgba(239, 68, 68, 0.8)',
+            'rgba(124, 58, 237, 0.8)'
+          ],
+          borderColor: 'rgba(255, 255, 255, 0.8)',
+          borderWidth: 2,
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: {
+              boxWidth: 12,
+              usePointStyle: true,
+              pointStyle: 'circle',
+              padding: 15
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.label + ': ' + context.raw + '%';
+              }
             }
           }
         }
       }
-    }
-  });
+    });
+    
+    console.log('✅ Category chart initialized successfully');
+  }
 
   // Time selector dropdown functionality
   const timeSelector = document.querySelector('.time-selector');
-  timeSelector.addEventListener('click', function() {
-    const periods = ['Next 7 Days', 'Next 14 Days', 'Next 30 Days', 'Next 90 Days'];
-    const dropdown = document.createElement('div');
-    dropdown.className = 'time-dropdown';
-    
-    periods.forEach(period => {
-      const option = document.createElement('div');
-      option.className = 'time-option';
-      option.textContent = period;
-      option.addEventListener('click', function() {
-        timeSelector.querySelector('span').textContent = period;
-        dropdown.remove();
-        
-        // Update forecast days based on selection
-        const days = parseInt(period.match(/\d+/)[0]);
-        fetchForecastForPeriod(days);
-      });
-      dropdown.appendChild(option);
-    });
-    
-    document.body.appendChild(dropdown);
-    
-    // Position the dropdown
-    const rect = timeSelector.getBoundingClientRect();
-    dropdown.style.top = rect.bottom + 'px';
-    dropdown.style.left = rect.left + 'px';
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function closeDropdown(e) {
-      if (!dropdown.contains(e.target) && e.target !== timeSelector) {
-        dropdown.remove();
-        document.removeEventListener('click', closeDropdown);
+  if (timeSelector) {
+    timeSelector.addEventListener('click', function(event) {
+      event.preventDefault();
+      
+      // Remove existing dropdown if any
+      const existingDropdown = document.querySelector('.time-dropdown');
+      if (existingDropdown) {
+        existingDropdown.remove();
+        return;
       }
-    });
-  });
-  
-  function fetchForecastForPeriod(days) {
-    // Show loading overlays
-    chartContainers.forEach(container => {
-      overlays.push(createLoadingOverlay(container));
-    });
-    
-    fetch(`/api/forecast?days=${days}`)
-      .then(response => response.json())
-      .then(data => {
-        // Process the forecast data
-        const forecastData = data.forecast;
-        const dates = forecastData.map(item => {
-          const date = new Date(item.date);
-          return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      
+      const periods = [
+        { label: 'Next 7 Days', days: 7 },
+        { label: 'Next 14 Days', days: 14 },
+        { label: 'Next 30 Days', days: 30 },
+        { label: 'Next 90 Days', days: 90 }
+      ];
+      
+      const dropdown = document.createElement('div');
+      dropdown.className = 'time-dropdown';
+      dropdown.style.cssText = `
+        position: absolute;
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+        z-index: 1000;
+        min-width: 150px;
+      `;
+      
+      periods.forEach(period => {
+        const option = document.createElement('div');
+        option.className = 'time-option';
+        option.textContent = period.label;
+        option.style.cssText = `
+          padding: 0.75rem 1rem;
+          cursor: pointer;
+          transition: background-color 0.2s;
+          border-bottom: 1px solid var(--border-color);
+        `;
+        
+        option.addEventListener('mouseenter', function() {
+          this.style.backgroundColor = 'var(--bg-primary)';
         });
-        const forecastedSales = forecastData.map(item => item.forecast);
-        const orderData = forecastData.map(item => item.orders || Math.round(item.forecast / 77));
         
-        // Update charts
-        updateSalesChart(dates, forecastedSales);
-        updateOrderChart(dates, orderData);
-        
-        // Update summary metrics
-        const totalProjectedSales = forecastData.reduce((sum, item) => sum + item.forecast, 0);
-        const totalEstimatedOrders = forecastData.reduce((sum, item) => sum + (item.orders || Math.round(item.forecast / 77)), 0);
-        
-        document.querySelector('.metric-card:nth-child(1) .metric-value').textContent = 
-          Math.round(totalProjectedSales).toLocaleString() + ' units';
-        
-        document.querySelector('.metric-card:nth-child(2) .metric-value').textContent = 
-          Math.round(totalEstimatedOrders).toLocaleString();
-        
-        // Remove loading overlays
-        document.querySelectorAll('.loading-overlay').forEach(overlay => {
-          overlay.style.opacity = 0;
-          setTimeout(() => overlay.remove(), 300);
+        option.addEventListener('mouseleave', function() {
+          this.style.backgroundColor = 'transparent';
         });
-      })
-      .catch(error => {
-        console.error('Error fetching forecast data:', error);
-        // Remove loading overlays and show error
-        document.querySelectorAll('.loading-overlay').forEach(overlay => {
-          overlay.style.opacity = 0;
-          setTimeout(() => overlay.remove(), 300);
+        
+        option.addEventListener('click', function() {
+          timeSelector.querySelector('span').textContent = period.label;
+          dropdown.remove();
+          
+          console.log(`🔄 Switching to ${period.label} (${period.days} days)`);
+          fetchForecastData(period.days);
         });
+        
+        dropdown.appendChild(option);
       });
+      
+      // Position the dropdown
+      const rect = timeSelector.getBoundingClientRect();
+      dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+      dropdown.style.left = rect.left + 'px';
+      
+      document.body.appendChild(dropdown);
+      
+      // Close dropdown when clicking outside
+      function closeDropdown(e) {
+        if (!dropdown.contains(e.target) && !timeSelector.contains(e.target)) {
+          dropdown.remove();
+          document.removeEventListener('click', closeDropdown);
+        }
+      }
+      
+      setTimeout(() => {
+        document.addEventListener('click', closeDropdown);
+      }, 0);
+    });
   }
+
+  // Initialize the category chart first (doesn't require API)
+  initializeCategoryChart();
+  
+  // Fetch initial forecast data
+  fetchForecastData(30);
 });
 </script>
+
 </body>
 </html>

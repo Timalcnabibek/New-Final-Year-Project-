@@ -155,6 +155,54 @@ if customers_collection.count_documents({}) == 0:
     customers_collection.insert_many(sample_customers)
 
 
+@app.route('/api/category-demand-purchased', methods=['GET'])
+def get_category_demand_purchased():
+    try:
+        pipeline = [
+            # Unwind the purchased products array
+            { "$unwind": "$products" },
+
+            # Join with products collection to get category
+            {
+                "$lookup": {
+                    "from": "products",
+                    "localField": "products.productId",
+                    "foreignField": "_id",
+                    "as": "product_info"
+                }
+            },
+
+            # Flatten product_info array
+            { "$unwind": "$product_info" },
+
+            # Group by product category and sum the quantities
+            {
+                "$group": {
+                    "_id": "$product_info.category",
+                    "total_quantity": { "$sum": "$products.quantity" }
+                }
+            },
+
+            # Sort by quantity descending
+            { "$sort": { "total_quantity": -1 } }
+        ]
+
+        result = list(orders_collection.aggregate(pipeline))
+
+        category_data = {
+            "labels": [r["_id"] for r in result if r["_id"]],
+            "data": [r["total_quantity"] for r in result if r["_id"]]
+        }
+
+        return jsonify({ "success": True, "categories": category_data })
+
+    except Exception as e:
+        return jsonify({ "success": False, "error": str(e) }), 500
+
+
+
+
+
 @app.route('/customer')
 def new_page():
     try:
@@ -573,10 +621,6 @@ def add_product():
 
 
 @app.route('/products', methods=['GET'])
-        # - productSKU: string (optional)
-        # - productDescription: string (optional)
-        # - productPrice: number
-        # - productDiscountPrice: number (optional)
 def get_products():
     try:
         # Get all products from MongoDB
@@ -620,106 +664,134 @@ def delete_product(product_id):
         print(f"Error in delete_product API: {str(e)}")
         return jsonify({"success": False, "message": f"Error deleting product: {str(e)}"}), 500
 
+# ✅ Route: Get a single product by ID
+@app.route('/products/<product_id>', methods=['GET'])
+def get_product(product_id):
+    try:
+        product = products_collection.find_one({"_id": ObjectId(product_id)})
+        if not product:
+            return jsonify({"success": False, "message": "Product not found"}), 404
+        product['_id'] = str(product['_id'])  # Convert ObjectId to string
+        return jsonify({"success": True, "product": product})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+# ✅ Route: Update product
 @app.route('/products/<product_id>', methods=['PUT'])
 def update_product(product_id):
     try:
         # Get the existing product
         existing_product = products_collection.find_one({"_id": ObjectId(product_id)})
-        
         if not existing_product:
             return jsonify({"success": False, "message": "Product not found"}), 404
-        
-        # Process sizes from multiple checkbox values
-        sizes = request.form.getlist('productSize') if 'productSize' in request.form else []
-        
-        # Process colors by splitting comma-separated string
-        colors = [color.strip() for color in request.form.get('productColor', '').split(',') if color.strip()]
-        
-        # Process tags by splitting comma-separated string
-        tags = [tag.strip() for tag in request.form.get('productTags', '').split(',') if tag.strip()]
-        
-        # Get product data from form
+
+        # Use request.form for multipart/form-data
+        data = request.form
+
+        # Parse checkbox/multiselect values
+        sizes = data.getlist('productSize') if 'productSize' in data else []
+
+        # Parse comma-separated values
+        colors = [c.strip() for c in data.get('productColor', '').split(',') if c.strip()]
+        tags = [t.strip() for t in data.get('productTags', '').split(',') if t.strip()]
+
+        # Build product data dictionary
         product_data = {
-            "name": request.form.get('productName'),
-            "sku": request.form.get('productSKU', ''),
-            "description": request.form.get('productDescription', ''),
-            "price": float(request.form.get('productPrice', 0)),
-            "discount_price": float(request.form.get('productDiscountPrice', 0)) if request.form.get('productDiscountPrice') else None,
-            "category": request.form.get('productCategory'),
-            "gender": request.form.get('productGender'),
-            "stock": int(request.form.get('productStock', 0)),
-            "featured": request.form.get('productFeatured') == 'true',
-            "trending": request.form.get('productTrending') == 'true',
-            "season": request.form.get('productSeason', ''),
+            "name": data.get('productName'),
+            "sku": data.get('productSKU', ''),
+            "description": data.get('productDescription', ''),
+            "price": float(data.get('productPrice', 0)),
+            "discount_price": float(data.get('productDiscountPrice', 0)) if data.get('productDiscountPrice') else None,
+            "category": data.get('productCategory'),
+            "gender": data.get('productGender'),
+            "stock": int(data.get('productStock', 0)),
+            "featured": data.get('productFeatured') in ['true', 'True', '1', 'on', 'yes'],
+            "trending": data.get('productTrending') in ['true', 'True', '1', 'on', 'yes'],
+            "season": data.get('productSeason', ''),
             "sizes": sizes,
             "colors": colors,
-            "material": request.form.get('productMaterial', ''),
+            "material": data.get('productMaterial', ''),
             "tags": tags,
-            "release_date": request.form.get('productReleaseDate', ''),
-            "weight": float(request.form.get('productWeight', 0)) if request.form.get('productWeight') else None,
-            "updated_at": datetime.now()
+            "release_date": data.get('productReleaseDate', ''),
+            "weight": float(data.get('productWeight', 0)) if data.get('productWeight') else None,
+            "updated_at": datetime.utcnow()
         }
-        
-        # Handle image uploads to Cloudinary
-        if 'productImages' in request.files and any(file.filename for file in request.files.getlist('productImages')):
-            # If new images were provided, delete old ones
+
+        # Handle image replacement if new files are uploaded
+        if 'productImages' in request.files and any(f.filename for f in request.files.getlist('productImages')):
+            # Delete existing Cloudinary images
             for image in existing_product.get('images', []):
                 if 'public_id' in image:
                     cloudinary.uploader.destroy(image['public_id'])
-            
+
             # Upload new images
             image_urls = []
             for file in request.files.getlist('productImages'):
                 if file.filename:
-                    # Upload image to Cloudinary
                     upload_result = cloudinary.uploader.upload(
                         file,
                         folder="ecommerce/products",
                         use_filename=True,
                         unique_filename=True
                     )
-                    
-                    # Store image URL and public_id for future reference
-                    image_info = {
+                    image_urls.append({
                         "url": upload_result['secure_url'],
                         "public_id": upload_result['public_id']
-                    }
-                    image_urls.append(image_info)
-            
+                    })
             product_data['images'] = image_urls
         else:
-            # Keep existing images
+            # Keep previous images if no new ones are uploaded
             product_data['images'] = existing_product.get('images', [])
-        
+
         # Update product in MongoDB
         result = products_collection.update_one(
             {"_id": ObjectId(product_id)},
             {"$set": product_data}
         )
-        
-        # Update related sales data
-        sales_data = {
-            "product_id": result.inserted_id,
-            "product_name": product_data["name"],
-            "category": product_data["category"],
-            "gender": product_data["gender"],
-            "season": product_data["season"],
-            "price": product_data["price"],
-            "total_sold": 0,  # Start with 0
-            "total_revenue": 0,  # No sales yet
-            "growth_rate": 0.0,  # Placeholder
-            "historical_sales": [],  # Optional future use
-            "last_updated": datetime.utcnow()
-        }
-        
+
+        # Update or create sales data
+        sales_record = sales_data_collection.find_one({"product_id": ObjectId(product_id)})
+        if sales_record:
+            sales_data_collection.update_one(
+                {"product_id": ObjectId(product_id)},
+                {"$set": {
+                    "product_name": product_data["name"],
+                    "category": product_data["category"],
+                    "gender": product_data["gender"],
+                    "season": product_data["season"],
+                    "price": product_data["price"],
+                    "stock": product_data["stock"],
+                    "last_updated": datetime.utcnow()
+                }}
+            )
+        else:
+            # If no sales record, create one
+            sales_data_collection.insert_one({
+                "product_id": ObjectId(product_id),
+                "product_name": product_data["name"],
+                "category": product_data["category"],
+                "gender": product_data["gender"],
+                "season": product_data["season"],
+                "price": product_data["price"],
+                "stock": product_data["stock"],
+                "total_sold": 0,
+                "total_revenue": 0,
+                "growth_rate": 0.0,
+                "historical_sales": [],
+                "last_updated": datetime.utcnow()
+            })
+
         if result.modified_count > 0:
             return jsonify({"success": True, "message": "Product updated successfully"})
         else:
             return jsonify({"success": False, "message": "No changes made to product"}), 200
-    
+
     except Exception as e:
         print(f"Error in update_product API: {str(e)}")
         return jsonify({"success": False, "message": f"Error updating product: {str(e)}"}), 500
+
+
 
 # Add a new endpoint to get customer data for your Node.js application
 @app.route('/api/customers/all', methods=['GET'])
@@ -938,8 +1010,8 @@ def get_top_selling_products():
                     if product:
                         p["stock"] = product.get("stock", "N/A")
 
-                        image = product.get("image", {})
-                        p["image_url"] = image.get("url", "")
+                        images = product.get("images", [])
+                        p["image_url"] = images[0]["url"] if images and "url" in images[0] else ""
 
                 # Convert nested sale _ids
                 for sale in historical_sales:
@@ -1802,7 +1874,6 @@ def get_combined_forecast():
 
 
 
-
 @app.route('/api/sales-data', methods=['GET'])
 def get_sales_data():
     """
@@ -1812,20 +1883,84 @@ def get_sales_data():
     - days_history: Number of historical days to fetch (default: 30)
     - days_forecast: Number of forecast days to generate (default: 14)
     - view: Type of data to return - 'all', 'historical', 'forecast' (default: 'all')
+    - forecast_from_date: ISO string date to start forecast from (default: current date)
+    - date: Specific date to get total sales for (format: YYYY-MM-DD)
     
     Returns:
-    - Historical sales data
+    - Historical sales data (aggregated by day)
     - Forecasted sales data
     - Order counts for both historical and forecast periods
+    - If date parameter is provided, returns total sales for that specific date
     """
     try:
-        # Parse query parameters
+        # Check if a specific date was requested
+        specific_date = request.args.get('date')
+        
+        if specific_date:
+            # User wants aggregated data for a specific date
+            try:
+                # Parse the date
+                target_date = datetime.fromisoformat(specific_date)
+                # Get next day to create a range
+                next_day = target_date + timedelta(days=1)
+                
+                # Get data from CSV_products for the specific date
+                csv_products = list(db.CSV_products.find(
+                    {"sales_date": {"$gte": target_date, "$lt": next_day}},
+                    {'sales_volume': 1, 'sales_date': 1, '_id': 0}
+                ))
+                
+                csv_sales_total = sum(doc.get("sales_volume", 0) for doc in csv_products)
+                
+                # Get data from orders collection for the specific date
+                orders = list(orders_collection.find(
+                    {"orderedAt": {"$gte": target_date, "$lt": next_day}},
+                    {"products": 1, "orderedAt": 1, "_id": 0}
+                ))
+                
+                order_sales_total = 0
+                order_count = len(orders)
+                
+                for order in orders:
+                    for item in order.get("products", []):
+                        quantity = item.get("quantity", 0)
+                        order_sales_total += quantity
+                
+                # Combine totals
+                total_sales = csv_sales_total + order_sales_total
+                
+                # Return the aggregated data
+                return jsonify({
+                    "success": True,
+                    "date": specific_date,
+                    "total_sales": float(total_sales),
+                    "total_orders": order_count
+                })
+            
+            except ValueError:
+                return jsonify({
+                    "success": False, 
+                    "error": f"Invalid date format: {specific_date}. Please use YYYY-MM-DD format."
+                }), 400
+        
+        # Parse query parameters for the original functionality
         days_history = int(request.args.get('days_history', 30))
         days_forecast = int(request.args.get('days_forecast', 14))
         view_type = request.args.get('view', 'all')  # 'all', 'historical', 'forecast'
         
+        # Get the forecast date from query param or use current date
+        forecast_from_date_str = request.args.get('forecast_from_date')
+        if forecast_from_date_str:
+            try:
+                forecast_from_date = datetime.fromisoformat(forecast_from_date_str.replace('Z', '+00:00'))
+            except ValueError:
+                # If parsing fails, use current date
+                forecast_from_date = datetime.now()
+        else:
+            forecast_from_date = datetime.now()
+            
         # Calculate date ranges
-        end_date = datetime.now()
+        end_date = forecast_from_date
         start_date = end_date - timedelta(days=days_history)
         
         # Get historical data from MongoDB
@@ -1897,14 +2032,26 @@ def get_sales_data():
             # Create empty dataframe if no data found
             historical_df = pd.DataFrame(columns=["sales_date", "sales_volume", "order_count"])
         
-        # Format historical data for API response
+        # Group historical data by date and aggregate
+        # This ensures we have only one entry per date with totals
         historical_data = []
-        for _, row in historical_df.iterrows():
-            historical_data.append({
-                "date": row["sales_date"].strftime('%Y-%m-%d'),
-                "sales": float(row["sales_volume"]),
-                "orders": int(row["order_count"]) if "order_count" in row else 0
-            })
+        if not historical_df.empty:
+            # Convert sales_date to string format for grouping
+            historical_df['date_str'] = historical_df['sales_date'].dt.strftime('%Y-%m-%d')
+            
+            # Group by the string date and sum
+            daily_totals = historical_df.groupby('date_str').agg({
+                'sales_volume': 'sum',
+                'order_count': 'sum'
+            }).reset_index()
+            
+            # Format for API response
+            for _, row in daily_totals.iterrows():
+                historical_data.append({
+                    "date": row["date_str"],
+                    "sales": float(row["sales_volume"]),
+                    "orders": int(row["order_count"])
+                })
             
         # Generate forecast if requested
         forecast_data = []
@@ -1954,7 +2101,8 @@ def get_sales_data():
             "success": True,
             "metrics": {
                 "total_historical_days": len(historical_data),
-                "total_forecast_days": len(forecast_data)
+                "total_forecast_days": len(forecast_data),
+                "forecast_from_date": forecast_from_date.strftime('%Y-%m-%d')
             }
         }
         
@@ -1970,7 +2118,59 @@ def get_sales_data():
         print(f"❌ Sales Data API Error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+# New endpoint to get today's sales
+@app.route('/api/sales-today', methods=['GET'])
+def get_today_sales():
+    """
+    API endpoint to get total sales for today
+    
+    Returns:
+    - Total sales for today
+    - Total order count for today
+    """
+    try:
+        # Get today's date
+        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        tomorrow = today + timedelta(days=1)
+        
+        # Get data from CSV_products for today
+        csv_products = list(db.CSV_products.find(
+            {"sales_date": {"$gte": today, "$lt": tomorrow}},
+            {'sales_volume': 1, '_id': 0}
+        ))
+        
+        csv_sales_total = sum(doc.get("sales_volume", 0) for doc in csv_products)
+        
+        # Get data from orders collection for today
+        orders = list(orders_collection.find(
+            {"orderedAt": {"$gte": today, "$lt": tomorrow}},
+            {"products": 1, "_id": 0}
+        ))
+        
+        order_sales_total = 0
+        order_count = len(orders)
+        
+        for order in orders:
+            for item in order.get("products", []):
+                quantity = item.get("quantity", 0)
+                order_sales_total += quantity
+        
+        # Combine totals
+        total_sales = csv_sales_total + order_sales_total
+        
+        return jsonify({
+            "success": True,
+            "date": today.strftime('%Y-%m-%d'),
+            "total_sales": float(total_sales),
+            "total_orders": order_count
+        })
+    
+    except Exception as e:
+        print(f"❌ Today's Sales API Error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
 # Frontend API that combines both historical and forecast data for the chart
+# Modified API backend code
 @app.route('/api/chart-data', methods=['GET'])
 def get_chart_data():
     """
@@ -1980,17 +2180,40 @@ def get_chart_data():
     - days_history: Number of historical days to fetch (default: 30)
     - days_forecast: Number of forecast days to generate (default: 14)
     - view: Type of data to return - 'combined', 'historical', 'forecast' (default: 'combined')
+    - forecastFromDate: ISO string date to start forecast from (default: current date)
     
     Returns:
     - Data formatted for the chart component
     """
     try:
-        # Forward the request to the sales-data API internally
-        days_history = request.args.get('days_history', 30)
-        days_forecast = request.args.get('days_forecast', 14)
+        # Get request parameters with defaults
+        days_history = int(request.args.get('days_history', 30))
+        days_forecast = int(request.args.get('days_forecast', 14))
+        
+        # Get the forecast date parameter - if not provided use current date
+        forecast_from_date = request.args.get('forecastFromDate')
+        if not forecast_from_date:
+            forecast_from_date = datetime.now().isoformat()
+        
+        # Create parameters for the sales data endpoint
+        params = {
+            'days_history': days_history,
+            'days_forecast': days_forecast,
+            'view': 'all',
+            'forecast_from_date': forecast_from_date
+        }
+            
+        # Store the original request args
+        original_args = request.args
+        
+        # Override request.args temporarily
+        request.args = params
         
         # Call the main API function directly to avoid HTTP overhead
         sales_response = get_sales_data()
+        
+        # Restore original request args
+        request.args = original_args
         
         # Parse the response
         sales_data = json.loads(sales_response.data)
@@ -2048,6 +2271,9 @@ def get_chart_data():
         
         # Add additional metrics
         chart_data["metrics"] = sales_data.get("metrics", {})
+        # Add the current date and forecast from date for reference
+        chart_data["metrics"]["current_date"] = datetime.now().strftime('%Y-%m-%d')
+        chart_data["metrics"]["forecast_from"] = params["forecast_from_date"]
             
         return jsonify(chart_data)
     
@@ -2061,33 +2287,35 @@ def get_chart_data():
 @app.route("/api/rewards", methods=["POST"])
 def add_reward():
     data = request.json
-    required_fields = ["title", "description", "points_required", "discount"]
+    required_fields = ["title", "description", "points_required"]
 
     if not all(field in data for field in required_fields):
-        return jsonify({"error": "Missing required fields"}), 400
-
-    discount = data.get("discount")
-    if not isinstance(discount, dict) or "type" not in discount or "value" not in discount:
-        return jsonify({"error": "Invalid discount format"}), 400
-
-    if discount["type"] not in ["percentage", "fixed"]:
-        return jsonify({"error": "Discount type must be 'percentage' or 'fixed'"}), 400
+        return jsonify({"success": False, "message": "Missing required fields"}), 400
 
     reward = {
         "title": data["title"],
         "description": data["description"],
         "points_required": int(data["points_required"]),
-        "discount": {
-            "type": discount["type"],
-            "value": float(discount["value"])
-        },
         "active": True,
         "created_at": datetime.utcnow()
     }
 
-    result = rewards_collection.insert_one(reward)
-    return jsonify({"message": "Reward added", "reward_id": str(result.inserted_id)}), 201
+    # Add discount info if present
+    if "discount" in data:
+        discount = data["discount"]
+        if not isinstance(discount, dict) or "type" not in discount or "value" not in discount:
+            return jsonify({"success": False, "message": "Invalid discount format"}), 400
 
+        if discount["type"] not in ["percentage", "fixed"]:
+            return jsonify({"success": False, "message": "Discount type must be 'percentage' or 'fixed'"}), 400
+
+        reward["discount"] = {
+            "type": discount["type"],
+            "value": float(discount["value"])
+        }
+
+    result = rewards_collection.insert_one(reward)
+    return jsonify({"success": True, "message": "Reward added successfully", "reward_id": str(result.inserted_id)}), 201
 
 
 @app.route("/api/rewards/get", methods=["GET"])
@@ -2107,7 +2335,7 @@ def get_all_rewards():
 def update_reward(reward_id):
     data = request.json
     if not data:
-        return jsonify({"error": "No data received"}), 400
+        return jsonify({"success": False, "message": "No data received"}), 400
 
     update_fields = {
         "title": data.get("title"),
@@ -2119,10 +2347,10 @@ def update_reward(reward_id):
     if "discount" in data:
         discount = data["discount"]
         if not isinstance(discount, dict) or "type" not in discount or "value" not in discount:
-            return jsonify({"error": "Invalid discount format"}), 400
+            return jsonify({"success": False, "message": "Invalid discount format"}), 400
 
         if discount["type"] not in ["percentage", "fixed"]:
-            return jsonify({"error": "Discount type must be 'percentage' or 'fixed'"}), 400
+            return jsonify({"success": False, "message": "Discount type must be 'percentage' or 'fixed'"}), 400
 
         update_fields["discount"] = {
             "type": discount["type"],
@@ -2135,18 +2363,23 @@ def update_reward(reward_id):
     )
 
     if result.matched_count == 0:
-        return jsonify({"error": "Reward not found"}), 404
+        return jsonify({"success": False, "message": "Reward not found"}), 404
 
     return jsonify({"success": True, "message": "Reward updated successfully"}), 200
 
 
 
-@app.route("/api/admin/rewards/<reward_id>", methods=["DELETE"])
+@app.route("/api/rewards/<reward_id>", methods=["DELETE"])
 def delete_reward(reward_id):
-    result = rewards_collection.delete_one({"_id": ObjectId(reward_id)})
-    if result.deleted_count == 0:
-        return jsonify({"error": "Reward not found"}), 404
-    return jsonify({"message": "Reward deleted"}), 200
+    try:
+        result = rewards_collection.delete_one({"_id": ObjectId(reward_id)})
+        if result.deleted_count == 1:
+            return jsonify({"success": True, "message": "Reward deleted successfully!"}), 200
+        else:
+            return jsonify({"success": False, "message": "Reward not found"}), 404
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error deleting reward: {str(e)}"}), 500
+
 
 
 

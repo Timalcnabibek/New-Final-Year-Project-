@@ -91,55 +91,129 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Form submission
-    const productForm = document.getElementById('productForm');
-    const saveLoader = document.getElementById('saveLoader');
+const productForm = document.getElementById('productForm');
+const saveLoader = document.getElementById('saveLoader');
+
+productForm.addEventListener('submit', function(event) {
+    event.preventDefault();
     
-    productForm.addEventListener('submit', function(event) {
-        event.preventDefault();
-        
-        // Show loader
-        saveLoader.style.display = 'inline-block';
-        
-        // Create FormData object to handle file uploads
-        const formData = new FormData();
-        
-        formData.append('productName', document.getElementById('productName').value);
-        formData.append('productSKU', document.getElementById('productSKU').value);
-        formData.append('productDescription', document.getElementById('productDescription').value);
-        formData.append('productPrice', document.getElementById('productPrice').value);
-        formData.append('productDiscountPrice', document.getElementById('productDiscountPrice').value);
-        formData.append('productCategory', document.getElementById('productCategory').value);
-        formData.append('productStock', document.getElementById('productStock').value);
-        formData.append('productFeatured', document.getElementById('productFeatured').checked);
-        
-        // Add images
-        const imageFiles = document.getElementById('productImages').files;
-        for (let i = 0; i < imageFiles.length; i++) {
-            formData.append('productImages', imageFiles[i]);
-        }
-        
-        // Send data to server
-        fetch('/products', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            saveLoader.style.display = 'none';
-            
-            if (data.success) {
-                showSuccess('Product has been successfully saved!');
-                resetForm();
-            } else {
-                showError(data.message || 'Error saving product. Please try again.');
-            }
-        })
-        .catch(error => {
-            saveLoader.style.display = 'none';
-            showError('Network error. Please try again.');
-            console.error('Error:', error);
-        });
+    // Show loader
+    saveLoader.style.display = 'inline-block';
+    
+    // Create FormData object to handle file uploads
+    const formData = new FormData();
+    
+    // Add basic product data
+    formData.append('productName', document.getElementById('productName').value);
+    formData.append('productSKU', document.getElementById('productSKU').value);
+    formData.append('productDescription', document.getElementById('productDescription').value);
+    formData.append('productPrice', document.getElementById('productPrice').value);
+    formData.append('productDiscountPrice', document.getElementById('productDiscountPrice').value);
+    formData.append('productCategory', document.getElementById('productCategory').value);
+    formData.append('productStock', document.getElementById('productStock').value);
+    formData.append('productFeatured', document.getElementById('productFeatured').checked ? 'true' : 'false');
+    
+    if (document.getElementById('productTrending')) {
+        formData.append('productTrending', document.getElementById('productTrending').checked ? 'true' : 'false');
+    }
+    
+    // Add sizes, colors, materials and other fields that might exist
+    const productSizeElements = document.querySelectorAll('input[name="productSize"]:checked');
+    productSizeElements.forEach(element => {
+        formData.append('productSize', element.value);
     });
+    
+    // Add other fields if they exist
+    if (document.getElementById('productGender')) {
+        formData.append('productGender', document.getElementById('productGender').value);
+    }
+    if (document.getElementById('productSeason')) {
+        formData.append('productSeason', document.getElementById('productSeason').value);
+    }
+    if (document.getElementById('productColor')) {
+        formData.append('productColor', document.getElementById('productColor').value);
+    }
+    if (document.getElementById('productMaterial')) {
+        formData.append('productMaterial', document.getElementById('productMaterial').value);
+    }
+    if (document.getElementById('productTags')) {
+        formData.append('productTags', document.getElementById('productTags').value);
+    }
+    if (document.getElementById('productReleaseDate')) {
+        formData.append('productReleaseDate', document.getElementById('productReleaseDate').value);
+    }
+    if (document.getElementById('productWeight')) {
+        formData.append('productWeight', document.getElementById('productWeight').value);
+    }
+    
+    // Add images
+    const imageFiles = document.getElementById('productImages').files;
+    for (let i = 0; i < imageFiles.length; i++) {
+        formData.append('productImages', imageFiles[i]);
+    }
+    
+    // Check if we're in edit mode
+    const isEditing = productForm.getAttribute('data-editing') === 'true';
+    const productId = isEditing ? productForm.getAttribute('data-product-id') : null;
+    
+    // Set URL and method based on action
+    let url = '/products';
+    let method = 'POST';
+    
+    if (isEditing && productId) {
+    url = `/products/${productId}`;
+    method = 'PUT'; // ✅ Use real PUT request
+    }
+
+    
+    console.log("Form submission URL:", url);
+    console.log("HTTP Method:", method);
+    console.log("Is editing mode:", isEditing);
+    if (isEditing) console.log("Product ID:", productId);
+    
+    // Make the request
+    fetch(url, {
+        method: method,
+        body: formData
+    })
+    .then(response => {
+        console.log("Response status:", response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        saveLoader.style.display = 'none';
+        console.log("Response data:", data);
+        
+        if (data.success) {
+            showSuccess(isEditing ? 'Product has been successfully updated!' : 'Product has been successfully saved!');
+            
+            // Reset form and UI
+            resetForm();
+            
+            // If we were editing, reset the form to add mode
+            if (isEditing) {
+                productForm.removeAttribute('data-editing');
+                productForm.removeAttribute('data-product-id');
+                document.getElementById('saveProduct').textContent = 'Save Product';
+            }
+            
+            // If we're in the products view, refresh the list
+            if (document.querySelector('[data-tab="all-products"]').classList.contains('active')) {
+                loadProducts();
+            }
+        } else {
+            showError(data.message || 'Error saving product. Please try again.');
+        }
+    })
+    .catch(error => {
+        saveLoader.style.display = 'none';
+        console.error('Error:', error);
+        showError('Network error. Please try again: ' + error.message);
+    });
+});
     
     // Reset form
     const resetFormBtn = document.getElementById('resetForm');
@@ -190,7 +264,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             
                             const priceCell = document.createElement('td');
                             priceCell.textContent = `$${product.price.toFixed(2)}`;
-                            
+
+                            const discountCell = document.createElement('td');
+                            if (product.discount_price && product.discount_price > 0) {
+                                discountCell.textContent = `$${product.discount_price.toFixed(2)}`;
+                            } else {
+                                discountCell.textContent = '—'; // or '$0.00'
+                            }
+
                             const stockCell = document.createElement('td');
                             stockCell.textContent = product.stock;
                             
@@ -224,6 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             row.appendChild(nameCell);
                             row.appendChild(skuCell);
                             row.appendChild(priceCell);
+                            row.appendChild(discountCell); 
                             row.appendChild(stockCell);
                             row.appendChild(statusCell);
                             row.appendChild(actionsCell);

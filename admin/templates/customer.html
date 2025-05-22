@@ -6,7 +6,6 @@
     <title>Customers - Admin Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/newstyles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css') }}">
-    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"> -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
@@ -64,7 +63,7 @@
                                 <th>Email</th>
                                 <th>Phone</th>
                                 <th>Status</th>
-                                <th>Total Spent</th>
+                                <!-- <th>Total Spent</th> -->
                                 <th>Registered</th>
                                 <th>Actions</th>
                             </tr>
@@ -107,11 +106,7 @@
                             <option value="Inactive">Inactive</option>
                             <option value="Pending">Pending</option>
                         </select>
-                    <!-- </div>
-                    <div class="form-group">
-                        <label for="customerSpent">Total Spent</label>
-                        <input type="number" id="customerSpent" step="0.01" min="0">
-                    </div> -->
+                    </div>
                     <div class="form-actions">
                         <button type="button" class="secondary-btn" id="cancelBtn">Cancel</button>
                         <button type="submit" class="primary-btn">Save Customer</button>
@@ -236,7 +231,6 @@ function renderCustomers() {
             <td>${customer.email || 'N/A'}</td>
             <td>${customer.phone || 'N/A'}</td>
             <td>${statusDisplay}</td>
-            <td>$${(customer.total_spent || 0).toFixed(2)}</td>
             <td>${customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : 'N/A'}</td>
             <td class="actions-cell">
                 <button class="edit-btn" data-id="${customer._id}"><i class="fas fa-edit"></i></button>
@@ -248,12 +242,25 @@ function renderCustomers() {
     });
 
     // Add event listeners to edit and delete buttons
+    addActionButtonListeners();
+}
+
+// Add event listeners to action buttons
+function addActionButtonListeners() {
+    // Add event listeners for edit buttons
     document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', () => openEditModal(btn.dataset.id));
+        btn.addEventListener('click', function() {
+            const customerId = this.getAttribute('data-id');
+            openEditModal(customerId);
+        });
     });
     
+    // Add event listeners for delete buttons
     document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', () => openDeleteModal(btn.dataset.id));
+        btn.addEventListener('click', function() {
+            const customerId = this.getAttribute('data-id');
+            openDeleteModal(customerId);
+        });
     });
 }
 
@@ -309,7 +316,6 @@ async function handleFormSubmit(e) {
     // For new customers, we need a password
     if (!isEdit) {
         // For simplicity, generate a default password for new customers
-        // In production, you might want to implement a proper password field
         customerData.password = "defaultPassword123";
     }
     

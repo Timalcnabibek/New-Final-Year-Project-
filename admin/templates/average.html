@@ -632,45 +632,8 @@
             <div class="categories-section">
                 <div class="category-card">
                     <div class="category-title">Top Categories</div>
-                    
-                    <div class="category-item">
-                        <div class="category-name">Electronics</div>
-                        <div class="category-value">85%</div>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 85%;"></div>
-                    </div>
-                    
-                    <div class="category-item">
-                        <div class="category-name">Clothing</div>
-                        <div class="category-value">72%</div>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 72%;"></div>
-                    </div>
-                    
-                    <div class="category-item">
-                        <div class="category-name">Home & Kitchen</div>
-                        <div class="category-value">63%</div>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 63%;"></div>
-                    </div>
-                    
-                    <div class="category-item">
-                        <div class="category-name">Books</div>
-                        <div class="category-value">51%</div>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 51%;"></div>
-                    </div>
-                    
-                    <div class="category-item">
-                        <div class="category-name">Sports</div>
-                        <div class="category-value">39%</div>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 39%;"></div>
+                    <div id="top-categories-container">
+                        <!-- Category bars will be injected here -->
                     </div>
                 </div>
             </div>
@@ -698,7 +661,8 @@
                 });
             });
         });
-        
+            loadTopCategories();
+
         function fetchAnalyticsData(period) {
             // Fetch data from API
             fetch(`/api/analytics/overview?period=${period}`)
@@ -795,6 +759,39 @@
                 `;
             });
         }
+
+        function loadTopCategories() {
+    fetch('/api/category-demand-purchased')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.categories) {
+                const labels = data.categories.labels;
+                const values = data.categories.data;
+                const maxValue = Math.max(...values);
+
+                const container = document.getElementById('top-categories-container');
+                container.innerHTML = '';
+
+                labels.forEach((label, index) => {
+                    const percentage = ((values[index] / maxValue) * 100).toFixed(0);
+
+                    container.innerHTML += `
+                        <div class="category-item">
+                            <div class="category-name">${label.replace('-', ' ')}</div>
+                            <div class="category-value">${percentage}%</div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${percentage}%;"></div>
+                        </div>
+                    `;
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading category data:', error);
+        });
+}
+
     </script>
 
 </body>

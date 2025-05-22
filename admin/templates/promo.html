@@ -40,16 +40,6 @@
             font-size: 14px;
         }
         
-        .reward-category {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            margin-bottom: 10px;
-            background-color: #e9f0fd;
-            color: #4c82e6;
-        }
-        
         .reward-description {
             color: #666;
             margin-bottom: 15px;
@@ -71,26 +61,6 @@
             padding: 30px;
             color: #888;
             font-size: 16px;
-        }
-        
-        .category-label.discount {
-            background-color: #e9f0fd;
-            color: #4c82e6;
-        }
-        
-        .category-label.gift {
-            background-color: #fdeaeb;
-            color: #e64c4c;
-        }
-        
-        .category-label.exclusive {
-            background-color: #f0fde9;
-            color: #4ce64c;
-        }
-        
-        .category-label.experience {
-            background-color: #fdf6e9;
-            color: #e6b44c;
         }
 
         #notification-container {
@@ -218,78 +188,75 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-          <h1>Rewards Management</h1>
-          <p class="subtitle">Create and manage rewards for your customer loyalty program</p>
-        </header>
-        <a href="{{ url_for('index') }}" class="fancy-link">
-            <i class="fas fa-arrow-left"></i> Go Back To Dashboard
-        </a>
-        
-        <div class="tabs">
-          <button class="tab-btn active" data-tab="add">Add Reward</button>
-          <button class="tab-btn" data-tab="view">View Rewards</button>
-        </div>
-        
-        <div id="add-tab" class="tab-content active">
-          <form id="add-reward-form">
-            <div class="form-group">
-              <label for="reward-title">Reward Title</label>
-              <input type="text" id="reward-title" placeholder="E.G. 10% Off" required>
-            </div>
-            
-            <div class="form-group">
-              <label for="reward-description">Description</label>
-              <input type="text" id="reward-description" placeholder="E.G. Get 10% off your order" required>
-            </div>
-            
-            <div class="form-row">
-              <div class="form-col">
-                <div class="form-group">
-                  <label for="points-required">Points Required</label>
-                  <input type="number" id="points-required" min="1" placeholder="700" required>
-                </div>
-              </div>
-            </div>
-            
-            <div id="discount-fields" class="form-row">
-              <div class="form-col">
-                <div class="form-group">
-                  <label for="discount-type">Discount Type</label>
-                  <select id="discount-type" required>
-                    <option value="percentage">Percentage (%)</option>
-                    <option value="fixed">Fixed Amount (Rs)</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-col">
-                <div class="form-group">
-                  <label for="discount-value">Discount Value</label>
-                  <input type="number" id="discount-value" min="0" step="0.01" placeholder="10" required>
-                </div>
-              </div>
-            </div>
-            
-            <button type="submit" class="btn btn-primary btn-block">Create Reward</button>
-          </form>
-        </div>
-        
-        <div id="view-tab" class="tab-content">
-          <div class="search-container">
-            <input type="text" id="search-input" placeholder="Search rewards...">
-            <select id="category-filter">
-              <option value="all">All Categories</option>
-              <option value="Discount">Fix Amount</option>
-              <option value="Gift">Percentage</option>
-            </select>
-          </div>
-          
-          <div class="rewards-container" id="rewards-container">
-            <!-- Rewards will be inserted here dynamically -->
+<div class="container">
+  <header>
+    <h1>Rewards Management</h1>
+    <p class="subtitle">Create and manage rewards for your customer loyalty program</p>
+  </header>
+
+  <a href="{{ url_for('index') }}" class="fancy-link">
+    <i class="fas fa-arrow-left"></i> Go Back To Dashboard
+  </a>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="add">Add Reward</button>
+    <button class="tab-btn" data-tab="view">View Rewards</button>
+  </div>
+
+  <div id="add-tab" class="tab-content active">
+    <form id="add-reward-form">
+      <div class="form-group">
+        <label for="reward-title">Reward Title</label>
+        <input type="text" id="reward-title" placeholder="E.G. 10% Off" required>
+      </div>
+
+      <div class="form-group">
+        <label for="reward-description">Description</label>
+        <input type="text" id="reward-description" placeholder="E.G. Get 10% off your order" required>
+      </div>
+
+      <div class="form-row">
+        <div class="form-col">
+          <div class="form-group">
+            <label for="points-required">Points Required</label>
+            <input type="number" id="points-required" min="1" placeholder="700" required>
           </div>
         </div>
       </div>
+
+      <div id="discount-fields" class="form-row">
+        <div class="form-col">
+          <div class="form-group">
+            <label for="discount-type">Discount Type</label>
+            <select id="discount-type" required>
+              <option value="percentage">Percentage (%)</option>
+              <option value="fixed">Fixed Amount (Rs)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-col">
+          <div class="form-group">
+            <label for="discount-value">Discount Value</label>
+            <input type="number" id="discount-value" min="0" step="0.01" placeholder="10" required>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">Create Reward</button>
+    </form>
+  </div>
+
+  <div id="view-tab" class="tab-content">
+    <div class="search-container">
+      <input type="text" id="search-input" placeholder="Search rewards...">
+    </div>
+
+    <div class="rewards-container" id="rewards-container">
+      <!-- Rewards will be inserted here dynamically -->
+    </div>
+  </div>
+</div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -315,22 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    
-    // Category change handler to show/hide discount fields
-    const categorySelect = document.getElementById('reward-category');
-    const discountFields = document.getElementById('discount-fields');
-    
-    categorySelect.addEventListener('change', function() {
-        if (this.value === 'Discount') {
-            discountFields.style.display = 'flex';
-            document.getElementById('discount-type').setAttribute('required', 'required');
-            document.getElementById('discount-value').setAttribute('required', 'required');
-        } else {
-            discountFields.style.display = 'none';
-            document.getElementById('discount-type').removeAttribute('required');
-            document.getElementById('discount-value').removeAttribute('required');
-        }
-    });
+
     
     // Form submission handler
     const addRewardForm = document.getElementById('add-reward-form');
@@ -340,35 +292,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const title = document.getElementById('reward-title').value.trim();
         const description = document.getElementById('reward-description').value.trim();
         const pointsRequired = parseInt(document.getElementById('points-required').value);
-        const category = document.getElementById('reward-category').value;
         
         // Create reward data object
         let rewardData = {
             title: title,
             description: description,
-            points_required: pointsRequired,
-            category: category
+            points_required: pointsRequired
         };
         
-        // Add discount info if category is Discount
-        if (category === 'Discount') {
-            rewardData.discount = {
-                type: document.getElementById('discount-type').value,
-                value: parseFloat(document.getElementById('discount-value').value)
-            };
-        }
+        // Add discount info
+        rewardData.discount = {
+            type: document.getElementById('discount-type').value,
+            value: parseFloat(document.getElementById('discount-value').value)
+        };
         
         console.log("✅ Submitting reward data:", rewardData);
         addReward(rewardData);
     });
     
-    // Filter and search functionality
-    const categoryFilter = document.getElementById('category-filter');
+    // Search functionality
     const searchInput = document.getElementById('search-input');
-    
-    categoryFilter.addEventListener('change', function() {
-        filterRewards();
-    });
     
     searchInput.addEventListener('input', function() {
         filterRewards();
@@ -426,19 +369,14 @@ function loadRewards() {
 }
 
 // Function to filter rewards            
-
 function filterRewards() {
     if (!window.allRewards) return;
     
     const searchTerm = document.getElementById('search-input').value.toLowerCase();
-    const categoryFilter = document.getElementById('category-filter').value;
     
     const filteredRewards = window.allRewards.filter(reward => {
-        const matchesSearch = reward.title.toLowerCase().includes(searchTerm) || 
-                            reward.description.toLowerCase().includes(searchTerm);
-        const matchesCategory = categoryFilter === 'all' || reward.category === categoryFilter;
-        
-        return matchesSearch && matchesCategory;
+        return reward.title.toLowerCase().includes(searchTerm) || 
+               reward.description.toLowerCase().includes(searchTerm);
     });
     
     displayRewards(filteredRewards);
@@ -460,7 +398,7 @@ function displayRewards(rewards) {
         
         // Generate discount text if applicable
         let discountText = '';
-        if (reward.category === 'Discount' && reward.discount) {
+        if (reward.discount) {
             if (reward.discount.type === 'percentage') {
                 discountText = `${reward.discount.value}% off`;
             } else {
@@ -473,7 +411,6 @@ function displayRewards(rewards) {
                 <h3 class="reward-title">${reward.title}</h3>
                 <span class="reward-points">${reward.points_required} points</span>
             </div>
-            <span class="reward-category category-label ${reward.category.toLowerCase()}">${reward.category}</span>
             <p class="reward-description">${reward.description}</p>
             ${discountText ? `<p><strong>Discount:</strong> ${discountText}</p>` : ''}
             <div class="reward-actions">
@@ -529,31 +466,22 @@ function editReward(id) {
                                 <input type="number" id="edit-points-required" min="1" value="${reward.points_required || 0}" required>
                             </div>
                         </div>
-                        <div class="form-col">
-                            <div class="form-group">
-                                <label for="edit-category">Category</label>
-                                <select id="edit-category" required>
-                                    <option value="Discount" ${reward.category === 'Discount' ? 'selected' : ''}>Fix Amount</option>
-                                    <option value="Gift" ${reward.category === 'Gift' ? 'selected' : ''}>Percentage</option>
-                                </select>
-                            </div>
-                        </div>
                     </div>
                     
-                    <div id="edit-discount-fields" class="form-row" ${reward.category !== 'Discount' ? 'style="display:none;"' : ''}>
+                    <div id="edit-discount-fields" class="form-row">
                         <div class="form-col">
                             <div class="form-group">
                                 <label for="edit-discount-type">Discount Type</label>
-                                <select id="edit-discount-type" ${reward.category === 'Discount' ? 'required' : ''}>
+                                <select id="edit-discount-type" required>
                                     <option value="percentage" ${reward.discount && reward.discount.type === 'percentage' ? 'selected' : ''}>Percentage (%)</option>
-                                    <option value="fixed" ${reward.discount && reward.discount.type === 'fixed' ? 'selected' : ''}>Fixed Amount ($)</option>
+                                    <option value="fixed" ${reward.discount && reward.discount.type === 'fixed' ? 'selected' : ''}>Fixed Amount (Rs)</option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-col">
                             <div class="form-group">
                                 <label for="edit-discount-value">Discount Value</label>
-                                <input type="number" id="edit-discount-value" min="0" step="0.01" value="${reward.discount ? reward.discount.value : 0}" ${reward.category === 'Discount' ? 'required' : ''}>
+                                <input type="number" id="edit-discount-value" min="0" step="0.01" value="${reward.discount ? reward.discount.value : 0}" required>
                             </div>
                         </div>
                     </div>
@@ -566,24 +494,6 @@ function editReward(id) {
     
     document.body.appendChild(modal);
     
-    // Add event listener for category change to show/hide discount fields
-    const editCategorySelect = document.getElementById('edit-category');
-    const editDiscountFields = document.getElementById('edit-discount-fields');
-    const editDiscountType = document.getElementById('edit-discount-type');
-    const editDiscountValue = document.getElementById('edit-discount-value');
-    
-    editCategorySelect.addEventListener('change', function() {
-        if (this.value === 'Discount') {
-            editDiscountFields.style.display = 'flex';
-            editDiscountType.setAttribute('required', 'required');
-            editDiscountValue.setAttribute('required', 'required');
-        } else {
-            editDiscountFields.style.display = 'none';
-            editDiscountType.removeAttribute('required');
-            editDiscountValue.removeAttribute('required');
-        }
-    });
-    
     // Add event listener for form submission
     const editForm = document.getElementById('edit-reward-form');
     editForm.addEventListener('submit', function(e) {
@@ -593,17 +503,14 @@ function editReward(id) {
         let updatedReward = {
             title: document.getElementById('edit-title').value.trim(),
             description: document.getElementById('edit-description').value.trim(),
-            points_required: parseInt(document.getElementById('edit-points-required').value),
-            category: document.getElementById('edit-category').value
+            points_required: parseInt(document.getElementById('edit-points-required').value)
         };
         
-        // Add discount info if category is Discount
-        if (updatedReward.category === 'Discount') {
-            updatedReward.discount = {
-                type: document.getElementById('edit-discount-type').value,
-                value: parseFloat(document.getElementById('edit-discount-value').value)
-            };
-        }
+        // Add discount info
+        updatedReward.discount = {
+            type: document.getElementById('edit-discount-type').value,
+            value: parseFloat(document.getElementById('edit-discount-value').value)
+        };
         
         updateReward(id, updatedReward);
     });
