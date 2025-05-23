@@ -179,6 +179,41 @@ window.addEventListener('scroll', function() {
     }
 });
 
+// Define this at the top or before any other DOMContentLoaded usage
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+
+    Object.assign(notification.style, {
+        position: 'fixed',
+        bottom: '20px',
+        right: '20px',
+        padding: '15px 20px',
+        borderRadius: '4px',
+        color: 'white',
+        zIndex: '1000',
+        boxShadow: '0 3px 10px rgba(0,0,0,0.2)',
+        transition: 'all 0.3s ease',
+        opacity: '0'
+    });
+
+    if (type === 'success') {
+        notification.style.backgroundColor = '#28a745';
+    } else if (type === 'error') {
+        notification.style.backgroundColor = '#dc3545';
+    }
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => { notification.style.opacity = '1'; }, 10);
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -288,10 +323,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Existing helper functions remain the same
-    function handleWishlist(productId) {
-        console.log('Added to wishlist:', productId);
-        // Implement wishlist logic
+function handleWishlist(productId) {
+    const customerId = localStorage.getItem("customerId");
+
+    if (!customerId) {
+        alert("Please log in to use the wishlist feature.");
+        window.location.href = "login.html";
+        return;
     }
+
+    fetch("http://localhost:3000/api/wishlist/addwish", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ customerId, productId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message === "Product already in wishlist") {
+            showNotification("❌ Product already in wishlist.", "error");
+        } else {
+            showNotification("❤️ Product added to wishlist!");
+        }
+    })
+    .catch(error => {
+        console.error("Error adding to wishlist:", error);
+        showNotification("❌ Error adding to wishlist.", "error");
+    });
+}
+
 
     function handleAddToCart(productId) {
         const customerId = localStorage.getItem("customerId");

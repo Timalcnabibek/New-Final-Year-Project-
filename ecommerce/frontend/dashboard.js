@@ -35,7 +35,7 @@ async function fetchUserWishlist() {
     }
     
     try {
-        const response = await fetch(`http://localhost:3000/api/wishlist/${customerId}`);
+        const response = await fetch(`http://localhost:3000/api/wishlist/wish/${customerId}`);
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -278,7 +278,7 @@ async function addToWishlist(productId, productName) {
         const result = await res.json();
         
         if (res.ok) {
-            alert(`❤️ ${productName} added to wishlist!`);
+            alert(`${productName} added to wishlist!`);
             
             // Add to local wishlist cache for persistent state
             if (!userWishlist.includes(productId)) {
@@ -287,12 +287,12 @@ async function addToWishlist(productId, productName) {
             
             return true;
         } else {
-            alert("❌ " + (result.message || "Failed to add to wishlist"));
+            alert((result.message || "Failed to add to wishlist"));
             return false;
         }
     } catch (err) {
-        console.error("❌ Add to wishlist error:", err);
-        alert("❌ Server error. Try again later.");
+        console.error(" Add to wishlist error:", err);
+        alert("Server error. Try again later.");
         return false;
     }
 }
@@ -302,7 +302,7 @@ async function removeFromWishlist(productId, productName) {
     const customerId = localStorage.getItem("customerId");
     
     if (!customerId) {
-        alert("❌ User not logged in! Redirecting.");
+        alert("User not logged in! Redirecting.");
         window.location.href = "login.html";
         return;
     }
@@ -317,19 +317,19 @@ async function removeFromWishlist(productId, productName) {
         const result = await res.json();
         
         if (res.ok) {
-            alert(`💔 ${productName} removed from wishlist!`);
+            alert(`${productName} removed from wishlist!`);
             
             // Remove from local wishlist cache
             userWishlist = userWishlist.filter(id => id !== productId);
             
             return true;
         } else {
-            alert("❌ " + (result.message || "Failed to remove from wishlist"));
+            alert((result.message || "Failed to remove from wishlist"));
             return false;
         }
     } catch (err) {
-        console.error("❌ Remove from wishlist error:", err);
-        alert("❌ Server error. Try again later.");
+        console.error(" Remove from wishlist error:", err);
+        alert(" Server error. Try again later.");
         return false;
     }
 }
@@ -359,7 +359,7 @@ function attachProductEventListeners() {
     // Wishlist buttons
 // Wishlist buttons
 document.querySelectorAll(".wishlist-btn").forEach(button => {
-    const newButton = button.cloneNode(true); // ✅ Clone to remove old listeners
+    const newButton = button.cloneNode(true); //  Clone to remove old listeners
     button.parentNode.replaceChild(newButton, button);
 
     newButton.addEventListener("click", function(e) {

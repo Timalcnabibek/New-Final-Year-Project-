@@ -651,7 +651,7 @@
             this.innerHTML = 'Processing...';
 
             // Submit order with "cod" payment method
-            submitOrder("cod");
+            submitOrder("Cash");
         });
 
         // Initialize page styling for transitions
@@ -767,7 +767,7 @@ async function fetchActiveRewards(customerId) {
 
         deliveryCharge = getDeliveryCharge(subtotal, deliveryType);
 
-    const tax = getNestedProperty(product, 'tax', 50);
+    const tax = getNestedProperty(product, 'tax', 150);
 
     let discount = 0;
     let rewardName = "";
@@ -900,109 +900,110 @@ async function fetchActiveRewards(customerId) {
         });
 // Update the submitOrder function to remove manual reward handling since backend handles it
 async function submitOrder(paymentMethod) {
-    const orderSummaryStr = sessionStorage.getItem("orderSummary");
     const selectedProductStr = sessionStorage.getItem("selectedProduct");
+    const orderSummaryStr = sessionStorage.getItem("orderSummary");
 
-    let product = null;
+    let productData = null;
+
     try {
         if (orderSummaryStr) {
-            product = JSON.parse(orderSummaryStr);
-            console.log("Using orderSummary data:", product);
+            productData = JSON.parse(orderSummaryStr);
         } else if (selectedProductStr) {
-            product = JSON.parse(selectedProductStr);
-            console.log("Using selectedProduct data:", product);
+            productData = JSON.parse(selectedProductStr);
+        } else {
+            alert("❌ Missing order data");
+            return;
         }
-    } catch (e) {
-        console.error("❌ Failed to parse sessionStorage data:", e);
+    } catch (error) {
+        console.error("❌ Invalid product/session data:", error);
+        return;
     }
 
+    // Determine if cart or single product
+    const products = Array.isArray(productData.items) ? 
+        productData.items.map(item => ({
+            productId: item.productId || item._id,
+            quantity: item.quantity || 1,
+            size: item.size || "N/A"
+        })) : 
+        [{
+            productId: productData.productId || productData._id,
+            quantity: productData.quantity || 1,
+            size: productData.size || "N/A"
+        }];
+
+    // Gather customer details
     const customerId = localStorage.getItem("customerId");
     const customerEmail = localStorage.getItem("userEmail");
     const customerName = localStorage.getItem("username");
 
-    if (!product) {
-        alert("❌ Missing data. Redirecting to homepage.");
-        window.location.href = "dashboard.html";
-        return;
-    }
+    // ✅ FIXED: Map frontend delivery type to backend expected format
+    const selectedDeliveryType = document.querySelector('input[name="deliveryType"]:checked')?.value;
+    const deliveryType = selectedDeliveryType === "express" ? "Express Delivery" : "Standard Delivery";
 
-    // Format products properly based on whether it's a cart or single product
-    const formattedProducts = product.items && Array.isArray(product.items) ?
-        product.items.map(item => ({
-            productId: item.productId || item._id,
-            quantity: item.quantity || 1,
-            size: item.size || "N/A",
-            price: item.price || 0
-        })) :
-        [{
-            productId: product.productId || product._id,
-            quantity: product.quantity || 1,
-            size: product.size || "N/A",
-            price: product.price || 0
-        }];
+    const deliveryInfo = {
+        fullName: document.getElementById("fullName").value,
+        phone: document.getElementById("phone").value,
+        address: document.getElementById("address").value,
+        city: document.getElementById("city").value,
+        postalCode: document.getElementById("zipCode").value,
+        instructions: document.getElementById("paymentInstructions")?.value || ""
+    };
 
-    // Calculate actual total cost for the order including delivery
-    const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
-const deliveryCharge = getDeliveryCharge(subtotal, deliveryType); // Use same helper
+    const estimatedDeliveryDate = new Date();
 
-    const activeReward = JSON.parse(sessionStorage.getItem("activeReward"));
-
-    
-    const orderData = {
-        rewardId: activeReward ? activeReward._id : null, // ✅ safe check
+    const payload = {
         customerId,
         customerEmail,
         customerName,
-        products: formattedProducts,
-        deliveryInfo: {
-            fullName: document.getElementById("fullName").value,
-            phone: document.getElementById("phone").value,
-            address: document.getElementById("address").value,
-            city: document.getElementById("city").value,
-            postalCode: document.getElementById("zipCode").value,
-            instructions: document.getElementById("paymentInstructions")?.value || ""
-        },
-        deliveryType: deliveryType === "express" ? "Express Delivery" : "Standard Delivery",
-        deliveryCharge: deliveryCharge,
-        estimatedDeliveryDate: new Date(),
-        paymentStatus: paymentMethod === "khalti" ? "Paid" : "Unpaid",
-        paymentMethod: paymentMethod === "khalti" ? "khalti" : "Cash"
+        products,
+        deliveryInfo,
+        deliveryType, // ✅ Now sends "Express Delivery" or "Standard Delivery"
+        estimatedDeliveryDate,
+        paymentMethod
     };
 
-    try {
-        console.log("📤 Sending order data:", JSON.stringify(orderData, null, 2));
+    console.log("📦 Sending order payload:", payload);
 
+    try {
         const res = await fetch("http://localhost:3000/api/trackorder", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(orderData),
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
         });
 
         const result = await res.json();
 
         if (res.ok) {
-            console.log("✅ Order placed successfully:", result);
-            
-            // Clear cart/sessionStorage data
+            console.log("✅ Order created successfully:", result);
+            console.log("💰 Final calculation:", result.calculation);
+
+            // Clear session storage
             sessionStorage.removeItem("selectedProduct");
             sessionStorage.removeItem("orderSummary");
-            sessionStorage.removeItem("redeemedReward");
             sessionStorage.removeItem("activeReward");
+            sessionStorage.removeItem("redeemedReward");
 
-
-            // Redirect to invoice with orderId and reference
+            // Redirect to invoice
             window.location.href = `invoice.html?orderId=${result.order._id}&ref=${result.order.orderReference}`;
         } else {
-            console.error("❌ Order failed:", result);
-            alert("❌ " + (result.message || "Unknown error"));
+            alert("❌ " + (result.message || "Order failed"));
         }
-
     } catch (err) {
-        console.error("❌ Network or server error:", err);
-        alert("❌ Something went wrong. Please try again.");
+        console.error("❌ Order creation error:", err);
+        alert("❌ Network or server error");
     }
+}
+
+
+
+// ✅ FIXED: Update delivery charge calculation to match backend
+function getDeliveryCharge(subtotal, deliveryType) {
+    if (deliveryType === "express" || deliveryType === "Express Delivery") {
+        return 300; // Always Rs. 300 for express
+    }
+    // Standard delivery: Free for orders ≥ Rs. 10,000, otherwise Rs. 150
+    return subtotal >= 10000 ? 0 : 150;
 }
 
 // Update the function to get nested properties safely
@@ -1399,7 +1400,7 @@ document.getElementById("pay-khalti").addEventListener("click", async () => {
 
         
         // Get the tax amount (default to 50 if not specified)
-        const tax = orderData.tax || 50;
+        const tax = orderData.tax || 150;
         
         // Calculate discount from active reward if any
         let discount = 0;

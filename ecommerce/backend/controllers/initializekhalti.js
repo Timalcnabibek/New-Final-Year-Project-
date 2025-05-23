@@ -384,6 +384,20 @@ router.get('/complete-khalti-payment', async (req, res) => {
       usedRewardId
     });
 
+    // ✅ Add loyalty points after successful Khalti order
+try {
+  await customerModel.findByIdAndUpdate(purchaseOrder.customerId, {
+    $inc: {
+      loyaltyPoints: newOrder.pointsEarned,
+      total_spent: newOrder.totalAmount
+    }
+  });
+  console.log(`✅ Added ${newOrder.pointsEarned} points to customer ${purchaseOrder.customerId}`);
+} catch (err) {
+  console.error("❌ Failed to update loyalty points:", err);
+}
+
+
     // Send confirmation email
     if (customerEmail) {
       await sendOrderConfirmationEmail(newOrder, customerEmail);

@@ -100,6 +100,84 @@ async function fetchCartAndUpdateLocalStorage(customerId) {
     }
 }
 
+    function showNotification(message, type = 'success') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        
+        // Add to the DOM
+        document.body.appendChild(notification);
+        
+        // Add styles
+        notification.style.position = 'fixed';
+        notification.style.bottom = '20px';
+        notification.style.right = '20px';
+        notification.style.padding = '15px 20px';
+        notification.style.borderRadius = '4px';
+        notification.style.color = 'white';
+        notification.style.zIndex = '1000';
+        notification.style.boxShadow = '0 3px 10px rgba(0,0,0,0.2)';
+        notification.style.transition = 'all 0.3s ease';
+        notification.style.opacity = '0';
+        
+        if (type === 'success') {
+            notification.style.backgroundColor = '#28a745';
+        } else if (type === 'error') {
+            notification.style.backgroundColor = '#dc3545';
+        }
+        
+        // Animate notification
+        setTimeout(() => {
+            notification.style.opacity = '1';
+        }, 10);
+        
+        // Remove notification after 3 seconds
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 3000);
+    }
+
+// Global function to handle wishlist actions
+async function handleWishlist(productId) {
+    const customerId = localStorage.getItem("customerId");
+
+    if (!customerId) {
+        showNotification("❌ Please log in to use the wishlist feature.", "error");
+        window.location.href = "login.html";
+        return;
+    }
+
+    try {
+        const response = await fetch("http://localhost:3000/api/wishlist/addwish", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ customerId, productId })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            if (result.message === "Product already in wishlist") {
+                showNotification("⚠️ Product already in wishlist.", "error");
+            } else {
+                showNotification("❤️ Product added to wishlist!");
+            }
+        } else {
+            showNotification(`❌ ${result.message || "Failed to add to wishlist."}`, "error");
+        }
+    } catch (error) {
+        console.error("Error adding to wishlist:", error);
+        showNotification("❌ Failed to add to wishlist. Try again later.", "error");
+    }
+}
+
+
 // Global function to add item to cart
 async function addToCart(productId) {
     const customerId = localStorage.getItem("customerId");
@@ -359,6 +437,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 button.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const productId = button.getAttribute('data-id');
+                    handleWishlist(productId); // ✅ Call actual logic
                     console.log('Added to wishlist:', productId);
                     // Implement wishlist logic
                 });
