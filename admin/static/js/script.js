@@ -2,6 +2,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Tab switching functionality
     const tabs = document.querySelectorAll('.tab');
     const tabContents = document.querySelectorAll('.tab-content');
+
+    function showLoader() {
+  document.getElementById('globalLoader').style.display = 'flex';
+}
+
+function hideLoader() {
+  document.getElementById('globalLoader').style.display = 'none';
+}
+
     
     tabs.forEach(tab => {
         tab.addEventListener('click', function() {
@@ -98,7 +107,7 @@ productForm.addEventListener('submit', function(event) {
     event.preventDefault();
     
     // Show loader
-    saveLoader.style.display = 'inline-block';
+    showLoader(); // 👈 Show loader
     
     // Create FormData object to handle file uploads
     const formData = new FormData();
@@ -177,6 +186,7 @@ productForm.addEventListener('submit', function(event) {
         body: formData
     })
     .then(response => {
+                hideLoader(); // 👈 Hide loader
         console.log("Response status:", response.status);
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);

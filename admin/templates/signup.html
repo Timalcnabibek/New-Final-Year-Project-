@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Create Account</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #667eea 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background elements */
+        .bg-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .floating-shapes {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape-1 { top: 10%; left: 10%; animation-delay: 0s; }
+        .shape-2 { top: 20%; right: 10%; animation-delay: 2s; }
+        .shape-3 { bottom: 10%; left: 20%; animation-delay: 4s; }
+        .shape-4 { bottom: 20%; right: 20%; animation-delay: 1s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .signup-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 15px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="password"] {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            color: #2d3748;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .password-strength {
+            margin-top: 8px;
+            display: none;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .strength-text {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .weak { background: #f56565; color: #c53030; }
+        .medium { background: #ed8936; color: #c05621; }
+        .strong { background: #48bb78; color: #2f855a; }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 25px;
+            gap: 12px;
+        }
+
+        .custom-checkbox {
+            position: relative;
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .custom-checkbox input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .custom-checkbox input:checked ~ .checkmark {
+            background: #667eea;
+            border-color: #667eea;
+        }
+
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 6px;
+            top: 2px;
+            width: 6px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .custom-checkbox input:checked ~ .checkmark:after {
+            display: block;
+        }
+
+        .checkbox-label {
+            color: #4a5568;
+            font-size: 14px;
+            line-height: 1.5;
+            cursor: pointer;
+        }
+
+        .checkbox-label a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .checkbox-label a:hover {
+            text-decoration: underline;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+            border-left: 4px solid;
+        }
+
+        .alert.success {
+            background: #f0fff4;
+            color: #2f855a;
+            border-color: #48bb78;
+        }
+
+        .alert.error {
+            background: #fed7d7;
+            color: #c53030;
+            border-color: #f56565;
+        }
+
+        .field-error {
+            color: #e53e3e;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .signup-container {
+                padding: 30px 25px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .subtitle {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="floating-shapes shape-1"></div>
+        <div class="floating-shapes shape-2"></div>
+        <div class="floating-shapes shape-3"></div>
+        <div class="floating-shapes shape-4"></div>
+    </div>
+
+    <div class="signup-container">
+        <div class="header">
+            <div class="logo">A</div>
+            <h1>Create Admin Account</h1>
+            <p class="subtitle">Join the administrative team</p>
+        </div>
+
+        <div class="alert" id="alert-message"></div>
+
+        <form id="signup-form">
+            <div class="form-group">
+                <div class="input-wrapper">
+                    <input type="text" id="name" name="name" placeholder="Full Name" required>
+                </div>
+                <div class="field-error" id="name-error"></div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-wrapper">
+                    <input type="email" id="email" name="email" placeholder="Email Address" required>
+                </div>
+                <div class="field-error" id="email-error"></div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-wrapper">
+                    <input type="tel" id="phone" name="phone" placeholder="Phone Number" required>
+                </div>
+                <div class="field-error" id="phone-error"></div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-wrapper">
+                    <input type="text" id="address" name="address" placeholder="Address" required>
+                </div>
+                <div class="field-error" id="address-error"></div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-wrapper">
+                    <input type="password" id="password" name="password" placeholder="Password" required autocomplete="new-password">
+                </div>
+                <div class="password-strength" id="password-strength">
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="strength-fill"></div>
+                    </div>
+                    <div class="strength-text" id="strength-text"></div>
+                </div>
+                <div class="field-error" id="password-error"></div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-wrapper">
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password" required autocomplete="new-password">
+                </div>
+                <div class="field-error" id="confirmPassword-error"></div>
+            </div>
+            <button type="submit" class="submit-btn" id="submit-btn">
+                <div class="btn-content">
+                    <div class="loading-spinner" id="loading-spinner"></div>
+                    <span id="btn-text">Create Admin Account</span>
+                </div>
+            </button>
+        </form>
+
+        <div class="login-link">
+            Already have an account? <a href="/login">Sign in here</a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/admin';
+        
+        // Form elements
+        const form = document.getElementById('signup-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const btnText = document.getElementById('btn-text');
+        const alertMessage = document.getElementById('alert-message');
+
+        // Password strength checker
+        const passwordInput = document.getElementById('password');
+        const passwordStrength = document.getElementById('password-strength');
+        const strengthFill = document.getElementById('strength-fill');
+        const strengthText = document.getElementById('strength-text');
+
+        // Form validation rules
+        const validationRules = {
+            name: {
+                required: true,
+                minLength: 2,
+                pattern: /^[a-zA-Z\s]+$/,
+                message: 'Name must be at least 2 characters and contain only letters'
+            },
+            email: {
+                required: true,
+                pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                message: 'Please enter a valid email address'
+            },
+            phone: {
+                required: true,
+                pattern: /^[\+]?[1-9][\d]{0,15}$/,
+                message: 'Please enter a valid phone number'
+            },
+            address: {
+                required: true,
+                minLength: 10,
+                message: 'Address must be at least 10 characters long'
+            },
+            password: {
+                required: true,
+                minLength: 8,
+                pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+                message: 'Password must be at least 8 characters with uppercase, lowercase, number and special character'
+            },
+            confirmPassword: {
+                required: true,
+                message: 'Passwords do not match'
+            }
+        };
+
+        // Event listeners
+        passwordInput.addEventListener('input', checkPasswordStrength);
+        passwordInput.addEventListener('focus', () => {
+            passwordStrength.style.display = 'block';
+        });
+
+        form.addEventListener('submit', handleSubmit);
+
+        // Real-time validation
+        Object.keys(validationRules).forEach(fieldName => {
+            const field = document.getElementById(fieldName);
+            if (field) {
+                field.addEventListener('blur', () => validateField(fieldName));
+                field.addEventListener('input', () => clearFieldError(fieldName));
+            }
+        });
+
+        // Password strength checker
+        function checkPasswordStrength() {
+            const password = passwordInput.value;
+            let score = 0;
+            let feedback = '';
+
+            if (password.length === 0) {
+                passwordStrength.style.display = 'none';
+                return;
+            }
+
+            passwordStrength.style.display = 'block';
+
+            // Length check
+            if (password.length >= 8) score += 25;
+            if (password.length >= 12) score += 25;
+
+            // Character variety checks
+            if (/[a-z]/.test(password)) score += 10;
+            if (/[A-Z]/.test(password)) score += 10;
+            if (/[0-9]/.test(password)) score += 15;
+            if (/[@$!%*?&]/.test(password)) score += 15;
+
+            // Update visual feedback
+            strengthFill.style.width = score + '%';
+
+            if (score < 40) {
+                strengthFill.className = 'strength-fill weak';
+                strengthText.className = 'strength-text weak';
+                feedback = 'Weak password';
+            } else if (score < 80) {
+                strengthFill.className = 'strength-fill medium';
+                strengthText.className = 'strength-text medium';
+                feedback = 'Medium strength';
+            } else {
+                strengthFill.className = 'strength-fill strong';
+                strengthText.className = 'strength-text strong';
+                feedback = 'Strong password';
+            }
+
+            strengthText.textContent = feedback;
+        }
+
+        // Field validation
+        function validateField(fieldName) {
+            const field = document.getElementById(fieldName);
+            const rule = validationRules[fieldName];
+            const value = field.value.trim();
+
+            // Special case for confirm password
+            if (fieldName === 'confirmPassword') {
+                const password = document.getElementById('password').value;
+                if (value !== password) {
+                    showFieldError(fieldName, 'Passwords do not match');
+                    return false;
+                }
+                return true;
+            }
+
+            // Required field check
+            if (rule.required && !value) {
+                showFieldError(fieldName, `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`);
+                return false;
+            }
+
+            // Pattern validation
+            if (rule.pattern && !rule.pattern.test(value)) {
+                showFieldError(fieldName, rule.message);
+                return false;
+            }
+
+            // Length validation
+            if (rule.minLength && value.length < rule.minLength) {
+                showFieldError(fieldName, rule.message);
+                return false;
+            }
+
+            return true;
+        }
+
+        function showFieldError(fieldName, message) {
+            const errorElement = document.getElementById(fieldName + '-error');
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+            }
+        }
+
+        function clearFieldError(fieldName) {
+            const errorElement = document.getElementById(fieldName + '-error');
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+        }
+
+        function showAlert(message, type) {
+            alertMessage.textContent = message;
+            alertMessage.className = `alert ${type}`;
+            alertMessage.style.display = 'block';
+            
+            // Auto-hide success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    alertMessage.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function setLoading(loading) {
+            submitBtn.disabled = loading;
+            if (loading) {
+                loadingSpinner.style.display = 'block';
+                btnText.textContent = 'Creating Account...';
+            } else {
+                loadingSpinner.style.display = 'none';
+                btnText.textContent = 'Create Admin Account';
+            }
+        }
+
+        // Form submission
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            // Validate all fields
+            let isValid = true;
+            Object.keys(validationRules).forEach(fieldName => {
+                if (!validateField(fieldName)) {
+                    isValid = false;
+                }
+            });
+
+
+            setLoading(true);
+
+            // Prepare form data - including new fields
+const userData = {
+    name: document.getElementById('name').value.trim(),
+    email: document.getElementById('email').value.trim().toLowerCase(),
+    phone: document.getElementById('phone').value.trim(),
+    address: document.getElementById('address').value.trim(),
+    password: document.getElementById('password').value,
+    confirmPassword: document.getElementById('confirmPassword').value,
+};
+;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert(data.message || 'Admin account created successfully!', 'success');
+                    form.reset();
+                    passwordStrength.style.display = 'none';
+                    
+                    // Clear all field errors
+                    Object.keys(validationRules).forEach(fieldName => {
+                        clearFieldError(fieldName);
+                    });
+                    
+                    // Redirect after success
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 3000);
+                } else {
+                    showAlert(data.message || 'Failed to create account', 'error');
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    showAlert('Unable to connect to server. Please make sure the backend is running on http://localhost:5000', 'error');
+                } else {
+                    showAlert('Network error. Please try again.', 'error');
+                }
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Modal functions (placeholder)
+        function showTerms() {
+            alert('Terms of Service modal would open here');
+        }
+
+        function showPrivacy() {
+            alert('Privacy Policy modal would open here');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Focus first input
+            document.getElementById('name').focus();
+        });
+    </script>
+</body>
+</html>

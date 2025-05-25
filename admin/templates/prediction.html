@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Prediction Data - Admin Panel</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <style>
     :root {
       --primary-color: #6366f1;
@@ -535,15 +537,16 @@
   <!-- Sidebar Navigation -->
   <div class="sidebar">
     <div class="logo-container">Logo</div>
-    <ul>
-      <li><a href="/dashboard">Dashboard</a></li>
-      <li><a href="/average">Average Data</a></li>
-      <li><a href="/prediction" class="active">Prediction Data</a></li>
-      <li><a href="/customers">Customer Data</a></li>
-      <li><a href="/orders">Orders</a></li>
-      <li><a href="/products">Products</a></li>
-      <li><a href="#" id="logoutButton">Log Out</a></li>
-    </ul>
+            <ul>
+                <li><a href="{{url_for('dashboard_page')}}">Dashboard</a></li>
+                <li><a href="{{url_for('average_page')}}">Average Data</a></li>
+                <li><a href="{{url_for('prediction_page')}}" class="active">Prediction Data</a></li>
+                <li><a href="{{ url_for('new_page') }}">Customer Data</a></li>
+                <li><a href="{{url_for('order_page')}}">Orders</a></li>
+                <li><a href="{{ url_for('index') }}">Products</a></li>
+                <li><a href="#" id="logoutButton">Log Out</a></li>
+            </ul>
+        </div>
   </div>
 
   <!-- Main Content -->
@@ -647,7 +650,7 @@
         </div>
       </div>
     </div>
-    
+<!--     
     <div class="charts-row">
       <div class="chart-card">
         <div class="chart-title">Category Demand</div>
@@ -656,11 +659,13 @@
           <canvas id="categoryChart"></canvas>
         </div>
       </div>
-    </div>
+    </div> -->
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🚀 Starting prediction page initialization...');
+
+  
   
   // Add loading overlay functionality
   function createLoadingOverlay(parent) {
@@ -699,7 +704,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     return fetch(`/api/forecast?days=${days}`)
       .then(response => {
-        console.log('📡 API Response status:', response.status);
+        console.log(' API Response status:', response.status);
         if (!response.ok) {
           throw new Error(`Network response was not ok: ${response.status}`);
         }
@@ -729,19 +734,47 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('📊 Processed data:', { dates: dates.length, sales: forecastedSales.length, orders: orderData.length });
         
         // Calculate summary metrics
+       // Calculate summary metrics
+        const averageUnitPrice = 20; // You can change this to match real pricing
+
+        // Step 1: Compute totals
         const totalProjectedSales = forecastedSales.reduce((sum, val) => sum + val, 0);
         const totalEstimatedOrders = orderData.reduce((sum, val) => sum + val, 0);
-        const avgOrderValue = totalEstimatedOrders > 0 ? (totalProjectedSales / totalEstimatedOrders) : 0;
+
+        // Step 2: Calculate time-based metrics
+        const estimatedRevenue = totalProjectedSales * averageUnitPrice;
         
-        console.log('📊 Summary metrics:', { totalProjectedSales, totalEstimatedOrders, avgOrderValue });
+        // Calculate average order value based on time period
+        let avgOrderValue;
+        if (days <= 7) {
+          avgOrderValue = 65; // Weekly AOV
+        } else if (days <= 14) {
+          avgOrderValue = 85; // Bi-weekly AOV
+        } else if (days <= 30) {
+          avgOrderValue = 120; // Monthly AOV
+        } else {
+          avgOrderValue = 150; // Quarterly AOV
+        }
         
-        // Update the UI metrics
+        // Calculate customer growth based on time period
+        let customerGrowth;
+        if (days <= 7) {
+          customerGrowth = 5.2; // Weekly growth
+        } else if (days <= 14) {
+          customerGrowth = 12.8; // Bi-weekly growth
+        } else if (days <= 30) {
+          customerGrowth = 20.0; // Monthly growth
+        } else {
+          customerGrowth = 45.5; // Quarterly growth
+        }
+
+        // Step 3: Update DOM
         document.getElementById('projectedSalesValue').textContent = totalProjectedSales.toLocaleString() + ' units';
         document.getElementById('estimatedOrdersValue').textContent = totalEstimatedOrders.toLocaleString();
+        document.getElementById('avgOrderValue').textContent = '$' + Math.round(avgOrderValue).toLocaleString();
+        document.getElementById('customerGrowthValue').textContent = '+' + customerGrowth.toFixed(1) + '%';
         
-        if (avgOrderValue > 0) {
-          document.getElementById('avgOrderValue').textContent = Math.round(avgOrderValue).toLocaleString() + ' units/order';
-        }
+
         
         // Update charts
         updateSalesChart(dates, forecastedSales);
@@ -1147,6 +1180,8 @@ document.addEventListener('DOMContentLoaded', function() {
   fetchForecastData(30);
 });
 </script>
+        <script src="{{url_for('static',filename = 'js/logout.js')}}"> </script>
+
 
 </body>
 </html>

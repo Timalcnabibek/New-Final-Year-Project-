@@ -1,4 +1,4 @@
-from flask import Flask, render_template,Blueprint, request, jsonify, url_for
+from flask import Flask, render_template,Blueprint, request, jsonify, url_for, session  
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
@@ -15,6 +15,7 @@ from bson.son import SON
 import joblib
 import numpy as np
 import pandas as pd
+import re
 
 
 
@@ -75,6 +76,7 @@ class JSONEncoder(json.JSONEncoder):
 
 
 app = Flask(__name__, static_folder="static")
+app.secret_key = os.getenv("SECRET_KEY", "Bibek@1234")  
 
 # MongoDB connection
 mongo_uri = os.getenv("MONGO_URI", "mongodb+srv://np03cs4a220312:bibek@ecommerce.sleh3.mongodb.net/Ecommerce_data?retryWrites=true&w=majority")
@@ -86,6 +88,7 @@ orders_collection = db["orders"]
 sales_data_collection = db["sales_datas"]
 promo_codes_collection = db["promo_codes"]
 rewards_collection = db["rewards"]
+admins_collection = db["admins"]
 
 
 # Load model and scaler from the models folder
@@ -153,6 +156,126 @@ if customers_collection.count_documents({}) == 0:
         }
     ]
     customers_collection.insert_many(sample_customers)
+
+
+LOCKOUT_THRESHOLD = 5
+LOCKOUT_DURATION = timedelta(minutes=1)
+
+
+def validate_email(email):
+    return re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', email)
+
+def validate_password(password):
+    return len(password) >= 6
+
+@app.route("/admin/signup", methods=["POST"])
+def admin_signup():
+    data = request.json
+
+    # Extract fields
+    name = data.get("name", "").strip()
+    email = data.get("email", "").lower()
+    phone = data.get("phone", "").strip()
+    address = data.get("address", "").strip()
+    password = data.get("password", "")
+    confirm_password = data.get("confirmPassword", "")
+
+    # Basic validation
+    if not all([name, email, phone, address, password, confirm_password]):
+        return jsonify({"success": False, "message": "All fields are required"}), 400
+
+    if not validate_email(email):
+        return jsonify({"success": False, "message": "Invalid email format"}), 400
+
+    if not validate_password(password):
+        return jsonify({"success": False, "message": "Password must be at least 6 characters"}), 400
+
+    if password != confirm_password:
+        return jsonify({"success": False, "message": "Passwords do not match"}), 400
+
+    if admins_collection.find_one({"email": email}):
+        return jsonify({"success": False, "message": "Admin already exists"}), 409
+
+    # Hash password
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    # Create admin document
+    admin = {
+        "name": name,
+        "email": email,
+        "phone": phone,
+        "address": address,
+        "password_hash": hashed_password,
+        "is_active": True,
+        "last_login": None,
+        "failed_attempts": 0,
+        "locked_until": None,
+        "created_at": datetime.utcnow()
+    }
+
+    # Insert into database
+    admins_collection.insert_one(admin)
+
+    return jsonify({"success": True, "message": "Admin registered successfully."}), 201
+
+
+
+
+@app.route("/admin/login", methods=["POST"])
+def admin_login():
+    data = request.json
+    email = data.get("email", "").lower()
+    password = data.get("password", "")
+
+    admin = admins_collection.find_one({"email": email})
+    if not admin:
+        return jsonify({"success": False, "message": "Invalid email or password"}), 401
+
+    # Check if locked
+    if admin.get("locked_until") and datetime.utcnow() < admin["locked_until"]:
+        return jsonify({"success": False, "message": "Account locked. Try again later."}), 403
+
+    if bcrypt.checkpw(password.encode('utf-8'), admin["password_hash"].encode('utf-8')):
+        # Successful login
+        admins_collection.update_one(
+            {"_id": admin["_id"]},
+            {
+                "$set": {
+                    "last_login": datetime.utcnow(),
+                    "failed_attempts": 0,
+                    "locked_until": None
+                }
+            }
+        )
+        session["admin_id"] = str(admin["_id"])  # Optional: Use session or token
+        return jsonify({"success": True, "message": "Login successful!"})
+    else:
+        # Failed login
+        new_attempts = admin.get("failed_attempts", 0) + 1
+        update_fields = {"failed_attempts": new_attempts}
+        if new_attempts >= LOCKOUT_THRESHOLD:
+            update_fields["locked_until"] = datetime.utcnow() + LOCKOUT_DURATION
+            update_fields["failed_attempts"] = 0  # reset after lock
+        admins_collection.update_one({"_id": admin["_id"]}, {"$set": update_fields})
+        return jsonify({"success": False, "message": "Invalid email or password"}), 401
+
+
+
+def validate_email(email):
+    return re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', email)
+
+def validate_password(password):
+    return len(password) >= 6
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'admin_id' not in session:
+            return jsonify({"error": "Authentication required"}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+
 
 
 @app.route('/api/category-demand-purchased', methods=['GET'])
@@ -305,8 +428,11 @@ def prediction_page():
 def order_page():
     return render_template('orders.html')
 
-@app.route('/login-signup')
-def login_sign_page():
+@app.route('/')
+def sign_page():
+    return render_template('signup.html')
+@app.route('/login')
+def login_page():
     return render_template('login.html')
 
 
@@ -530,38 +656,40 @@ def index():
 @app.route('/products', methods=['POST'])
 def add_product():
     try:
-
+        # Handle form data
         if request.is_json:
             data = request.get_json()
         else:
             data = request.form
+
         # Get checkbox values for sizes
-        sizes = request.form.getlist('productSize') if 'productSize' in request.form else []
+        sizes = data.getlist('productSize') if 'productSize' in data else []
 
         # Colors from comma-separated input
-        colors = [color.strip() for color in request.form.get('productColor', '').split(',') if color.strip()]
+        raw_colors = data.get('productColor', '')
+        colors = [color.strip() for color in raw_colors.split(',') if color.strip()]
 
         # Tags from comma-separated input
-        tags = [tag.strip() for tag in request.form.get('productTags', '').split(',') if tag.strip()]
+        raw_tags = data.get('productTags', '')
+        tags = [tag.strip() for tag in raw_tags.split(',') if tag.strip()]
 
         # Product data
         product_data = {
-            "name": request.form.get('productName'),
-            "sku": request.form.get('productSKU', ''),
-            "description": request.form.get('productDescription', ''),
-            "price": float(request.form.get('productPrice', 0)),
-            "discount_price": float(request.form.get('productDiscountPrice', 0)) if request.form.get('productDiscountPrice') else None,
-            "category": request.form.get('productCategory'),
-            "gender": request.form.get('productGender'),
-            "stock": int(request.form.get('productStock', 0)),
-            "featured": request.form.get('productFeatured') in ['true', 'True', '1', 'on', 'yes'],
-            "trending": request.form.get('productTrending') in ['true', 'True', '1', 'on', 'yes'],
-            "season": request.form.get('productSeason') or "",
+            "name": data.get('productName'),
+            "sku": data.get('productSKU', ''),
+            "description": data.get('productDescription', ''),
+            "price": float(data.get('productPrice', 0)),
+            "discount_price": float(data.get('productDiscountPrice', 0)) if data.get('productDiscountPrice') else None,
+            "category": data.get('productCategory'),
+            "gender": data.get('productGender'),
+            "stock": int(data.get('productStock', 0)),
+            "featured": data.get('productFeatured') in ['true', 'True', '1', 'on', 'yes'],
+            "trending": data.get('productTrending') in ['true', 'True', '1', 'on', 'yes'],
+            "season": data.get('productSeason', ''),
             "sizes": sizes,
             "colors": colors,
-            "material": request.form.get('productMaterial') or "",
+            "material": data.get('productMaterial', ''),
             "tags": tags,
-            "release_date": request.form.get('productReleaseDate') or "",  # You said to ignore this but leaving it here (optional)
             "weight": None,  # Ignored per your request
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
@@ -588,7 +716,6 @@ def add_product():
         # Insert product
         result = products_collection.insert_one(product_data)
 
-
         # Get first image URL if available
         first_image_url = ""
         if product_data["images"] and isinstance(product_data["images"], list):
@@ -602,14 +729,14 @@ def add_product():
             "gender": product_data["gender"],
             "season": product_data["season"],
             "price": product_data["price"],
-            "stock": product_data["stock"],                # ✅ Include stock count
-            "image_url": first_image_url,                  # ✅ Include image URL
+            "stock": product_data["stock"],
+            "image_url": first_image_url,
             "total_sold": 0,
             "total_revenue": 0,
             "growth_rate": 0.0,
             "historical_sales": [],
             "last_updated": datetime.utcnow()
-}
+        }
         sales_data_collection.insert_one(sales_data)
 
         return jsonify({"success": True, "message": "Product added successfully", "product_id": str(result.inserted_id)})
@@ -617,6 +744,7 @@ def add_product():
     except Exception as e:
         print(f"Error in add_product API: {str(e)}")
         return jsonify({"success": False, "message": f"Error adding product: {str(e)}"}), 500
+
 
 
 
@@ -850,7 +978,6 @@ def get_order_count():
 
 
 
-#route to find the total sales, average order value, total revenue and conversion
 
 #total salesfrom bson.son import SON  # Make sure you import this for sorting
 
@@ -2170,7 +2297,6 @@ def get_today_sales():
         return jsonify({"success": False, "error": str(e)}), 500
 
 # Frontend API that combines both historical and forecast data for the chart
-# Modified API backend code
 @app.route('/api/chart-data', methods=['GET'])
 def get_chart_data():
     """

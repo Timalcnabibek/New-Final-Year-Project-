@@ -15,7 +15,7 @@
                 <ul>
                     <li><a href="{{url_for('dashboard_page')}}">Dashboard</a></li>
                     <li><a href="{{url_for('average_page')}}">Average Data</a></li>
-                    <li><a href="{{url_for('average_page')}}">Average Data</a></li>
+                    <li><a href="{{url_for('average_page')}}">Prediction Data</a></li>
                     <li><a href="{{ url_for('new_page') }}" >Customer Data</a></li>
                     <li><a href="{{url_for('order_page')}}">Orders</a></li>
                     <li><a href="{{ url_for('index') }}" class="active">Products</a></li>
@@ -23,6 +23,11 @@
                 </ul>
             </div>
         </nav>
+        <!-- Global Loader -->
+<div id="globalLoader" class="loader-overlay" style="display: none;">
+  <div class="spinner"></div>
+</div>
+
         
         <div class="container">
             <div class="dashboard">
@@ -492,7 +497,6 @@
 </div>
  
         <script src="{{url_for('static',filename = 'js/script.js')}}"> </script>
-        <!-- <script src="{{url_for('static',filename = 'js/app.js')}}"> </script> -->
         <script src="{{url_for('static',filename = 'js/logout.js')}}"> </script>
     </body>    
 </html>

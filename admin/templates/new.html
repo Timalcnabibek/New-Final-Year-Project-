@@ -9,26 +9,26 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/newstyles.css') }}">
-    <!-- <link rel="stylesheet" href="url_for('static', filename='css/styles.css')"> -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
     <div class="container">
         <!-- Navigation -->
-        <nav class="navbar">
-            <div class="sidebar">
-                <h2>Logo</h2>
-                <ul>
-                    <li><a href="{{url_for('dashboard_page')}}">Dashboard</a></li>
-                    <li><a href="{{url_for('average_page')}}">Average Data</a></li>
-                    <li><a href="{{url_for('prediction_page')}}">Prediction Data</a></li>
-                    <li><a href="{{ url_for('new_page') }}" class="active">Customer Data</a></li>
-                    <li><a href="{{url_for('order_page')}}">Orders</a></li>
-                    <li><a href="{{ url_for('index') }}">Products</a></li>
-                    <li><a href="#" id="logoutButton">Log Out</a></li>
-                </ul>
-            </div>
-        </nav>
+    <nav class="navbar">
+        <div class="sidebar">
+            <h2>Logo</h2>
+            <ul>
+                <li><a href="{{url_for('dashboard_page')}}" >Dashboard</a></li>
+                <li><a href="{{url_for('average_page')}}">Average Data</a></li>
+                <li><a href="{{url_for('prediction_page')}}">Prediction Data</a></li>
+                <li><a href="{{ url_for('new_page') }}"class="active">Customer Data</a></li>
+                <li><a href="{{url_for('order_page')}}">Orders</a></li>
+                <li><a href="{{ url_for('index') }}">Products</a></li>
+                <li><a href="#" id="logoutButton">Log Out</a></li>
+            </ul>
+        </div>
+    </nav>
 
         <!-- Content -->
         <div class="content">
@@ -351,19 +351,12 @@ document.addEventListener("DOMContentLoaded", function() {
     fetchAverageSpend(); // Add this line to call the new function
     initializeGrowthChart();
     
-    // Add logout functionality
-    const logoutButton = document.getElementById('logoutButton');
-    if (logoutButton) {
-        logoutButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (confirm('Are you sure you want to log out?')) {
-                window.location.href = '/logout';
-            }
-        });
-    }
+
 });
 
 </script>
+
+<script src="{{ url_for('static', filename='js/logout.js') }}"></script>
 
 </body>
 

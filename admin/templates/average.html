@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales Dashboard</title>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
         /* Add your CSS styles here */
         body {
@@ -23,7 +25,7 @@
     height: 100%;
     position: fixed;
     width: 250px;
-    z-index: 1000;
+    z-index: 100;
 }
 
 .sidebar {
@@ -76,6 +78,14 @@
     padding: 15px 10px;
 }
 
+/* Main Content Adjustment */
+.dashboard-container {
+    margin-left: 250px;
+    padding: 20px;
+    width: calc(100% - 250px);
+}
+
+
 /* Responsive Adjustments */
 @media (max-width: 768px) {
     .navbar {
@@ -103,6 +113,7 @@
         margin-left: 0; 
 }
 }
+
 .main-content {
     margin-left: 250px; 
 }
@@ -379,10 +390,7 @@
     margin-bottom: 30px;
 }
 
-/* Sidebar improvements */
-.sidebar {
-    background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
-}
+/* 
 
 .sidebar ul li a {
     border-left: 4px solid transparent;
@@ -398,7 +406,7 @@
     background: rgba(255, 255, 255, 0.1);
     border-left: 4px solid #ff9800;
     font-weight: 600;
-}
+} */
 
 /* Better search bar */
 .search-input {
@@ -517,20 +525,20 @@
 </head>
 <body>
         <!-- Navigation -->
-        <nav class="navbar">
-            <div class="sidebar">
-                <h2>Logo</h2>
-                <ul>
-                    <li><a href="{{url_for('dashboard_page')}}" >Dashboard</a></li>
-                    <li><a href="{{url_for('average_page')}}" class="active">Average Data</a></li>
-                    <li><a href="{{url_for('prediction_page')}}">Prediction Data</a></li>
-                    <li><a href="{{ url_for('new_page') }}">Customer Data</a></li>
-                    <li><a href="{{url_for('order_page')}}">Orders</a></li>
-                    <li><a href="{{ url_for('index') }}">Products</a></li>
-                    <li><a href="#" id="logoutButton">Log Out</a></li>
-                </ul>
-            </div>
-        </nav>
+    <nav class="navbar">
+        <div class="sidebar">
+            <h2>Logo</h2>
+            <ul>
+                <li><a href="{{url_for('dashboard_page')}}">Dashboard</a></li>
+                <li><a href="{{url_for('average_page')}}" class="active">Average Data</a></li>
+                <li><a href="{{url_for('prediction_page')}}">Prediction Data</a></li>
+                <li><a href="{{ url_for('new_page') }}">Customer Data</a></li>
+                <li><a href="{{url_for('order_page')}}">Orders</a></li>
+                <li><a href="{{ url_for('index') }}">Products</a></li>
+                <li><a href="#" id="logoutButton">Log Out</a></li>
+            </ul>
+        </div>
+    </nav>
     <!-- Main Content -->
     <div class="main-content">
         <div class="container">
@@ -793,6 +801,8 @@
 }
 
     </script>
+
+        <script src="{{url_for('static',filename = 'js/logout.js')}}"> </script>
 
 </body>
 </html>

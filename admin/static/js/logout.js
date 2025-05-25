@@ -12,7 +12,7 @@ document.getElementById("logoutButton").addEventListener("click", function(event
         cancelButtonText: "Cancel"
     }).then((result) => {
         if (result.isConfirmed) {
-            window.location.href = "/logout"; // Redirect to logout URL
+            window.location.href = "/login"; // Redirect to logout URL
         }
     });
 });

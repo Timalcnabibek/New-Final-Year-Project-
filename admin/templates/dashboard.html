@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 
 <body>
@@ -22,7 +24,7 @@
                 <li><a href="{{ url_for('new_page') }}">Customer Data</a></li>
                 <li><a href="{{url_for('order_page')}}">Orders</a></li>
                 <li><a href="{{ url_for('index') }}">Products</a></li>
-                <li><a href="#" id="logoutButton">Log Out</a></li>
+                    <li><a href="#" id="logoutButton">Log Out</a></li>
             </ul>
         </div>
     </nav>
@@ -664,6 +666,8 @@ document.addEventListener("DOMContentLoaded", function() {
     fetchChartData();
 });
  </script>
+
+ <script src="{{url_for('static', filename='js/logout.js')}}"></script>
 </body>
 
 </html>
