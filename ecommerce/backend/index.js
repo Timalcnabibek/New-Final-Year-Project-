@@ -4,6 +4,10 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const path = require("path");
+const session = require('express-session');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+
 require("../backend/controllers/autostatusupdater.js");
 
 // Load environment variables
@@ -44,7 +48,7 @@ app.get("/signup", (req, res) => {
 app.get("/verify-otp", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/authenticate.html"));
 });
-app.get("/dashboard", (req, res) => {
+app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/dashboard.html"));
 });
 app.get("/details", (req, res) => {
@@ -86,6 +90,62 @@ app.use('/api', redeemRewards);
 app.use('/api/payment', khalti);
 app.use('/api',reward);
 app.use('/api',update_password);
+
+
+// Session setup
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false
+}));
+
+// Passport setup
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: process.env.GOOGLE_CALLBACK_URL
+}, (accessToken, refreshToken, profile, done) => {
+  // You can save user data to DB here
+  return done(null, profile);
+}));
+
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+passport.deserializeUser((user, done) => {
+  done(null, user);
+});
+
+// Routes
+app.get('/', (req, res) => {
+  res.send(`<h1>Welcome</h1><a href="/auth/google">Login with Google</a>`);
+});
+
+app.get('/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+app.get('/auth/google/callback',
+  passport.authenticate('google', {
+    failureRedirect: '/',
+    successRedirect: '/dashboard'
+  })
+);
+
+app.get('/dashboard', (req, res) => {
+  if (!req.user) return res.redirect('/');
+  res.send(`<h1>Dashboard</h1><p>Welcome, ${req.user.displayName}</p><a href="/logout">Logout</a>`);
+});
+
+app.get('/logout', (req, res) => {
+  req.logout(() => {
+    res.redirect('/');
+  });
+});
+
 
 // Database connection
 const MONGO_URL = process.env.MONGO_URL;

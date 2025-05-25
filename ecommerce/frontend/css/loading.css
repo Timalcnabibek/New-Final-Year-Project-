@@ -9,8 +9,10 @@
     background: rgba(255, 255, 255, 0.9);
     justify-content: center;
     align-items: center;
+    flex-direction: column; /* ✅ Add this to vertically center */
     z-index: 1000;
 }
+
 
 .load-9 {
     text-align: center;

@@ -148,9 +148,9 @@ function displayProducts(products, containerId) {
 
         const title = product.name || 'Product';
         const category = product.category || 'Uncategorized';
-        const price = product.price ? `$${product.price.toFixed(2)}` : '$0.00';
+        const price = product.price ? `Rs. ${product.price.toFixed(2)}` : 'Rs. 0.00';
         const originalPrice = product.discount_price ? 
-            `$${product.discount_price.toFixed(2)}` : '';
+            `Rs. ${product.discount_price.toFixed(2)}` : '';
         const badge = product.featured ? 'Featured' : (product.trending ? 'Trending' : '');
 
         // Check if this product is in the user's wishlist

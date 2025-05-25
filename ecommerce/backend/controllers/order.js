@@ -27,8 +27,8 @@ const sendOrderConfirmation = async (email, order) => {
             `<tr>
                 <td>${product.name}</td>
                 <td>${product.quantity}</td>
-                <td>$${product.price.toFixed(2)}</td>
-                <td>$${(product.price * product.quantity).toFixed(2)}</td>
+                <tdRs. $${product.price.toFixed(2)}</td>
+                <td>Rs. ${(product.price * product.quantity).toFixed(2)}</td>
             </tr>`
         ).join('');
 
@@ -67,11 +67,11 @@ const sendOrderConfirmation = async (email, order) => {
                     </table>
                     
                     <div style="margin-top: 20px; text-align: right;">
-                        <p><strong>Subtotal:</strong> $${order.subtotal.toFixed(2)}</p>
-                        <p><strong>Delivery Charge:</strong> $${order.deliveryCharge.toFixed(2)}</p>
-                        <p><strong>Tax:</strong> $${order.tax.toFixed(2)}</p>
-                        <p><strong>Discount:</strong> -$${order.discount.toFixed(2)}</p>
-                        <p style="font-size: 18px;"><strong>Total:</strong> $${order.totalAmount.toFixed(2)}</p>
+                        <p><strong>Subtotal:</strong> Rs. ${order.subtotal.toFixed(2)}</p>
+                        <p><strong>Delivery Charge:</strong> Rs. ${order.deliveryCharge.toFixed(2)}</p>
+                        <p><strong>Tax:</strong> Rs. ${order.tax.toFixed(2)}</p>
+                        <p><strong>Discount:</strong> -Rs. ${order.discount.toFixed(2)}</p>
+                        <p style="font-size: 18px;"><strong>Total:</strong> Rs. ${order.totalAmount.toFixed(2)}</p>
                     </div>
                     
                     <div style="background-color: #e6f7e6; padding: 15px; border-radius: 5px; margin: 20px 0;">
